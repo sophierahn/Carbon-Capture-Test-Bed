@@ -25,3 +25,5 @@ git status
 Remember, you'll committing the changes under Sophie's account
 Theres nothing to be done on this point, just don't expect a generated
 tag announcing it was you who made the change
+
+Have fun

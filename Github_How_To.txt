@@ -1,0 +1,27 @@
+How to github
+
+You enter the folder:
+
+git pull
+
+This updates the repo incase a collaborator has remotely altered the repo
+
+When you're ready to apply your changes:
+git add . 
+This applies all changes you made, otherwise you could use:
+git add <filename> to specify one altered file
+
+Then commit your changes:
+git commit
+
+You'll be asked to submit some sort of comment on what you did
+
+Finally, use 
+git push
+
+To check the status of where you are use:
+git status
+
+Remember, you'll committing the changes under Sophie's account
+Theres nothing to be done on this point, just don't expect a generated
+tag announcing it was you who made the change

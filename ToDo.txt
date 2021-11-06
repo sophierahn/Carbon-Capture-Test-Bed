@@ -1,0 +1,6 @@
+Set up Github with proper keys
+Bring it to eduroam
+Get pi set up for ssh on eduroam
+Get rpi camera
+test visualization
+order other sensors

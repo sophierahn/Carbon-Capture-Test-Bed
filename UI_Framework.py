@@ -5,7 +5,7 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import Canvas
 from random import randint
-from typing_extensions import get_origin
+#from typing_extensions import get_origin
 import matplotlib
 from matplotlib import pylab
 import matplotlib.pyplot as plt

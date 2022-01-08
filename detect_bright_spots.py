@@ -29,12 +29,15 @@ h = image.shape[0]
 w = image.shape[1]
 print(h, w)
 #cropping Image
-image = image[round(h/2-600):round(h/2+900), round(w/2-600):round(w/2+600)]
-
+image = image[round(h/2-400):round(h/2+900), round(w/2-600):round(w/2+600)]
+h = image.shape[0]
+w = image.shape[1]
+hSmall = round(h/2)
+wSmall = round(w/2)
 
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 blurred = cv2.GaussianBlur(gray, (11, 11), 0)
-threshSmall = cv2.resize(gray, (960, 540))
+threshSmall = cv2.resize(gray, (hSmall, wSmall))
 cv2.imshow("gray", threshSmall)
 cv2.waitKey(0)
 
@@ -48,7 +51,7 @@ thresh = cv2.threshold(gray, 80, 255, cv2.THRESH_BINARY)[1]
 thresh = cv2.erode(thresh, None, iterations=2)
 thresh = cv2.dilate(thresh, None, iterations=4)
 
-threshSmall = cv2.resize(thresh, (960, 540))
+threshSmall = cv2.resize(thresh, (hSmall, wSmall))
 cv2.imshow("2", threshSmall)
 cv2.waitKey(0)
 
@@ -104,7 +107,7 @@ for (i, c) in enumerate(cnts):
 		cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
 
 # show the output image
-threshSmall = cv2.resize(image, (960, 540))
+threshSmall = cv2.resize(image, (hSmall, wSmall))
 cv2.imshow("Image", threshSmall)
 print (area)
 #print (xPos)

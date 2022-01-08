@@ -6,7 +6,7 @@ camera = PiCamera()
 camera.resolution = (2592, 1944)
 print("Start Camera")
 camera.start_preview()
-camera.brightness = 40
+camera.brightness = 60
 camera.contrast = 50
 #for i in range(0,80):
 #    camera.annotate_text = "Brightness: " +str(i)
@@ -15,7 +15,7 @@ camera.contrast = 50
     
 #camera.annotate_text = "10 seconds:"
 #input("enter when finished")
-sleep(60)
+sleep(30)
 try:
     camera.capture("/home/pi/Desktop/testnew.jpg")
 except:

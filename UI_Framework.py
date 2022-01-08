@@ -35,7 +35,7 @@ debug = True
 
 class controls:
     global radioVar, var, estop, countdown, testDefault
-    testDefault = [0,0,0,0]
+    testDefault = [0,0,0,3]
 
     def __init__(self, master):
         self.master = master
@@ -43,10 +43,17 @@ class controls:
         master.geometry('1000x630') #Set Size of GUI window (WxH)
         master.lift()
         #master.attributes('-topmost',True)
-        text = 10
-        setX = 70
-        setY = 100
-        entX = 160
+        #RPI settings
+        text = 6
+        setX = 90
+        setY = 130
+        entX = 190
+
+        #Mac Settings
+        #text = 10
+        #setX = 70
+        #setY = 100
+        #entX = 160
 
         #### Data variables ####
         self.pressure = float(0)
@@ -71,7 +78,7 @@ class controls:
         self.LblTimer = Label(master, text="Remaining Time:", font=("Calibri",text+6))
         self.LblTimer.place(x=setX+300,y=setY-50)
         self.LblCountdown = Label(master, text="", font=("Calibri",text+6))
-        self.LblCountdown.place(x=setX+430,y=setY-50)
+        self.LblCountdown.place(x=setX+460,y=setY-50)
 
     #### Settings Controls ####
         def only_numbers(char):
@@ -113,7 +120,7 @@ class controls:
         #Test Duration
         EntTime[0] = Entry(master, width=5, justify=RIGHT, validate="key", validatecommand=(validation, '%S'))
         self.LblTime = Label(master, text="Test Duration:", font=("Calibri",text+6))
-        EntTime[0].place(x=entX+200,y=setY+340)
+        EntTime[0].place(x=entX,y=setY+340)
         EntTime[0].insert(0,testDefault[3])#Set Default
         self.LblTime.place(x=setX-20,y=setY+340)
 
@@ -123,9 +130,9 @@ class controls:
         self.BtnStart = Button(master, text="Start Test", command=lambda: self.validateTest(), width=10, height=2, bg='#DDDDDD', activebackground='#32CD32', wraplength=100)
         self.BtnStart.place(x=btnX,y=btnY)
         self.BtnCancel = Button(master, text="Cancel Test", command=lambda: self.stopTest(), width=10, height=2, bg='#DDDDDD', activebackground='#32CD32', wraplength=100)
-        self.BtnCancel.place(x=btnX,y=btnY+40)
+        self.BtnCancel.place(x=btnX,y=btnY+50)
         self.BtnPurge = Button(master, text="Purge Cell", command=lambda: self.validateTest(), width=10, height=2, bg='#DDDDDD', activebackground='#32CD32', wraplength=100)
-        self.BtnPurge.place(x=btnX+100,y=btnY+20)
+        self.BtnPurge.place(x=btnX+130,y=btnY+20)
         self.BtnDefault = Button(master, text="Save Test Default", command=lambda: self.saveTest())
         self.BtnDefault.place(x=20,y=20)
         
@@ -153,10 +160,10 @@ class controls:
     def saveTest(self):
         global testDefault
         try:
-            testDefault[0] = float(EntFlow[0].get())
-            testDefault[1] = float(EntPump[0].get())
-            testDefault[2] = float(EntTime[0].get())
-            testDefault[3] = float(EntPower[0].get())
+            testDefault[0] = float(EntPump[0].get())
+            testDefault[1] = float(EntFlow[0].get())
+            testDefault[2] = float(EntPower[0].get())
+            testDefault[3] = float(EntTime[0].get())
             print(testDefault)
         except:
             func.Missatge("Warning","Numerical Entry Invalid")

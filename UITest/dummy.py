@@ -15,9 +15,9 @@ def fillarray(dum_pipe):
         data2 = dumdata[x]
         #print(data2)
         dum_pipe.send(data2)
-        time.sleep(1)
+        time.sleep(0.1)
         x = x - 1
 
 
-#if __name__ == '__main__':
-    #fillarray()
+if __name__ == '__main__':
+    fillarray()

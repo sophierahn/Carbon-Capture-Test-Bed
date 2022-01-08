@@ -1,5 +1,5 @@
 import sys
-from time import time
+import time
 import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
@@ -8,15 +8,19 @@ from random import randint
 #from typing_extensions import get_origin
 import matplotlib
 from matplotlib import pylab
+from numpy import False_
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from pylab import plot, show, figure, xlabel, ylabel, draw, pause, ion, close
 import os
 import csv
 from datetime import datetime
 from datetime import timedelta
+from multiprocessing import Process, Pipe, Queue
 import func
+from pressure_sensor import start_psensor
 #from scipy.stats import linregress
-matplotlib.use('TkAgg')
+
 
 EntFlow = [None]*1
 EntPower = [None]*1
@@ -25,6 +29,8 @@ EntPump = [None]*1
 
 estop = False
 countdown = None
+
+debug = True
 
 
 class controls:
@@ -41,6 +47,9 @@ class controls:
         setX = 70
         setY = 100
         entX = 160
+
+        #### Data variables ####
+        self.pressure = float(0)
        
         # self.canvas = Canvas(master, bg="#f2f2f2")
         # self.canvas.place(x=MVP+10, y=50)
@@ -49,6 +58,7 @@ class controls:
         #Master Title
         self.lblTitle = Label(master, text="MEA Cell Controls", font=("Calibri",text+14))
         self.lblTitle.pack(side=TOP)
+
         
     #### Settings Titles ####
         self.TitlPump = Label(master, text="Pump Controls", font=("Calibri",text+8))
@@ -103,7 +113,7 @@ class controls:
         #Test Duration
         EntTime[0] = Entry(master, width=5, justify=RIGHT, validate="key", validatecommand=(validation, '%S'))
         self.LblTime = Label(master, text="Test Duration:", font=("Calibri",text+6))
-        EntTime[0].place(x=entX,y=setY+340)
+        EntTime[0].place(x=entX+200,y=setY+340)
         EntTime[0].insert(0,testDefault[3])#Set Default
         self.LblTime.place(x=setX-20,y=setY+340)
 
@@ -124,13 +134,19 @@ class controls:
         self.BtnClose.place(x=10,y=580)
 
         
+
+        
     #Change Powersupply Label
     def lblChange(self):
         global radioVar
         radioVar = var.get()
         if radioVar == 1:
+            if debug:
+                print("changing voltage")
             self.LblPower.config(text = "Set Voltage:")
         else:
+            if debug:
+                print("changing current")
             self.LblPower.config(text = "Set Current:")
 
     #Save Test Default Values
@@ -147,13 +163,21 @@ class controls:
 
     #closes window
     def close(self):
+        if debug:
+            print("closing")
+        global psen_script
+        if 'psen_script' in globals():
+
+            psen_script.kill()
         sys.exit(0)
     
     ##Estop Function //Need to add a reset fuctionality to change estop back to false so tests can be restarted
     def stopTest(self): 
-        global estop
+        global estop, psen_script
         if not estop:
             estop = True
+            if 'psen_script' in globals():
+                psen_script.kill()
             self.BtnCancel.config(text="Reset", bg='#FF0000', activebackground='#FF0000')
             EntFlow[0].delete(0,'end')
             EntPump[0].delete(0,'end')
@@ -170,6 +194,9 @@ class controls:
 
     #start of test program, validating all varibles
     def validateTest(self):
+        if debug:
+            print("validating")
+        global psen_script
         try:
             gasFlow = float(EntFlow[0].get())
             liquidFlow = float(EntPump[0].get())
@@ -178,16 +205,25 @@ class controls:
         except:
            func.Missatge("Warning","Numerical Entry Invalid")
         
-        self.button_countdown(int(testMin*60))#starts countdown to test time
-      
-    
-    #countdown timing function //Add better formatting (hours:min:sec)
-    def button_countdown(self,i): 
+        psen_pipe, mainp_pipe = Pipe()
+        psen_script = Process(target= start_psensor, args= (psen_pipe,))
+        psen_script.start()  
+        mainp_pipe.send(False)
+        self.button_countdown(int(testMin*60), psen_pipe, mainp_pipe)#starts countdown to test time
+
+    def button_countdown(self,i, psen_pipe, mainp_pipe):
+        if debug:
+            print("countdown")
         global estop, countdown
         if i > 0 and estop == False:
+            print("the main pipe poll comes back: ",mainp_pipe.poll()) 
+            #while dum_pipe.poll():
+            while mainp_pipe.poll():
+                self.pressure = mainp_pipe.recv()
+            print(self.pressure)
             self.LblCountdown.config(text = str(i))
             i -= 1
-            countdown = root.after(1000, lambda: self.button_countdown(i))
+            countdown = root.after(1000, lambda: self.button_countdown(i, psen_pipe, mainp_pipe))
         elif estop:
             root.after_cancel(countdown)
             self.LblCountdown.config(text = "Test Cancelled")
@@ -195,8 +231,8 @@ class controls:
             self.LblCountdown.config(text = "Test Ended")
 
     
-            
+        
 
 root = Tk()
-my_gui = controls(root)
+my_gui = controls(root)  
 root.mainloop()

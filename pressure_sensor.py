@@ -1,26 +1,34 @@
 import time
-#from adafruit_blinka.board.dragonboard_410c import I2C0_SCL
 import board
 import adafruit_mprls
-import spidev
-#from busio import I2C
+from multiprocessing import Process, Pipe, Queue
 
-i2c = board.I2C()
+def start_psensor(psen_pipe):
+    i2c = board.I2C()
+    mpr = adafruit_mprls.MPRLS(i2c, psi_min=0, psi_max=25)
+    shutoff = psen_pipe.recv()
+    print("The main loop told me shutoff is")
+    print(shutoff)
+    while (not shutoff):
+        pressure = mpr.pressure
+        #print("The pressure sensor says")
+        #print(pressure)
+        psen_pipe.send(pressure)
+    print("closing sensor end pipe")
+    psen_pipe.close()
+    #this close function isn't currently relevant bc i cant send
+    #a shut off signal from the main code
+    #hopefully we can adjust that to be the case
 
-# Simplest use, connect to default over I2C
-mpr = adafruit_mprls.MPRLS(i2c, psi_min=0, psi_max=25)
+#def poll_psensor(i2c, mpr, p_pipe):
+    #pressure = mpr.pressure
+    #p_pipe.send(pressure)
 
-while True:
-   print((mpr.pressure,))
-   time.sleep(1)
 
-# spi = spidev.SpiDev()
-# spi.open(0,0)
-# spi.max_speed_hz = 400000
-# to_send = [0xAA, 0x00, 0x00]
-# spi.xfer(to_send)
-# print(spi.readbytes(8))
-# to_send = [0xF0, 0x00, 0x00, 0x00]
-# spi.xfer(to_send)
-# time.sleep(2)
-# print(spi.readbytes(24))
+
+
+
+#while True:
+   #print((mpr.pressure,))
+   #time.sleep(1)
+

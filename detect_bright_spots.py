@@ -9,107 +9,140 @@ import argparse
 import imutils
 import cv2
 import math
+from picamera import PiCamera
+from time import sleep
+import func
+import glob
+import os
+from multiprocessing import Process, Pipe, Queue
 
 
-global xPos, yPos, area
-xPos = []
-yPos = []
-area = 0
+def start_imageCapture(image_pipe):
+	global xPos, yPos, area
+	xPos = []
+	yPos = []
+	area = 0
+	debug = true 
 
-# construct the argument parse and parse the arguments
-# ap = argparse.ArgumentParser()
-# ap.add_argument("-i", "--image", required=True,
-# 	help="path to the image file")
-# args = vars(ap.parse_args())
+	#initalize camera, set exposure and attempt to capture image
+	camera = PiCamera()
+	camera.resolution = (2592, 1944)
+	camera.brightness = 60
+	camera.contrast = 50
+	fileID = datetime.now().strftime("%Y%m%d-%H%M%S")
+	fileName = "/home/pi/Carbon-Capture-Test-Bed/Raw_Images/%s_salt.jpg"%(fileID)
+	try:
+		camera.capture(fileName)
+	except:
+		func.Missatge("Error","Camera Capture Failed")
 
+	#Look at image folder, load most recent file
+	list_of_files = glob.glob('/home/pi/Carbon-Capture-Test-Bed/Raw_Images/*.jpg') # * means all if need specific format then *.csv
+	latest_file = max(list_of_files, key=os.path.getctime)
+	image = cv2.imread(latest_file)
+	h = image.shape[0]
+	w = image.shape[1]
 
-# load the image, convert it to grayscale, and blur it
-image = cv2.imread("/home/pi/Desktop/testnew.jpg")
-h = image.shape[0]
-w = image.shape[1]
-print(h, w)
-#cropping Image
-image = image[round(h/2-400):round(h/2+900), round(w/2-600):round(w/2+600)]
-h = image.shape[0]
-w = image.shape[1]
-hSmall = round(h/2)
-wSmall = round(w/2)
+	if debug:
+		print(h, w)
 
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-blurred = cv2.GaussianBlur(gray, (11, 11), 0)
-threshSmall = cv2.resize(gray, (hSmall, wSmall))
-cv2.imshow("gray", threshSmall)
-cv2.waitKey(0)
+	#cropping Image
+	image = image[round(h/2-400):round(h/2+900), round(w/2-600):round(w/2+600)]
+	h = image.shape[0]
+	w = image.shape[1]
+	hSmall = round(h/2)
+	wSmall = round(w/2)
 
-# threshold the image to reveal light regions in the
-# blurred image
-####### change colour cut off to fine tune #####
-thresh = cv2.threshold(gray, 80, 255, cv2.THRESH_BINARY)[1]
+	#convert it to grayscale, and blur it
+	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+	blurred = cv2.GaussianBlur(gray, (11, 11), 0)
 
-# perform a series of erosions and dilations to remove
-# any small blobs of noise from the thresholded image
-thresh = cv2.erode(thresh, None, iterations=2)
-thresh = cv2.dilate(thresh, None, iterations=4)
+	if debug:
+		threshSmall = cv2.resize(gray, (hSmall, wSmall))
+		cv2.imshow("gray", threshSmall)
+		cv2.waitKey(0)
 
-threshSmall = cv2.resize(thresh, (hSmall, wSmall))
-cv2.imshow("2", threshSmall)
-cv2.waitKey(0)
+	# threshold the image to reveal light regions in the
+	# blurred image
+	####### change colour cut off to fine tune #####
+	thresh = cv2.threshold(gray, 80, 255, cv2.THRESH_BINARY)[1]
 
-# perform a connected component analysis on the thresholded
-# image, then initialize a mask to store only the "large"
-# components neighbors=8,
-labels = measure.label(thresh, background=0)
-mask = np.zeros(thresh.shape, dtype="uint8")
-print(image.shape[0], image.shape[1])
-# loop over the unique components
-for label in np.unique(labels):
-	# if this is the background label, ignore it
-	if label == 0:
-		continue
+	# perform a series of erosions and dilations to remove
+	# any small blobs of noise from the thresholded image
+	thresh = cv2.erode(thresh, None, iterations=2)
+	thresh = cv2.dilate(thresh, None, iterations=4)
 
-	# otherwise, construct the label mask and count the
-	# number of pixels 
-	labelMask = np.zeros(thresh.shape, dtype="uint8")
-	labelMask[labels == label] = 255
-	numPixels = cv2.countNonZero(labelMask)
+	if debug:
+		threshSmall = cv2.resize(thresh, (hSmall, wSmall))
+		cv2.imshow("2", threshSmall)
+		cv2.waitKey(0)
 
-	# if the number of pixels in the component is sufficiently
-	# large, then add it to our mask of "large blobs"
-	#if numPixels > 300:
-	mask = cv2.add(mask, labelMask)
+	# perform a connected component analysis on the thresholded
+	# image, then initialize a mask to store only the "large"
+	# components neighbors=8,
+	labels = measure.label(thresh, background=0)
+	mask = np.zeros(thresh.shape, dtype="uint8")
+	print(image.shape[0], image.shape[1])
+	# loop over the unique components
+	for label in np.unique(labels):
+		# if this is the background label, ignore it
+		if label == 0:
+			continue
 
-# find the contours in the mask, then sort them from left to
-# right
-cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-	cv2.CHAIN_APPROX_SIMPLE)
-cnts = imutils.grab_contours(cnts)
-cnts = contours.sort_contours(cnts)[0]
+		# otherwise, construct the label mask and count the
+		# number of pixels 
+		labelMask = np.zeros(thresh.shape, dtype="uint8")
+		labelMask[labels == label] = 255
+		numPixels = cv2.countNonZero(labelMask)
 
-# loop over the contours
+		# if the number of pixels in the component is sufficiently
+		# large, then add it to our mask of "large blobs"
+		#if numPixels > 300:
+		mask = cv2.add(mask, labelMask)
 
-for (i, c) in enumerate(cnts):
-	# draw the bright spot on the image
-	(x, y, w, h) = cv2.boundingRect(c)
-	((cX, cY), radius) = cv2.minEnclosingCircle(c)
-	if i == 0:
-		scaleFactor = (math.sqrt(200)/2)/radius
-	else:
-		xPos.append(round(cX*scaleFactor,4))
-		yPos.append(round(cY*scaleFactor,4))
-		#newArea = math.pi*(scaleFactor*radius)**2
-		area += math.pi*(scaleFactor*radius)**2
-		#print(newArea)
+	# find the contours in the mask, then sort them from left to
+	# right
+	cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
+		cv2.CHAIN_APPROX_SIMPLE)
+	cnts = imutils.grab_contours(cnts)
+	cnts = contours.sort_contours(cnts)[0]
 
-	#print("X:"+ str(cX) + " Y:" + str(cY) + " Radius:" + str(radius))
-	cv2.circle(image, (int(cX), int(cY)), int(radius),
-		(0, 0, 255), 3)
-	cv2.putText(image, "#{}".format(i + 1), (x, y - 15),
-		cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
+	# loop over the contours
 
-# show the output image
-threshSmall = cv2.resize(image, (hSmall, wSmall))
-cv2.imshow("Image", threshSmall)
-print (area)
-#print (xPos)
-cv2.imwrite("Test_image.jpg", image)
-cv2.waitKey(0)
+	for (i, c) in enumerate(cnts):
+		# draw the bright spot on the image
+		(x, y, w, h) = cv2.boundingRect(c)
+		((cX, cY), radius) = cv2.minEnclosingCircle(c)
+		if i == 0:
+			scaleFactor = (math.sqrt(200)/2)/radius
+		else:
+			xPos.append(round(cX*scaleFactor,4))
+			yPos.append(round(cY*scaleFactor,4))
+			#newArea = math.pi*(scaleFactor*radius)**2
+			area += math.pi*(scaleFactor*radius)**2
+			#print(newArea)
+
+		#print("X:"+ str(cX) + " Y:" + str(cY) + " Radius:" + str(radius))
+		cv2.circle(image, (int(cX), int(cY)), int(radius),
+			(0, 0, 255), 3)
+		cv2.putText(image, "#{}".format(i + 1), (x, y - 15),
+			cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
+
+	# show the output image
+	if debug:
+		threshSmall = cv2.resize(image, (hSmall, wSmall))
+		cv2.imshow("Image", threshSmall)
+		cv2.waitKey(0)
+		print(area)
+
+	fileID = datetime.now().strftime("%Y%m%d-%H%M%S")
+	fileName = "/home/pi/Carbon-Capture-Test-Bed/Edited_Images/%s_identified.jpg"%(fileID)
+	cv2.imwrite(fileName, image)
+
+	#shutoff = image_pipe.recv()
+    print("The main loop told me shutoff is", shutoff)###
+    image_pipe.send(area)
+	sleep(60)
+
+	#print("closing sensor end pipe")###
+    #psen_pipe.close()

@@ -5,7 +5,6 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import Canvas
 from random import randint
-#from typing_extensions import get_origin
 import matplotlib
 from matplotlib import pylab
 from numpy import False_
@@ -19,8 +18,6 @@ from datetime import timedelta
 from multiprocessing import Process, Pipe, Queue
 import func
 from pressure_sensor import start_psensor
-#from scipy.stats import linregress
-
 
 EntFlow = [None]*1
 EntPower = [None]*1
@@ -29,9 +26,7 @@ EntPump = [None]*1
 
 estop = False
 countdown = None
-
 debug = True
-
 
 class controls:
     global radioVar, var, estop, countdown, testDefault
@@ -212,32 +207,63 @@ class controls:
         except:
            func.Missatge("Warning","Numerical Entry Invalid")
         
+        #Initiallize pressure sensor process
         psen_pipe, mainp_pipe = Pipe()
         psen_script = Process(target= start_psensor, args= (psen_pipe,))
         psen_script.start()  
         mainp_pipe.send(False)
-        self.button_countdown(int(testMin*60), psen_pipe, mainp_pipe)#starts countdown to test time
 
-    def button_countdown(self,i, psen_pipe, mainp_pipe):
+        #Initiallize Image Capture Process
+        image_pipe, maini_pipe = Pipe()
+        image_script = Process(target= start_imageCapture, args= (image_pipe,))
+        image_script.start()  
+        maini_pipe.send(False)
+
+        #Call repeating functions
+        self.button_countdown(int(testMin*60))
+        self.pressure_sensor(psen_pipe, mainp_pipe)
+        self.image_capture(image_pipe, maini_pipe)
+
+    def button_countdown(self,i):
         if debug:
             print("countdown")
         global estop, countdown
         if i > 0 and estop == False:
-            print("the main pipe poll comes back: ",mainp_pipe.poll()) 
-            #while dum_pipe.poll():
-            while mainp_pipe.poll():
-                self.pressure = mainp_pipe.recv()
-            print(self.pressure)
             self.LblCountdown.config(text = str(i))
             i -= 1
-            countdown = root.after(1000, lambda: self.button_countdown(i, psen_pipe, mainp_pipe))
+            countdown = root.after(1000, lambda: self.button_countdown(i))
         elif estop:
             root.after_cancel(countdown)
             self.LblCountdown.config(text = "Test Cancelled")
         else:
             self.LblCountdown.config(text = "Test Ended")
 
-    
+    def pressure_sensor(self, psen_pipe, mainp_pipe):
+        global estop
+        if debug:
+            print("Pressure Sensor")
+        if not estop:
+            print("the main pipe poll comes back: ",mainp_pipe.poll()) 
+            while mainp_pipe.poll():
+                self.pressure = mainp_pipe.recv()
+            print(self.pressure)
+            pressure_sensor = root.after(1000, lambda: self.pressure_sensor(psen_pipe, mainp_pipe))
+        else:
+            root.after_cancel(pressure_sensor)
+
+    def image_capture(self, image_pipe, maini_pipe):
+        global estop
+        if debug:
+            print("Image Capture Salt Area")
+        saltArea = float(0)
+        if not estop:
+            print("the main pipe poll comes back: ",maini_pipe.poll()) 
+            while maini_pipe.poll():
+                saltArea = maini_pipe.recv()
+            print(saltArea)
+            pressure_sensor = root.after(1000, lambda: self.image_capture(image_pipe, maini_pipe))
+        else:
+            root.after_cancel(image_capture)
         
 
 root = Tk()

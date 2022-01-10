@@ -18,6 +18,7 @@ from datetime import timedelta
 from multiprocessing import Process, Pipe, Queue
 import func
 from pressure_sensor import start_psensor
+from detect_bright_spots import start_imageCapture
 
 EntFlow = [None]*1
 EntPower = [None]*1
@@ -52,6 +53,7 @@ class controls:
 
         #### Data variables ####
         self.pressure = float(0)
+        self.saltArea = float(0)
        
         # self.canvas = Canvas(master, bg="#f2f2f2")
         # self.canvas.place(x=MVP+10, y=50)
@@ -167,19 +169,22 @@ class controls:
     def close(self):
         if debug:
             print("closing")
-        global psen_script
+        global psen_script, image_script
         if 'psen_script' in globals():
-
             psen_script.kill()
+        if 'image_script' in globals():
+            image_script.kill()              
         sys.exit(0)
     
     ##Estop Function //Need to add a reset fuctionality to change estop back to false so tests can be restarted
     def stopTest(self): 
-        global estop, psen_script
+        global estop, psen_script, image_script
         if not estop:
             estop = True
             if 'psen_script' in globals():
                 psen_script.kill()
+            if 'image_script' in globals():
+                image_script.kill()    
             self.BtnCancel.config(text="Reset", bg='#FF0000', activebackground='#FF0000')
             EntFlow[0].delete(0,'end')
             EntPump[0].delete(0,'end')
@@ -198,7 +203,7 @@ class controls:
     def validateTest(self):
         if debug:
             print("validating")
-        global psen_script
+        global psen_script, image_script
         try:
             gasFlow = float(EntFlow[0].get())
             liquidFlow = float(EntPump[0].get())
@@ -221,7 +226,7 @@ class controls:
 
         #Call repeating functions
         self.button_countdown(int(testMin*60))
-        self.pressure_sensor(psen_pipe, mainp_pipe)
+        #self.pressure_sensor(psen_pipe, mainp_pipe)
         self.image_capture(image_pipe, maini_pipe)
 
     def button_countdown(self,i):
@@ -249,21 +254,20 @@ class controls:
             print(self.pressure)
             pressure_sensor = root.after(1000, lambda: self.pressure_sensor(psen_pipe, mainp_pipe))
         else:
-            root.after_cancel(pressure_sensor)
+            root.after_cancel(self.pressure_sensor)
 
     def image_capture(self, image_pipe, maini_pipe):
         global estop
         if debug:
             print("Image Capture Salt Area")
-        saltArea = float(0)
+            print("the main pipe poll comes back: ",maini_pipe.poll())         
         if not estop:
-            print("the main pipe poll comes back: ",maini_pipe.poll()) 
             while maini_pipe.poll():
-                saltArea = maini_pipe.recv()
-            print(saltArea)
-            pressure_sensor = root.after(1000, lambda: self.image_capture(image_pipe, maini_pipe))
+                self.saltArea = maini_pipe.recv()
+            print(self.saltArea)
+            image_capture = root.after(1000, lambda: self.image_capture(image_pipe, maini_pipe))
         else:
-            root.after_cancel(image_capture)
+            root.after_cancel(self.image_capture)
         
 
 root = Tk()

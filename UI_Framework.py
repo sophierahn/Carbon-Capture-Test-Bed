@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
 from tkinter import Canvas
+from PIL import ImageTk, Image
 from random import randint
 import matplotlib
 from matplotlib import pylab
@@ -12,6 +13,7 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from pylab import plot, show, figure, xlabel, ylabel, draw, pause, ion, close
 import os
+import glob
 import csv
 from datetime import datetime
 from datetime import timedelta
@@ -38,6 +40,8 @@ class controls:
         master.title("Carbon Capture Control")
         master.geometry('1000x630') #Set Size of GUI window (WxH)
         master.lift()
+        #self.canvas = Canvas(master, width=1000, height=630)
+        #self.canvas.pack()
         #master.attributes('-topmost',True)
         #RPI settings
         text = 6
@@ -55,13 +59,12 @@ class controls:
         self.pressure = float(0)
         self.saltArea = float(0)
        
-        # self.canvas = Canvas(master, bg="#f2f2f2")
-        # self.canvas.place(x=MVP+10, y=50)
+        
         # self.canvas.create_line(1,1,1,255, width = 3, fill="#666666")    
 
         #Master Title
         self.lblTitle = Label(master, text="MEA Cell Controls", font=("Calibri",text+14))
-        self.lblTitle.pack(side=TOP)
+        self.lblTitle.place(x=400,y=10)
 
         
     #### Settings Titles ####
@@ -120,6 +123,31 @@ class controls:
         EntTime[0].place(x=entX,y=setY+340)
         EntTime[0].insert(0,testDefault[3])#Set Default
         self.LblTime.place(x=setX-20,y=setY+340)
+        
+        datax = 600
+        datay = 130
+    #### Data ####
+        self.pressHeading = Label(master, text="Pressure Sensor Data", font=("Calibri",text+8))
+        self.pressHeading.place(x=datax,y=datay)
+        self.psen1 = Label(master, text="Inlet 1: 0 kPa", font=("Calibri",text+6))
+        self.psen1.place(x=datax,y=datay+35)
+        self.psen2 = Label(master, text="Outlet 1: 0 kPa", font=("Calibri",text+6))
+        self.psen2.place(x=datax+130,y=datay+35)
+
+        self.imageHeading = Label(master, text="Salt Idenification", font=("Calibri",text+8))
+        self.imageHeading.place(x=datax,y=datay+100)
+        self.saltData = Label(master, text="Total Salt Area: 0 mm2", font=("Calibri",text+6))
+        self.saltData.place(x=datax,y=datay+135)
+        self.img = Image.open(func.latestFile())
+        self.imgW, self.imgH = self.img.size
+        self.imgW = round(int(self.imgW)/4)
+        self.imgH = round(int(self.imgH)/4)
+        self.imgSmall = self.img.resize((self.imgW,self.imgH))
+        self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
+        self.saltImage = Label(master,image=self.imgSmall)
+        self.saltImage.place(x=datax,y=datay+165)
+        
+
 
     #### Buttons ####
         btnX = setX+50
@@ -251,7 +279,8 @@ class controls:
             print("the main pipe poll comes back: ",mainp_pipe.poll()) 
             while mainp_pipe.poll():
                 self.pressure = mainp_pipe.recv()
-            print(self.pressure)
+            #print(self.pressure)
+            self.psen1.config(text = "Inlet 1: %ikPa"%self.pressure)
             pressure_sensor = root.after(1000, lambda: self.pressure_sensor(psen_pipe, mainp_pipe))
         else:
             root.after_cancel(self.pressure_sensor)
@@ -264,7 +293,15 @@ class controls:
         if not estop:
             while maini_pipe.poll():
                 self.saltArea = maini_pipe.recv()
-            print(self.saltArea)
+            #print(self.saltArea)
+            self.saltData.config(text = "Total Salt Area: %i mm2"%self.saltArea)
+            self.img = Image.open(func.latestFile())
+            self.imgW, self.imgH = self.img.size
+            self.imgW = round(int(self.imgW)/4)
+            self.imgH = round(int(self.imgH)/4)
+            self.imgSmall = self.img.resize((self.imgW,self.imgH))
+            self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
+            self.saltImage.config(image=self.imgSmall)
             image_capture = root.after(1000, lambda: self.image_capture(image_pipe, maini_pipe))
         else:
             root.after_cancel(self.image_capture)

@@ -3,6 +3,8 @@ import tkinter as tk
 from time import sleep
 #import RPi.GPIO as GPIO
 import sys
+import glob
+import os
 
 def Missatge(cap,msg):
     lmsg = len(msg)/50+1
@@ -32,3 +34,6 @@ def isint(x):
     else:
         return True
 
+def latestFile():
+    list_of_files = glob.glob('/home/pi/Carbon-Capture-Test-Bed/Edited_Images/*.jpg')
+    return max(list_of_files, key=os.path.getctime)

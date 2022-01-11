@@ -42,8 +42,7 @@ def start_imageCapture(image_pipe):
 
         # Look at image folder, load most recent file
         # * means all if need specific format then *.csv
-        list_of_files = glob.glob(
-            '/home/pi/Carbon-Capture-Test-Bed/Raw_Images/*.jpg')
+        list_of_files = glob.glob('/home/pi/Carbon-Capture-Test-Bed/Raw_Images/*.jpg')
         latest_file = max(list_of_files, key=os.path.getctime)
         image = cv2.imread(latest_file)
         h = image.shape[0]

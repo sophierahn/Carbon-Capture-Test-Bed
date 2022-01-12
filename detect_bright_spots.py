@@ -52,8 +52,7 @@ def start_imageCapture(image_pipe):
             print(h, w)
 
         # cropping Image
-        image = image[round(h/2-400):round(h/2+900),
-                            round(w/2-600):round(w/2+600)]
+        image = image[round(h/2-400):round(h/2+900),round(w/2-600):round(w/2+600)]
         h = image.shape[0]
         w = image.shape[1]
         hSmall = round(h/2)
@@ -90,6 +89,7 @@ def start_imageCapture(image_pipe):
         mask = np.zeros(thresh.shape, dtype="uint8")
         # print(image.shape[0], image.shape[1])
         # loop over the unique components
+        count = 0
         for label in np.unique(labels):
             # if this is the background label, ignore it
             if label == 0:
@@ -99,55 +99,60 @@ def start_imageCapture(image_pipe):
             # number of pixels
             labelMask = np.zeros(thresh.shape, dtype="uint8")
             labelMask[labels == label] = 255
-            numPixels = cv2.countNonZero(labelMask)
+            #numPixels = cv2.countNonZero(labelMask)
 
             # if the number of pixels in the component is sufficiently
             # large, then add it to our mask of "large blobs"
             # if numPixels > 300:
             mask = cv2.add(mask, labelMask)
+            count += 1
+        #print(count)
 
         # find the contours in the mask, then sort them from left to
         # right
-        cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-            cv2.CHAIN_APPROX_SIMPLE)
-        cnts = imutils.grab_contours(cnts)
-        cnts = contours.sort_contours(cnts)[0]
+        area = 0
+        if count != 0:
+            cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            cnts = imutils.grab_contours(cnts)
+            cnts = contours.sort_contours(cnts)[0]
 
-        # loop over the contours
+            # loop over the contours
+            for (i, c) in enumerate(cnts):
+                # draw the bright spot on the image
+                (x, y, w, h) = cv2.boundingRect(c)
+                ((cX, cY), radius) = cv2.minEnclosingCircle(c)
+                if i == 0:
+                    scaleFactor = (math.sqrt(200)/2)/radius
+                else:
+                    xPos.append(round(cX*scaleFactor, 4))
+                    yPos.append(round(cY*scaleFactor, 4))
+                    # newArea = math.pi*(scaleFactor*radius)**2
+                    area += math.pi*(scaleFactor*radius)**2
+                    # print(newArea)
 
-        for (i, c) in enumerate(cnts):
-            # draw the bright spot on the image
-            (x, y, w, h) = cv2.boundingRect(c)
-            ((cX, cY), radius) = cv2.minEnclosingCircle(c)
-            if i == 0:
-                scaleFactor = (math.sqrt(200)/2)/radius
-            else:
-                xPos.append(round(cX*scaleFactor, 4))
-                yPos.append(round(cY*scaleFactor, 4))
-                # newArea = math.pi*(scaleFactor*radius)**2
-                area += math.pi*(scaleFactor*radius)**2
-                # print(newArea)
+                # print("X:"+ str(cX) + " Y:" + str(cY) + " Radius:" + str(radius))
+                cv2.circle(image, (int(cX), int(cY)), int(radius),
+                    (0, 0, 255), 3)
+                cv2.putText(image, "#{}".format(i + 1), (x, y - 15),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
 
-            # print("X:"+ str(cX) + " Y:" + str(cY) + " Radius:" + str(radius))
-            cv2.circle(image, (int(cX), int(cY)), int(radius),
-                (0, 0, 255), 3)
-            cv2.putText(image, "#{}".format(i + 1), (x, y - 15),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
+            # show the output image
+            if debug:
+                threshSmall = cv2.resize(image, (hSmall, wSmall))
+                cv2.imshow("Image", threshSmall)
+                cv2.waitKey(0)
+                print(area)
 
-        # show the output image
-        if debug:
-            threshSmall = cv2.resize(image, (hSmall, wSmall))
-            cv2.imshow("Image", threshSmall)
-            cv2.waitKey(0)
-            print(area)
-
-        fileID = datetime.now().strftime("%Y%m%d-%H%M%S")
-        fileName = "/home/pi/Carbon-Capture-Test-Bed/Edited_Images/%s_identified.jpg" % (
-            fileID)
-        cv2.imwrite(fileName, image)
-        print("The main loop told me shutoff is", shutoff)
-        image_pipe.send(area)
-        sleep(60)
+            fileID = datetime.now().strftime("%Y%m%d-%H%M%S")
+            fileName = "/home/pi/Carbon-Capture-Test-Bed/Edited_Images/%s_identified.jpg" % (fileID)
+            cv2.imwrite(fileName, image)
+            image_pipe.send(area)
+        else:
+            #fileID = datetime.now().strftime("%Y%m%d-%H%M%S")
+            #fileName = "/home/pi/Carbon-Capture-Test-Bed/Edited_Images/%s_identified.jpg" % (fileID)
+            cv2.imwrite(fileName, gray)
+            image_pipe.send(area)
+        sleep(10)
 
     print("closing sensor end pipe")
     image_pipe.close()

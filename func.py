@@ -35,5 +35,7 @@ def isint(x):
         return True
 
 def latestFile():
-    list_of_files = glob.glob('/home/pi/Carbon-Capture-Test-Bed/Edited_Images/*.jpg')
-    return max(list_of_files, key=os.path.getctime)
+        list_of_files = glob.glob('/home/pi/Carbon-Capture-Test-Bed/Edited_Images/*.jpg')
+        #print(type(list_of_files), len(list_of_files))
+        return max(list_of_files, key=os.path.getctime)
+

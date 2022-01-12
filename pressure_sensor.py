@@ -7,8 +7,8 @@ def start_psensor(psen_pipe):
     i2c = board.I2C()
     mpr = adafruit_mprls.MPRLS(i2c, psi_min=0, psi_max=25)
     shutoff = psen_pipe.recv()
-    print("The main loop told me shutoff is")
-    print(shutoff)
+    #print("The main loop told me shutoff is")
+    #print(shutoff)
     while (not shutoff):
         pressure = mpr.pressure
         #print("The pressure sensor says")

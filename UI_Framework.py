@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
 from tkinter import Canvas
-from PIL import ImageTk, Image
+from PIL import ImageTk, Image, ImageFile
 from random import randint
 import matplotlib
 from matplotlib import pylab
@@ -22,6 +22,8 @@ import func
 from pressure_sensor import start_psensor
 from detect_bright_spots import start_imageCapture
 
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 EntFlow = [None]*1
 EntPower = [None]*1
 EntTime = [None]*1
@@ -29,7 +31,7 @@ EntPump = [None]*1
 
 estop = False
 countdown = None
-debug = True
+debug = False
 
 class controls:
     global radioVar, var, estop, countdown, testDefault
@@ -131,19 +133,19 @@ class controls:
         self.pressHeading.place(x=datax,y=datay)
         self.psen1 = Label(master, text="Inlet 1: 0 kPa", font=("Calibri",text+6))
         self.psen1.place(x=datax,y=datay+35)
-        self.psen2 = Label(master, text="Outlet 1: 0 kPa", font=("Calibri",text+6))
-        self.psen2.place(x=datax+130,y=datay+35)
+        # self.psen2 = Label(master, text="Outlet 1: 0 kPa", font=("Calibri",text+6))
+        # self.psen2.place(x=datax+130,y=datay+35)
 
         self.imageHeading = Label(master, text="Salt Idenification", font=("Calibri",text+8))
         self.imageHeading.place(x=datax,y=datay+100)
         self.saltData = Label(master, text="Total Salt Area: 0 mm2", font=("Calibri",text+6))
         self.saltData.place(x=datax,y=datay+135)
-        self.img = Image.open(func.latestFile())
-        self.imgW, self.imgH = self.img.size
-        self.imgW = round(int(self.imgW)/4)
-        self.imgH = round(int(self.imgH)/4)
-        self.imgSmall = self.img.resize((self.imgW,self.imgH))
-        self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
+        self.img = Image.open("/home/pi/Carbon-Capture-Test-Bed/download.png")
+        #self.imgW, self.imgH = self.img.size
+        #self.imgW = round(int(self.imgW)/4)
+        #self.imgH = round(int(self.imgH)/4)
+        #self.imgSmall = self.img.resize((self.imgW,self.imgH))
+        self.imgSmall = ImageTk.PhotoImage(self.img)
         self.saltImage = Label(master,image=self.imgSmall)
         self.saltImage.place(x=datax,y=datay+165)
         
@@ -254,7 +256,7 @@ class controls:
 
         #Call repeating functions
         self.button_countdown(int(testMin*60))
-        #self.pressure_sensor(psen_pipe, mainp_pipe)
+        self.pressure_sensor(psen_pipe, mainp_pipe)
         self.image_capture(image_pipe, maini_pipe)
 
     def button_countdown(self,i):
@@ -270,17 +272,18 @@ class controls:
             self.LblCountdown.config(text = "Test Cancelled")
         else:
             self.LblCountdown.config(text = "Test Ended")
+            self.stopTest()
 
     def pressure_sensor(self, psen_pipe, mainp_pipe):
         global estop
         if debug:
             print("Pressure Sensor")
-        if not estop:
             print("the main pipe poll comes back: ",mainp_pipe.poll()) 
+        if not estop:
             while mainp_pipe.poll():
-                self.pressure = mainp_pipe.recv()
+                self.pressure = round(mainp_pipe.recv(),3)
             #print(self.pressure)
-            self.psen1.config(text = "Inlet 1: %ikPa"%self.pressure)
+            self.psen1.config(text = "Inlet 1: %fkPa"%self.pressure)
             pressure_sensor = root.after(1000, lambda: self.pressure_sensor(psen_pipe, mainp_pipe))
         else:
             root.after_cancel(self.pressure_sensor)
@@ -292,10 +295,10 @@ class controls:
             print("the main pipe poll comes back: ",maini_pipe.poll())         
         if not estop:
             while maini_pipe.poll():
-                self.saltArea = maini_pipe.recv()
+                self.saltArea = round(maini_pipe.recv(),3)
             #print(self.saltArea)
             #testing
-            self.saltData.config(text = "Total Salt Area: %i mm2"%self.saltArea)
+            self.saltData.config(text = "Total Salt Area: %fmm2"%self.saltArea)
             self.img = Image.open(func.latestFile())
             self.imgW, self.imgH = self.img.size
             self.imgW = round(int(self.imgW)/4)

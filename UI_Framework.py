@@ -294,6 +294,7 @@ class controls:
             while maini_pipe.poll():
                 self.saltArea = maini_pipe.recv()
             #print(self.saltArea)
+            #testing
             self.saltData.config(text = "Total Salt Area: %i mm2"%self.saltArea)
             self.img = Image.open(func.latestFile())
             self.imgW, self.imgH = self.img.size

@@ -7,3 +7,5 @@ Now im changing a thing for another test
  im chanigng another thin
 
 Testing upload from Mac 
+
+Trying again to get credentials working

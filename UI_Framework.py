@@ -21,6 +21,7 @@ from multiprocessing import Process, Pipe, Queue
 import func
 from pressure_sensor import start_psensor
 from detect_bright_spots import start_imageCapture
+from mulitplexer import muliplexer
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -242,11 +243,16 @@ class controls:
         except:
            func.Missatge("Warning","Numerical Entry Invalid")
         
+        #Multiplexer
+        q = Queue()
+        multi = Process(target= muliplexer, args= (q,))
+        multi.start()
+
         #Initiallize pressure sensor process
         psen_pipe, mainp_pipe = Pipe()
         psen_script = Process(target= start_psensor, args= (psen_pipe,))
         psen_script.start()  
-        mainp_pipe.send(False)
+        #mainp_pipe.send(False)
 
         #Initiallize Image Capture Process
         image_pipe, maini_pipe = Pipe()
@@ -282,7 +288,7 @@ class controls:
         if not estop:
             while mainp_pipe.poll():
                 self.pressure = round(mainp_pipe.recv(),3)
-            #print(self.pressure)
+            
             self.psen1.config(text = "Inlet 1: %fkPa"%self.pressure)
             pressure_sensor = root.after(1000, lambda: self.pressure_sensor(psen_pipe, mainp_pipe))
         else:

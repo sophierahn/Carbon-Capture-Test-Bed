@@ -2,7 +2,7 @@
 from multiprocessing import Process, Pipe, Queue
 #import Queue
 from time import sleep
-from mulitplexer import muliplexer
+from mulitplexer_test import muliplexer
 from pressure_test import pressureStore
 
 
@@ -14,13 +14,11 @@ count = 10
 q = Queue()
 multi = Process(target= muliplexer, args= (q,))
 multi.start()
-#q.put_nowait(11)
 
 #Power Supply
 psen_pipe, mainp_pipe = Pipe()
 psen_script = Process(target= pressureStore, args= (psen_pipe,q))
 psen_script.start()  
-#mainp_pipe.send(False)
 
 pressure = 22
 
@@ -31,7 +29,6 @@ while count > 0:
     q.put_nowait((1,powerLevel[index]))
 
     if pressure%5 == 0:
-        #mainp_pipe.send(True)
         q.put_nowait((2,True))
         sleep(1)
         multi.terminate()

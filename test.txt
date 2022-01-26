@@ -1,7 +1,4 @@
 
-RPi personal Access token:
-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 
-
 hi, doing a thing
 
 Now im changing a thing for another test

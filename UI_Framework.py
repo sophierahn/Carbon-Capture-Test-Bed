@@ -141,7 +141,7 @@ class controls:
         self.imageHeading.place(x=datax,y=datay+100)
         self.saltData = Label(master, text="Total Salt Area: 0 mm2", font=("Calibri",text+6))
         self.saltData.place(x=datax,y=datay+135)
-        self.img = Image.open("/home/pi/Carbon-Capture-Test-Bed/download.png")
+        self.img = Image.open("/home/pi/Carbon-Capture-Test-Bed/test.jpg")
         #self.imgW, self.imgH = self.img.size
         #self.imgW = round(int(self.imgW)/4)
         #self.imgH = round(int(self.imgH)/4)
@@ -198,24 +198,28 @@ class controls:
 
     #closes window
     def close(self):
+        global psen_script, image_script, multi
         if debug:
             print("closing")
-        global psen_script, image_script
         if 'psen_script' in globals():
-            psen_script.kill()
+            psen_script.terminate()
         if 'image_script' in globals():
-            image_script.kill()              
+            image_script.terminate()   
+        if 'multi' in globals(): 
+            multi.terminate()             
         sys.exit(0)
     
     ##Estop Function //Need to add a reset fuctionality to change estop back to false so tests can be restarted
     def stopTest(self): 
-        global estop, psen_script, image_script
+        global estop, psen_script, image_script, multi
         if not estop:
             estop = True
             if 'psen_script' in globals():
-                psen_script.kill()
+                psen_script.terminate()
             if 'image_script' in globals():
-                image_script.kill()    
+                image_script.terminate()   
+            if 'multi' in globals():
+                multi.terminate()    
             self.BtnCancel.config(text="Reset", bg='#FF0000', activebackground='#FF0000')
             EntFlow[0].delete(0,'end')
             EntPump[0].delete(0,'end')
@@ -234,7 +238,7 @@ class controls:
     def validateTest(self):
         if debug:
             print("validating")
-        global psen_script, image_script
+        global psen_script, image_script, multi
         try:
             gasFlow = float(EntFlow[0].get())
             liquidFlow = float(EntPump[0].get())
@@ -250,20 +254,20 @@ class controls:
 
         #Initiallize pressure sensor process
         psen_pipe, mainp_pipe = Pipe()
-        psen_script = Process(target= start_psensor, args= (psen_pipe,))
+        psen_script = Process(target= start_psensor, args= (psen_pipe,q,))
         psen_script.start()  
         #mainp_pipe.send(False)
 
         #Initiallize Image Capture Process
-        image_pipe, maini_pipe = Pipe()
-        image_script = Process(target= start_imageCapture, args= (image_pipe,))
-        image_script.start()  
-        maini_pipe.send(False)
+        # image_pipe, maini_pipe = Pipe()
+        # image_script = Process(target= start_imageCapture, args= (image_pipe,))
+        # image_script.start()  
+        # maini_pipe.send(False)
 
         #Call repeating functions
         self.button_countdown(int(testMin*60))
         self.pressure_sensor(psen_pipe, mainp_pipe)
-        self.image_capture(image_pipe, maini_pipe)
+        #self.image_capture(image_pipe, maini_pipe)
 
     def button_countdown(self,i):
         if debug:
@@ -286,10 +290,12 @@ class controls:
             print("Pressure Sensor")
             print("the main pipe poll comes back: ",mainp_pipe.poll()) 
         if not estop:
+            pressureList = [0]*4
             while mainp_pipe.poll():
-                self.pressure = round(mainp_pipe.recv(),3)
+                pressureList= mainp_pipe.recv()
+            self.pressure_1 = round(pressureList[0],3)
             
-            self.psen1.config(text = "Inlet 1: %fkPa"%self.pressure)
+            self.psen1.config(text = "Inlet 1: %fkPa"%self.pressure_1)
             pressure_sensor = root.after(1000, lambda: self.pressure_sensor(psen_pipe, mainp_pipe))
         else:
             root.after_cancel(self.pressure_sensor)

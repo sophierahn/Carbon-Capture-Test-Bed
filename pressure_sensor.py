@@ -17,8 +17,8 @@ def start_psensor(psen_pipe, q):
                 pressure = i[1]
                 psen_pipe.send(pressure)
                 #dataCheck.append(pressure)
-            if i[0] == 1:
-                q.put_nowait((1,i[1]))
+            #if i[0] == 1:
+            #   q.put_nowait((1,i[1]))
             if i[0] == 2:
                 shutoff = i[1]
                 q.put_nowait((2,shutoff))

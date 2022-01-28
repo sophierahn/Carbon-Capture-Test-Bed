@@ -6,7 +6,7 @@ from mulitplexer_test import muliplexer
 from pressure_test import pressureStore
 
 
-powerLevel = [20,30,40,50,60,70,80,90,100,110,120,130,140,150]
+powerLevel = [10,20,30,40,50,60,70,80,90,100,110,120,130,140,150]
 index = 0
 count = 10
 
@@ -15,7 +15,7 @@ q = Queue()
 multi = Process(target= muliplexer, args= (q,))
 multi.start()
 
-#Power Supply
+#pressure sensor
 psen_pipe, mainp_pipe = Pipe()
 psen_script = Process(target= pressureStore, args= (psen_pipe,q))
 psen_script.start()  

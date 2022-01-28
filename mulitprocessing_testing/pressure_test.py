@@ -23,8 +23,9 @@ def pressureStore(psen_pipe,q):
             if i[0] == 2:
                 shutoff = i[1]
                 q.put_nowait((2,shutoff))
+                print("Pressure Closed")
         queueDump = []
-    print("Pressure Closed")
+    #print("Pressure Closed")
     print("Pressure:",dataCheck[-10:-1])
     psen_pipe.close()
            

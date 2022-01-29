@@ -10,7 +10,8 @@ def muliplexer(q):
     shutoff = False
     i2c = board.I2C()
     tca = adafruit_tca9548a.TCA9548A(i2c)
-    mpr_1 = adafruit_mprls.MPRLS(tca[1], psi_min=0, psi_max=25)
+    mpr_1 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25)
+    mpr_2 = adafruit_mprls.MPRLS(tca[1], psi_min=0, psi_max=25)
 
     while not shutoff:
         while not q.empty():
@@ -27,6 +28,7 @@ def muliplexer(q):
                 shutoff = i[1]
                 q.put_nowait((2,shutoff))
         pressure[0] = mpr_1.pressure
+        pressure[1] = mpr_2.pressure
         q.put_nowait((0,pressure))
         queueDump = []
     

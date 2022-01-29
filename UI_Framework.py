@@ -134,8 +134,8 @@ class controls:
         self.pressHeading.place(x=datax,y=datay)
         self.psen1 = Label(master, text="Inlet 1: 0 kPa", font=("Calibri",text+6))
         self.psen1.place(x=datax,y=datay+35)
-        # self.psen2 = Label(master, text="Outlet 1: 0 kPa", font=("Calibri",text+6))
-        # self.psen2.place(x=datax+130,y=datay+35)
+        self.psen2 = Label(master, text="Outlet 1: 0 kPa", font=("Calibri",text+6))
+        self.psen2.place(x=datax+130,y=datay+35)
 
         self.imageHeading = Label(master, text="Salt Idenification", font=("Calibri",text+8))
         self.imageHeading.place(x=datax,y=datay+100)
@@ -294,8 +294,10 @@ class controls:
             while mainp_pipe.poll():
                 pressureList= mainp_pipe.recv()
             self.pressure_1 = round(pressureList[0],3)
+            self.pressure_2 = round(pressureList[1],3)
             
             self.psen1.config(text = "Inlet 1: %fkPa"%self.pressure_1)
+            self.psen2.config(text = "Inlet 2: %fkPa"%self.pressure_2)
             pressure_sensor = root.after(1000, lambda: self.pressure_sensor(psen_pipe, mainp_pipe))
         else:
             root.after_cancel(self.pressure_sensor)

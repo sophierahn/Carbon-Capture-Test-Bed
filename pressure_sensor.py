@@ -4,7 +4,7 @@ def start_psensor(psen_pipe, q):
     shutoff = False
     #dataCheck = []
     queueDump = []
-    pressure = 11
+    pressure = [0]*4
 
     while not shutoff:
         while not q.empty():

@@ -22,6 +22,7 @@ import func
 from pressure_sensor import start_psensor
 from detect_bright_spots import start_imageCapture
 from mulitplexer import muliplexer
+from power_sensor import power_log
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -128,27 +129,41 @@ class controls:
         self.LblTime.place(x=setX-20,y=setY+340)
         
         datax = 600
-        datay = 130
+        datay = 80
     #### Data ####
         self.pressHeading = Label(master, text="Pressure Sensor Data", font=("Calibri",text+8))
         self.pressHeading.place(x=datax,y=datay)
-        self.psen1 = Label(master, text="Inlet 1: 0 kPa", font=("Calibri",text+6))
-        self.psen1.place(x=datax,y=datay+35)
-        self.psen2 = Label(master, text="Outlet 1: 0 kPa", font=("Calibri",text+6))
-        self.psen2.place(x=datax+130,y=datay+35)
+        self.psen0 = Label(master, text="Inlet 1: 0 kPa", font=("Calibri",text+6))
+        self.psen0.place(x=datax,y=datay+35)
+        self.psen1 = Label(master, text="Outlet 1: 0 kPa", font=("Calibri",text+6))
+        self.psen1.place(x=datax+130,y=datay+35)
+        self.psen2 = Label(master, text="Inlet 2: 0 kPa", font=("Calibri",text+6))
+        self.psen2.place(x=datax,y=datay+70)
+        self.psen3 = Label(master, text="Outlet 2: 0 kPa", font=("Calibri",text+6))
+        self.psen3.place(x=datax+130,y=datay+70)
+        
+        self.power0 = Label(master, text="Current: 0 mA", font=("Calibri",text+6))
+        self.power0.place(x=datax-30,y=datay+105)
+        self.power1 = Label(master, text="Voltage: 0 V", font=("Calibri",text+6))
+        self.power1.place(x=datax+100,y=datay+105)
+        self.power2 = Label(master, text="Power: 0 mW", font=("Calibri",text+6))
+        self.power2.place(x=datax+210,y=datay+105)
 
+
+    
+        salty = datay + 160
         self.imageHeading = Label(master, text="Salt Idenification", font=("Calibri",text+8))
-        self.imageHeading.place(x=datax,y=datay+100)
+        self.imageHeading.place(x=datax,y=salty)
         self.saltData = Label(master, text="Total Salt Area: 0 mm2", font=("Calibri",text+6))
-        self.saltData.place(x=datax,y=datay+135)
+        self.saltData.place(x=datax,y=salty+35)
         self.img = Image.open("/home/pi/Carbon-Capture-Test-Bed/test.jpg")
-        #self.imgW, self.imgH = self.img.size
-        #self.imgW = round(int(self.imgW)/4)
-        #self.imgH = round(int(self.imgH)/4)
-        #self.imgSmall = self.img.resize((self.imgW,self.imgH))
-        self.imgSmall = ImageTk.PhotoImage(self.img)
+        self.imgW, self.imgH = self.img.size
+        self.imgW = round(int(self.imgW)/6)
+        self.imgH = round(int(self.imgH)/6)
+        self.imgSmall = self.img.resize((self.imgW,self.imgH))
+        self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
         self.saltImage = Label(master,image=self.imgSmall)
-        self.saltImage.place(x=datax,y=datay+165)
+        self.saltImage.place(x=datax,y=salty+70)
         
 
 
@@ -198,7 +213,7 @@ class controls:
 
     #closes window
     def close(self):
-        global psen_script, image_script, multi
+        global psen_script, image_script, multi, power_script
         if debug:
             print("closing")
         if 'psen_script' in globals():
@@ -206,12 +221,14 @@ class controls:
         if 'image_script' in globals():
             image_script.terminate()   
         if 'multi' in globals(): 
-            multi.terminate()             
+            multi.terminate()
+        if 'power_log' in globals():
+            power_script.terminate()             
         sys.exit(0)
     
     ##Estop Function //Need to add a reset fuctionality to change estop back to false so tests can be restarted
     def stopTest(self): 
-        global estop, psen_script, image_script, multi
+        global estop, psen_script, image_script, multi, power_script
         if not estop:
             estop = True
             if 'psen_script' in globals():
@@ -219,7 +236,9 @@ class controls:
             if 'image_script' in globals():
                 image_script.terminate()   
             if 'multi' in globals():
-                multi.terminate()    
+                multi.terminate()
+            if 'power_log' in globals():
+                power_script.terminate()      
             self.BtnCancel.config(text="Reset", bg='#FF0000', activebackground='#FF0000')
             EntFlow[0].delete(0,'end')
             EntPump[0].delete(0,'end')
@@ -236,9 +255,11 @@ class controls:
 
     #start of test program, validating all varibles
     def validateTest(self):
+        global psen_script, image_script, multi, power_script
+
         if debug:
             print("validating")
-        global psen_script, image_script, multi
+
         try:
             gasFlow = float(EntFlow[0].get())
             liquidFlow = float(EntPump[0].get())
@@ -256,7 +277,11 @@ class controls:
         psen_pipe, mainp_pipe = Pipe()
         psen_script = Process(target= start_psensor, args= (psen_pipe,q,))
         psen_script.start()  
-        #mainp_pipe.send(False)
+
+        #power sensor process
+        power_pipe, mainpower_pipe = Pipe()
+        power_script = Process(target= power_log, args= (power_pipe,q,))
+        power_script.start()  
 
         #Initiallize Image Capture Process
         # image_pipe, maini_pipe = Pipe()
@@ -267,6 +292,7 @@ class controls:
         #Call repeating functions
         self.button_countdown(int(testMin*60))
         self.pressure_sensor(psen_pipe, mainp_pipe)
+        self.power_sensor(power_pipe,mainpower_pipe)
         #self.image_capture(image_pipe, maini_pipe)
 
     def button_countdown(self,i):
@@ -293,12 +319,37 @@ class controls:
             pressureList = [0]*4
             while mainp_pipe.poll():
                 pressureList= mainp_pipe.recv()
-            self.pressure_1 = round(pressureList[0],3)
-            self.pressure_2 = round(pressureList[1],3)
+            print(pressureList)
+            self.pressure_0 = round(pressureList[0],3)
+            self.pressure_1 = round(pressureList[1],3)
+            self.pressure_2 = round(pressureList[2],3)
+            self.pressure_3 = round(pressureList[3],3)
             
-            self.psen1.config(text = "Inlet 1: %fkPa"%self.pressure_1)
+            self.psen0.config(text = "Inlet 1: %fkPa"%self.pressure_0)
+            self.psen1.config(text = "Outlet 1: %fkPa"%self.pressure_1)
             self.psen2.config(text = "Inlet 2: %fkPa"%self.pressure_2)
+            self.psen3.config(text = "Outlet 2: %fkPa"%self.pressure_3)
             pressure_sensor = root.after(1000, lambda: self.pressure_sensor(psen_pipe, mainp_pipe))
+        else:
+            root.after_cancel(self.pressure_sensor)
+
+    def power_sensor(self, power_pipe, mainpower_pipe):
+        global estop
+        if debug:
+            print("Pressure Sensor")
+            print("the main pipe poll comes back: ",mainpower_pipe.poll()) 
+        if not estop:
+            powerList = [0]*3
+            while mainpower_pipe.poll():
+                powerList= mainpower_pipe.recv()
+            self.power_0 = round(powerList[0],3)
+            self.power_1 = round(powerList[1],3)
+            self.power_2 = round(powerList[2],3)
+            
+            self.power0.config(text = "Current: %fkPa"%self.power_0)
+            self.power1.config(text = "Voltage: %fkPa"%self.power_1)
+            self.power2.config(text = "Power: %fkPa"%self.power_2)
+            power_sensor = root.after(1000, lambda: self.pressure_sensor(power_pipe, mainpower_pipe))
         else:
             root.after_cancel(self.pressure_sensor)
 

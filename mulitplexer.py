@@ -2,6 +2,7 @@ import board
 import adafruit_tca9548a
 import adafruit_mprls
 import adafruit_ina260
+import adafruit_mcp4725
 
 
 def muliplexer(q):
@@ -16,6 +17,7 @@ def muliplexer(q):
     mpr_2 = adafruit_mprls.MPRLS(tca[2], psi_min=0, psi_max=25)
     mpr_3 = adafruit_mprls.MPRLS(tca[3], psi_min=0, psi_max=25)
     energy = adafruit_ina260.INA260(tca[4])
+    dac = adafruit_mcp4725.MCP4725(tca[5], address=0x60)
 
 
     while not shutoff:
@@ -32,10 +34,10 @@ def muliplexer(q):
             if i[0] == 2:
                 shutoff = i[1]
                 q.put_nowait((2,shutoff))
-        pressure[0] = round(mpr_0.pressure,3)
-        pressure[1] = round(mpr_1.pressure,3)
-        pressure[2] = round(mpr_2.pressure,3)
-        pressure[3] = round(mpr_3.pressure,3)
+        pressure[0] = mpr_0.pressure
+        pressure[1] = mpr_1.pressure
+        pressure[2] = mpr_2.pressure
+        pressure[3] = mpr_3.pressure
         powerList = [energy.current, energy.voltage, energy.power]
         q.put_nowait((0,pressure))
         q.put_nowait((1,powerList))

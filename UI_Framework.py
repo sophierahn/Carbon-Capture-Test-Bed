@@ -62,8 +62,6 @@ class controls:
         #### Data variables ####
         self.pressure = float(0)
         self.saltArea = float(0)
-       
-        
         # self.canvas.create_line(1,1,1,255, width = 3, fill="#666666")    
 
         #Master Title
@@ -78,11 +76,11 @@ class controls:
         self.TitlFlow.place(x=setX,y=setY+100)
         self.TitlPower = Label(master, text="Power Supply", font=("Calibri",text+8))
         self.TitlPower.place(x=setX,y=setY+200)
-
+        #Countdown Timer
         self.LblTimer = Label(master, text="Remaining Time:", font=("Calibri",text+6))
-        self.LblTimer.place(x=setX+300,y=setY-50)
+        self.LblTimer.place(x=setX+100,y=setY-50)
         self.LblCountdown = Label(master, text="", font=("Calibri",text+6))
-        self.LblCountdown.place(x=setX+460,y=setY-50)
+        self.LblCountdown.place(x=setX+60,y=setY-50)
 
     #### Settings Controls ####
         def only_numbers(char):
@@ -131,26 +129,24 @@ class controls:
         datax = 600
         datay = 80
     #### Data ####
-        self.pressHeading = Label(master, text="Pressure Sensor Data", font=("Calibri",text+8))
-        self.pressHeading.place(x=datax,y=datay)
-        self.psen0 = Label(master, text="Inlet 1: 0 kPa", font=("Calibri",text+6))
+        self.dataHeading = Label(master, text="Live Data", font=("Calibri",text+8))
+        self.dataHeading.place(x=datax+100,y=datay)
+        self.psen0 = Label(master, text="Inlet 1: 0kPa", font=("Calibri",text+6))
         self.psen0.place(x=datax,y=datay+35)
-        self.psen1 = Label(master, text="Outlet 1: 0 kPa", font=("Calibri",text+6))
-        self.psen1.place(x=datax+130,y=datay+35)
-        self.psen2 = Label(master, text="Inlet 2: 0 kPa", font=("Calibri",text+6))
+        self.psen1 = Label(master, text="Outlet 1: 0kPa", font=("Calibri",text+6))
+        self.psen1.place(x=datax+170,y=datay+35)
+        self.psen2 = Label(master, text="Inlet 2: 0kPa", font=("Calibri",text+6))
         self.psen2.place(x=datax,y=datay+70)
-        self.psen3 = Label(master, text="Outlet 2: 0 kPa", font=("Calibri",text+6))
-        self.psen3.place(x=datax+130,y=datay+70)
+        self.psen3 = Label(master, text="Outlet 2: 0kPa", font=("Calibri",text+6))
+        self.psen3.place(x=datax+170,y=datay+70)
         
         self.power0 = Label(master, text="Current: 0 mA", font=("Calibri",text+6))
-        self.power0.place(x=datax-30,y=datay+105)
+        self.power0.place(x=datax-10,y=datay+105)
         self.power1 = Label(master, text="Voltage: 0 V", font=("Calibri",text+6))
-        self.power1.place(x=datax+100,y=datay+105)
+        self.power1.place(x=datax+110,y=datay+105)
         self.power2 = Label(master, text="Power: 0 mW", font=("Calibri",text+6))
-        self.power2.place(x=datax+210,y=datay+105)
+        self.power2.place(x=datax+220,y=datay+105)
 
-
-    
         salty = datay + 160
         self.imageHeading = Label(master, text="Salt Idenification", font=("Calibri",text+8))
         self.imageHeading.place(x=datax,y=salty)
@@ -158,14 +154,12 @@ class controls:
         self.saltData.place(x=datax,y=salty+35)
         self.img = Image.open("/home/pi/Carbon-Capture-Test-Bed/test.jpg")
         self.imgW, self.imgH = self.img.size
-        self.imgW = round(int(self.imgW)/6)
-        self.imgH = round(int(self.imgH)/6)
+        self.imgW = round(int(self.imgW)/10)
+        self.imgH = round(int(self.imgH)/10)
         self.imgSmall = self.img.resize((self.imgW,self.imgH))
         self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
         self.saltImage = Label(master,image=self.imgSmall)
         self.saltImage.place(x=datax,y=salty+70)
-        
-
 
     #### Buttons ####
         btnX = setX+50
@@ -179,13 +173,10 @@ class controls:
         self.BtnDefault = Button(master, text="Save Test Default", command=lambda: self.saveTest())
         self.BtnDefault.place(x=20,y=20)
         
-
         self.BtnClose = Button(master, text="Close", command=lambda: self.close())
         self.BtnClose.place(x=10,y=580)
 
-        
 
-        
     #Change Powersupply Label
     def lblChange(self):
         global radioVar
@@ -211,34 +202,33 @@ class controls:
         except:
             func.Missatge("Warning","Numerical Entry Invalid")
 
-    #closes window
-    def close(self):
+    #Kill Processes
+    def killProcesses(self):
         global psen_script, image_script, multi, power_script
         if debug:
-            print("closing")
+            print("Killing")
         if 'psen_script' in globals():
             psen_script.terminate()
         if 'image_script' in globals():
             image_script.terminate()   
         if 'multi' in globals(): 
             multi.terminate()
-        if 'power_log' in globals():
-            power_script.terminate()             
+        if 'power_script' in globals():
+            power_script.terminate()     
+
+    #closes window
+    def close(self):
+        if debug:
+            print("closing")      
+        self.killProcesses()
         sys.exit(0)
     
     ##Estop Function //Need to add a reset fuctionality to change estop back to false so tests can be restarted
     def stopTest(self): 
-        global estop, psen_script, image_script, multi, power_script
+        global estop
         if not estop:
-            estop = True
-            if 'psen_script' in globals():
-                psen_script.terminate()
-            if 'image_script' in globals():
-                image_script.terminate()   
-            if 'multi' in globals():
-                multi.terminate()
-            if 'power_log' in globals():
-                power_script.terminate()      
+            self.killProcesses()
+            estop = True   
             self.BtnCancel.config(text="Reset", bg='#FF0000', activebackground='#FF0000')
             EntFlow[0].delete(0,'end')
             EntPump[0].delete(0,'end')
@@ -259,7 +249,6 @@ class controls:
 
         if debug:
             print("validating")
-
         try:
             gasFlow = float(EntFlow[0].get())
             liquidFlow = float(EntPump[0].get())
@@ -319,16 +308,16 @@ class controls:
             pressureList = [0]*4
             while mainp_pipe.poll():
                 pressureList= mainp_pipe.recv()
-            print(pressureList)
+            #print(pressureList)
             self.pressure_0 = round(pressureList[0],3)
             self.pressure_1 = round(pressureList[1],3)
             self.pressure_2 = round(pressureList[2],3)
             self.pressure_3 = round(pressureList[3],3)
             
-            self.psen0.config(text = "Inlet 1: %fkPa"%self.pressure_0)
-            self.psen1.config(text = "Outlet 1: %fkPa"%self.pressure_1)
-            self.psen2.config(text = "Inlet 2: %fkPa"%self.pressure_2)
-            self.psen3.config(text = "Outlet 2: %fkPa"%self.pressure_3)
+            self.psen0.config(text = "Inlet 1: "+str(self.pressure_0)+"kPa")
+            self.psen1.config(text = "Outlet 1: "+str(self.pressure_1)+"kPa")
+            self.psen2.config(text = "Inlet 2: "+str(self.pressure_2)+"kPa")
+            self.psen3.config(text = "Outlet 2: "+str(self.pressure_3)+"kPa")
             pressure_sensor = root.after(1000, lambda: self.pressure_sensor(psen_pipe, mainp_pipe))
         else:
             root.after_cancel(self.pressure_sensor)
@@ -346,9 +335,9 @@ class controls:
             self.power_1 = round(powerList[1],3)
             self.power_2 = round(powerList[2],3)
             
-            self.power0.config(text = "Current: %fkPa"%self.power_0)
-            self.power1.config(text = "Voltage: %fkPa"%self.power_1)
-            self.power2.config(text = "Power: %fkPa"%self.power_2)
+            self.power0.config(text = "Current: "+str(self.power_0)+" mA")
+            self.power1.config(text = "Voltage: "+str(self.power_1)+" V")
+            self.power2.config(text = "Power: "+str(self.power_2)+" mW")
             power_sensor = root.after(1000, lambda: self.pressure_sensor(power_pipe, mainpower_pipe))
         else:
             root.after_cancel(self.pressure_sensor)

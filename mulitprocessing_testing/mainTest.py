@@ -6,10 +6,10 @@ from mulitplexer_test import muliplexer
 from pressure_test import pressureStore
 
 
+
 powerLevel = [10,20,30,40,50,60,70,80,90,100,110,120,130,140,150]
 index = 0
 count = 10
-
 #Multiplexer
 q = Queue()
 multi = Process(target= muliplexer, args= (q,))

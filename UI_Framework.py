@@ -19,7 +19,10 @@ from datetime import datetime
 from datetime import timedelta
 from multiprocessing import Process, Pipe, Queue
 import func
+#import subprocess
 
+
+#I'm taking this to differentiate between B testing on the Pi vs her mac
 mac = True
 
 if not mac:
@@ -27,6 +30,16 @@ if not mac:
     from detect_bright_spots import start_imageCapture
     from mulitplexer import muliplexer
     from power_sensor import power_log
+    
+    
+    #If running on pi, this is to mount CSV flashdrive, giving us a folder to send data to
+    #sdc1 is a potential flashdrive name, may not be true for the pi
+    #Check and adjust using lsblk on the command line, it should be the same name every time
+    #I'd love to make this more dynamic than a hardcoded file name but idk how to do that rn
+    #The name of the device should be sdXY where X is any letter and Y any digit 
+    #This doesn't need to be done in a specific process bc it's interacting with the OS
+    #subprocess.run(["udisksctl",  "mount",  "-b",  "/dev/sdc1"]) 
+    
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 

@@ -3,8 +3,8 @@ import adafruit_tca9548a
 import adafruit_mprls
 import adafruit_ina260
 import adafruit_mcp4725
-import csv
-from datetime import datetime
+#import csv
+#from datetime import datetime
 
 
 def muliplexer(q):
@@ -22,14 +22,14 @@ def muliplexer(q):
     dac = adafruit_mcp4725.MCP4725(tca[5], address=0x60)
 
     #To be used with file indexing
-    now = datetime.now()
-    current= now.strftime("%m/%d/%Y, %H:%M:%S")
+    #now = datetime.now()
+    #current= now.strftime("%m/%d/%Y, %H:%M:%S")
 
     #creating pressure sensor data csv with current date and time
-    pfilename = "Pressure_sensor_data " + current
-    pfile = open('%s.csv' %pfilename, 'w')
-    pwriter = csv.writer(pfile)
-    pwriter.writerow(' ', '0' , '1', '2', '3', 'current', 'voltage', 'power')
+    #pfilename = "path/to/folder/on/usb/flashdrive" +"Pressure_sensor_data " + current
+    #pfile = open('%s.csv' %pfilename, 'w')
+    #pwriter = csv.writer(pfile)
+    #pwriter.writerow(' ', '0' , '1', '2', '3', 'current', 'voltage', 'power')
 
 
     while not shutoff:
@@ -55,7 +55,7 @@ def muliplexer(q):
         powerList = [energy.current, energy.voltage, energy.power]
 
         #writing data to csvs
-        pwriter.writerow(pressure, powerList)
+        #pwriter.writerow(pressure, powerList)
 
         q.put_nowait((0,pressure))
         q.put_nowait((1,powerList))
@@ -66,7 +66,7 @@ def muliplexer(q):
     #print("Power: ", powerReceived)
 
     #closing pressure sensor file
-    pfile.close()
+    #pfile.close()
 
 
     q.close()

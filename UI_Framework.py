@@ -19,10 +19,27 @@ from datetime import datetime
 from datetime import timedelta
 from multiprocessing import Process, Pipe, Queue
 import func
-from pressure_sensor import start_psensor
-from detect_bright_spots import start_imageCapture
-from mulitplexer import muliplexer
-from power_sensor import power_log
+#import subprocess
+
+
+#I'm taking this to differentiate between B testing on the Pi vs her mac
+mac = True
+
+if not mac:
+    from pressure_sensor import start_psensor
+    from detect_bright_spots import start_imageCapture
+    from mulitplexer import muliplexer
+    from power_sensor import power_log
+    
+    
+    #If running on pi, this is to mount CSV flashdrive, giving us a folder to send data to
+    #sdc1 is a potential flashdrive name, may not be true for the pi
+    #Check and adjust using lsblk on the command line, it should be the same name every time
+    #I'd love to make this more dynamic than a hardcoded file name but idk how to do that rn
+    #The name of the device should be sdXY where X is any letter and Y any digit 
+    #This doesn't need to be done in a specific process bc it's interacting with the OS
+    #subprocess.run(["udisksctl",  "mount",  "-b",  "/dev/sdc1"]) 
+    
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -280,7 +297,7 @@ class controls:
 
         #Call repeating functions
         self.button_countdown(int(testMin*60))
-        self.pressure_sensor(psen_pipe, mainp_pipe)
+        self.pressure_sensor(psen_pipe, mainp_pipe,int(testMin*60))
         self.power_sensor(power_pipe,mainpower_pipe)
         #self.image_capture(image_pipe, maini_pipe)
 
@@ -299,12 +316,13 @@ class controls:
             self.LblCountdown.config(text = "Test Ended")
             self.stopTest()
 
-    def pressure_sensor(self, psen_pipe, mainp_pipe):
+    def pressure_sensor(self, psen_pipe, mainp_pipe, testSec):
         global estop
         if debug:
             print("Pressure Sensor")
             print("the main pipe poll comes back: ",mainp_pipe.poll()) 
         if not estop:
+            pressureArray =[]
             pressureList = [0]*4
             while mainp_pipe.poll():
                 pressureList= mainp_pipe.recv()
@@ -313,6 +331,23 @@ class controls:
             self.pressure_1 = round(pressureList[1],3)
             self.pressure_2 = round(pressureList[2],3)
             self.pressure_3 = round(pressureList[3],3)
+
+            plt.ion()
+            plt.clf()
+            index = range(0,testSec)
+            pressureArray.append(self.pressure_0)
+            l = len(pressureArray)
+            plt.plot(index[0:l],pressureArray)
+            if index[-1]>10:
+                pressureArray.pop(0)
+                index.pop(0)
+                #print(x[-12:-1])
+                #print(index[-12:-1])
+                plt.xlim([index[-10], index[-1]])
+            else:
+                plt.xlim([0, 10])
+            plt.ylim([0, 100])
+            plt.show
             
             self.psen0.config(text = "Inlet 1: "+str(self.pressure_0)+"kPa")
             self.psen1.config(text = "Outlet 1: "+str(self.pressure_1)+"kPa")
@@ -335,6 +370,7 @@ class controls:
             self.power_1 = round(powerList[1],3)
             self.power_2 = round(powerList[2],3)
             
+           
             self.power0.config(text = "Current: "+str(self.power_0)+" mA")
             self.power1.config(text = "Voltage: "+str(self.power_1)+" V")
             self.power2.config(text = "Power: "+str(self.power_2)+" mW")

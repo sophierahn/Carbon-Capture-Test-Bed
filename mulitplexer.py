@@ -3,8 +3,9 @@ import adafruit_tca9548a
 import adafruit_mprls
 import adafruit_ina260
 import adafruit_mcp4725
-#import csv
-#from datetime import datetime
+import csv
+from datetime import datetime
+import subprocess
 
 
 def muliplexer(q):
@@ -12,6 +13,7 @@ def muliplexer(q):
     powerList = [0]*3
     pressure = [0]*4
     shutoff = False
+    data = True
     i2c = board.I2C()
     tca = adafruit_tca9548a.TCA9548A(i2c)
     mpr_0 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25)
@@ -21,23 +23,20 @@ def muliplexer(q):
     energy = adafruit_ina260.INA260(tca[4])
     dac = adafruit_mcp4725.MCP4725(tca[5], address=0x60)
 
-    #To be used with file indexing
-    #now = datetime.now()
-    #current= now.strftime("%m/%d/%Y, %H:%M:%S")
+    if data:
+        #To be used with file indexing
+        now = datetime.now()
+        current= now.strftime("%m_%d_%Y_%H_%M_%S")
+        pfilename = "./data/" +"Pressure_sensor_data_" + current +".csv"
 
-    #creating pressure sensor data csv with current date and time
-<<<<<<< HEAD
-    # pfilename = "Pressure_sensor_data " + current
-    # pfile = open('%s.csv' %pfilename, 'w')
-    # pwriter = csv.writer(pfile)
-    # pwriter.writerow(' ', '0' , '1', '2', '3', 'current', 'voltage', 'power')
-=======
-    #pfilename = "path/to/folder/on/usb/flashdrive" +"Pressure_sensor_data " + current
-    #pfile = open('%s.csv' %pfilename, 'w')
-    #pwriter = csv.writer(pfile)
-    #pwriter.writerow(' ', '0' , '1', '2', '3', 'current', 'voltage', 'power')
->>>>>>> e11c6b6305eeb02ead1bd6d88d566776b66f5c9a
+        #args = ["echo ","test ",">>",pfilename]
+        #subprocess.run(["echo ","test ",">>",pfilename]) 
 
+        #creating pressure sensor data csv with current date and time
+    
+        pfile = open(pfilename, "w")
+        pwriter = csv.writer(pfile)
+        pwriter.writerow(['0' , '1', '2', '3', 'current', 'voltage', 'power'])
 
     while not shutoff:
         while not q.empty():
@@ -61,8 +60,10 @@ def muliplexer(q):
         pressure[3] = mpr_3.pressure
         powerList = [energy.current, energy.voltage, energy.power]
 
-        #writing data to csvs
-        #pwriter.writerow(pressure, powerList)
+
+        if data:
+            #riting data to csvs
+            pwriter.writerow(pressure)
 
         q.put_nowait((0,pressure))
         q.put_nowait((1,powerList))
@@ -72,8 +73,9 @@ def muliplexer(q):
     print("Mulit Closed")
     #print("Power: ", powerReceived)
 
-    #closing pressure sensor file
-    #pfile.close()
+    if data:
+        #closing pressure sensor file
+        pfile.close()
 
 
     q.close()

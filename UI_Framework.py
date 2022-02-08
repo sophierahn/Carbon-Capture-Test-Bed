@@ -23,7 +23,7 @@ import func
 
 
 #I'm taking this to differentiate between B testing on the Pi vs her mac
-mac = True
+mac = False
 
 if not mac:
     from pressure_sensor import start_psensor
@@ -332,28 +332,28 @@ class controls:
             self.pressure_2 = round(pressureList[2],3)
             self.pressure_3 = round(pressureList[3],3)
 
-            plt.ion()
-            plt.clf()
-            index = range(0,testSec)
-            pressureArray.append(self.pressure_0)
-            l = len(pressureArray)
-            plt.plot(index[0:l],pressureArray)
-            if index[-1]>10:
-                pressureArray.pop(0)
-                index.pop(0)
-                #print(x[-12:-1])
-                #print(index[-12:-1])
-                plt.xlim([index[-10], index[-1]])
-            else:
-                plt.xlim([0, 10])
-            plt.ylim([0, 100])
-            plt.show
+            # plt.ion()
+            # plt.clf()
+            # index = range(0,testSec)
+            # pressureArray.append(self.pressure_0)
+            # l = len(pressureArray)
+            # plt.plot(index[0:l],pressureArray)
+            # if index[-1]>10:
+            #     pressureArray.pop(0)
+            #     index.pop(0)
+            #     #print(x[-12:-1])
+            #     #print(index[-12:-1])
+            #     plt.xlim([index[-10], index[-1]])
+            # else:
+            #     plt.xlim([0, 10])
+            # plt.ylim([0, 100])
+            # plt.show
             
             self.psen0.config(text = "Inlet 1: "+str(self.pressure_0)+"kPa")
             self.psen1.config(text = "Outlet 1: "+str(self.pressure_1)+"kPa")
             self.psen2.config(text = "Inlet 2: "+str(self.pressure_2)+"kPa")
             self.psen3.config(text = "Outlet 2: "+str(self.pressure_3)+"kPa")
-            pressure_sensor = root.after(1000, lambda: self.pressure_sensor(psen_pipe, mainp_pipe))
+            pressure_sensor = root.after(1000, lambda: self.pressure_sensor(psen_pipe, mainp_pipe,testSec))
         else:
             root.after_cancel(self.pressure_sensor)
 
@@ -374,7 +374,7 @@ class controls:
             self.power0.config(text = "Current: "+str(self.power_0)+" mA")
             self.power1.config(text = "Voltage: "+str(self.power_1)+" V")
             self.power2.config(text = "Power: "+str(self.power_2)+" mW")
-            power_sensor = root.after(1000, lambda: self.pressure_sensor(power_pipe, mainpower_pipe))
+            power_sensor = root.after(1000, lambda: self.power_sensor(power_pipe, mainpower_pipe))
         else:
             root.after_cancel(self.pressure_sensor)
 

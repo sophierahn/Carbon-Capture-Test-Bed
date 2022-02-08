@@ -26,10 +26,10 @@ def muliplexer(q):
     current= now.strftime("%m/%d/%Y, %H:%M:%S")
 
     #creating pressure sensor data csv with current date and time
-    pfilename = "Pressure_sensor_data " + current
-    pfile = open('%s.csv' %pfilename, 'w')
-    pwriter = csv.writer(pfile)
-    pwriter.writerow(' ', '0' , '1', '2', '3', 'current', 'voltage', 'power')
+    # pfilename = "Pressure_sensor_data " + current
+    # pfile = open('%s.csv' %pfilename, 'w')
+    # pwriter = csv.writer(pfile)
+    # pwriter.writerow(' ', '0' , '1', '2', '3', 'current', 'voltage', 'power')
 
 
     while not shutoff:
@@ -55,7 +55,7 @@ def muliplexer(q):
         powerList = [energy.current, energy.voltage, energy.power]
 
         #writing data to csvs
-        pwriter.writerow(pressure, powerList)
+        #pwriter.writerow(pressure, powerList)
 
         q.put_nowait((0,pressure))
         q.put_nowait((1,powerList))
@@ -66,7 +66,7 @@ def muliplexer(q):
     #print("Power: ", powerReceived)
 
     #closing pressure sensor file
-    pfile.close()
+    #pfile.close()
 
 
     q.close()

@@ -21,7 +21,7 @@ dac = adafruit_mcp4725.MCP4725(tca[5], address=0x60)
 
 
 
-count = 0
+count = 10
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(17,GPIO.OUT)
@@ -33,9 +33,9 @@ while count <= 10:
 #     pressure[2] = round(mpr_2.pressure,3)
 #     pressure[3] = round(mpr_3.pressure,3)
 #     print (pressure)
-    r = 1
-    setValue = 1748
-    aim = 1.4
+    #r = 1
+    #setValue = 1748
+    #aim = 1.4
 
 #while r > 1.01 or r < 0.99:
     #dac.raw_value = 3877
@@ -43,15 +43,15 @@ while count <= 10:
     #elec = [energy.current, energy.voltage, energy.power]
     #print(elec[1])
     #dac.normalized_value = 0.946826238
-    GPIO.output(17, GPIO.HIGH)
-    x = input()
+    #GPIO.output(17, GPIO.HIGH)
+    #x = input()
     #r = elec[1]/aim
     #print (r)
     #time.sleep(4)
     #elec = [energy.current, energy.voltage, energy.power]
     #print(elec[1])
     GPIO.output(17, GPIO.LOW)
-    x = input()
+    #x = input()
     # time.sleep(1)
     count += 1
 

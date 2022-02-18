@@ -44,8 +44,10 @@ def muliplexer(q):
             if i[0] == 1:
                 q.put_nowait((1,i[1]))
             if i[0] == 2:
+                powerLevel = i[1]  
+            if i[0] == 3:
                 shutoff = i[1]  
-                q.put_nowait((2,shutoff))
+                q.put_nowait((3,shutoff))
 
         #Writing data to lists
         pressure[0] = mpr_0.pressure  

@@ -59,6 +59,7 @@ class controls:
 
     def __init__(self, master):
         self.master = master
+        #Define Window
         master.title("Carbon Capture Control")
         master.geometry('1000x630') #Set Size of GUI window (WxH)
         master.lift()
@@ -88,8 +89,6 @@ class controls:
 
 
     #### Settings Titles ####
-        #self.TitlPump = Label(master, text="Pump Controls", font=("Calibri",text+8))
-        #self.TitlPump.place(x=setX,y=setY)
         self.TitlFlow = Label(master, text="Flow Controller", font=("Calibri",text+8))
         self.TitlFlow.place(x=setX,y=setY+100)
         self.TitlPower = Label(master, text="Power Supply", font=("Calibri",text+8))
@@ -223,15 +222,17 @@ class controls:
 
     #Kill Processes
     def killProcesses(self):
-        global psen_script, image_script, multi, power_script
+        global psen_script, image_script, multi, power_script, q
         if debug:
             print("Killing")
+        if 'multi' in globals():
+            q.put_nowait((3,True))
+            time.sleep(0.05)
+            multi.terminate()
         if 'psen_script' in globals():
             psen_script.terminate()
         if 'image_script' in globals():
             image_script.terminate()
-        if 'multi' in globals():
-            multi.terminate()
         if 'power_script' in globals():
             power_script.terminate()
 
@@ -264,13 +265,12 @@ class controls:
 
     #start of test program, validating all varibles
     def validateTest(self):
-        global psen_script, image_script, multi, power_script
+        global psen_script, image_script, multi, power_script, q
 
         if debug:
             print("validating")
         try:
             gasFlow = float(EntFlow[0].get())
-            #liquidFlow = float(EntPump[0].get())
             testMin = float(EntTime[0].get())
             powerVC = float(EntPower[0].get())
         except:

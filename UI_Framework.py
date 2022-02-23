@@ -23,7 +23,8 @@ import func
 
 #Using *** to indicate Changes should be made in future
 
-#I'm taking this to differentiate between B testing on the Pi vs her mac
+
+#set true to view UI not on RPI
 mac = False
 if not mac:
     from pressure_sensor import start_psensor
@@ -57,7 +58,7 @@ testRunning = False
 
 class controls:
     global radioVar, var, estop, countdown, testDefault, graph, setup
-    testDefault = [0,0,0,3]
+    testDefault = func.loadTestPresets()
 
     def __init__(self, master):
         self.master = master
@@ -223,7 +224,7 @@ class controls:
             testDefault[3] = float(EntTime[0].get())
             print(testDefault)
         except:
-            func.Missatge("Warning","Numerical Entry Invalid")
+            func.message("Warning","Numerical Entry Invalid")
 
     #Kill Processes
     def killProcesses(self):
@@ -284,7 +285,7 @@ class controls:
         try:
             gasFlow = float(EntFlow[0].get()) #add similiar proportional control calcuations to powerValue
         except:
-           func.Missatge("Warning","Numerical Entry Invalid")
+           func.message("Warning","Numerical Entry Invalid")
         
         #Initialization of Multiplexer Process
         q = Queue()
@@ -324,7 +325,7 @@ class controls:
             elaspedTime = time.time()-startTime
             if elaspedTime > 120:
                 self.stopTest()
-                func.Missatge("Error","Test not initated after 2min of PreTest. Test cancelled")
+                func.message("Error","Test not initated after 2min of PreTest. Test cancelled")
                 testCancelled = True
             testCheck = root.after(1000, lambda: self.preTestCheck(startTime))
         else:
@@ -345,7 +346,7 @@ class controls:
                 powerNormValue = powerValue*5/20/3.28  #Current 0-20A Proportial 5v, percentage value for DAC 0-3.28v
             powerTuple = (radioVar,powerNormValue) #combining volt or current selection and Desired Value
         except:
-           func.Missatge("Warning","Numerical Entry Invalid")
+           func.message("Warning","Numerical Entry Invalid")
 
         #send inital set values
         # q.put_nowait((2,powerTuple))

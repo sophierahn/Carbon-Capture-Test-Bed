@@ -6,7 +6,7 @@ import sys
 import glob
 import os
 
-def Missatge(cap,msg):
+def message(cap,msg):
     lmsg = len(msg)/50+1
     tkmsg = tk.Toplevel()
     tkmsg.wm_title("%s"%str(cap))
@@ -38,4 +38,15 @@ def latestFile():
         list_of_files = glob.glob('/home/pi/Carbon-Capture-Test-Bed/Edited_Images/*.jpg')
         #print(type(list_of_files), len(list_of_files))
         return max(list_of_files, key=os.path.getctime)
+
+def loadTestPresets():
+    with open('TestPreset.txt', 'r') as file:
+        lines = file.readlines()
+        testDefault = []
+        for line in lines:
+            if line != 'Break':
+                testDefault.append(line.strip())
+    for i in testDefault:
+        testDefault[i] = float(testDefault[i][testDefault[i].find(':')+2:])
+    return testDefault
 

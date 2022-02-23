@@ -12,8 +12,10 @@ def muliplexer(q):
     queueDump = []
     powerList = [0]*3
     pressureList = [0]*4
+    powerLevel = (0,0)
     shutoff = False
-    data = True
+    data = False
+    firstTime = True #used to start data logging once power supply receives a value
     i2c = board.I2C()
     tca = adafruit_tca9548a.TCA9548A(i2c)
     mpr_0 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25)
@@ -50,6 +52,9 @@ def muliplexer(q):
                 q.put_nowait((1,i[1])) #power sensor Data
             if i[0] == 2:
                 powerLevel = i[1]  #power supply DAC
+                if firstTime: #start data logging when the actual test starts
+                    data = True
+                    firstTime = False
             if i[0] == 3:
                 shutoff = i[1]  #shutoff command
                 q.put_nowait((3,shutoff))
@@ -61,12 +66,13 @@ def muliplexer(q):
         #Writing data to the Queue
         q.put_nowait((0,pressureList))
         q.put_nowait((1,powerList))
-        queueDump = [] #reseting the local queue list
+        
 
         #Writing data to DACs
         ### *** add switching system to select current vs volt control
         #dac_1.normalized_value = powerLevel[1]
 
+        queueDump = [] #reseting the local queue list
         if data:
             pwriter.writerow(pressureList) #writing data to csv
 

@@ -21,15 +21,16 @@ from multiprocessing import Process, Pipe, Queue
 import func
 #import subprocess
 
+#Using *** to indicate Changes should be made in future
 
 #I'm taking this to differentiate between B testing on the Pi vs her mac
 mac = False
-
 if not mac:
     from pressure_sensor import start_psensor
     from detect_bright_spots import start_imageCapture
     from mulitplexer import muliplexer
     from power_sensor import power_log
+    import RPi.GPIO as GPIO
 
 
     #If running on pi, this is to mount CSV flashdrive, giving us a folder to send data to
@@ -52,9 +53,10 @@ estop = False
 graph = False
 countdown = None
 debug = False
+testRunning = False
 
 class controls:
-    global radioVar, var, estop, countdown, testDefault, graph
+    global radioVar, var, estop, countdown, testDefault, graph, setup
     testDefault = [0,0,0,3]
 
     def __init__(self, master):
@@ -166,28 +168,32 @@ class controls:
         self.power2.place(x=datax+250,y=datay+105)
 
         salty = datay + 160
-        self.imageHeading = Label(master, text="Salt Idenification", font=("Calibri",text+8))
-        self.imageHeading.place(x=datax,y=salty)
-        self.saltData = Label(master, text="Total Salt Area: 0 mm2", font=("Calibri",text+6))
-        self.saltData.place(x=datax,y=salty+35)
-        self.img = Image.open("/home/pi/Carbon-Capture-Test-Bed/test.jpg")
-        self.imgW, self.imgH = self.img.size
-        self.imgW = round(int(self.imgW)/10)
-        self.imgH = round(int(self.imgH)/10)
-        self.imgSmall = self.img.resize((self.imgW,self.imgH))
-        self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
-        self.saltImage = Label(master,image=self.imgSmall)
-        self.saltImage.place(x=datax,y=salty+70)
+        if not mac:
+            self.imageHeading = Label(master, text="Salt Idenification", font=("Calibri",text+8))
+            self.imageHeading.place(x=datax,y=salty)
+            self.saltData = Label(master, text="Total Salt Area: 0 mm2", font=("Calibri",text+6))
+            self.saltData.place(x=datax,y=salty+35)
+            self.img = Image.open("/home/pi/Carbon-Capture-Test-Bed/test.jpg")
+            self.imgW, self.imgH = self.img.size
+            self.imgW = round(int(self.imgW)/10)
+            self.imgH = round(int(self.imgH)/10)
+            self.imgSmall = self.img.resize((self.imgW,self.imgH))
+            self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
+            self.saltImage = Label(master,image=self.imgSmall)
+            self.saltImage.place(x=datax,y=salty+70)
 
     #### Buttons ####
         btnX = setX+50
-        btnY = setY+400
-        self.BtnStart = Button(master, text="Start Test", command=lambda: self.validateTest(), width=10, height=2, bg='#DDDDDD', activebackground='#32CD32', wraplength=100)
-        self.BtnStart.place(x=btnX,y=btnY)
-        self.BtnCancel = Button(master, text="Cancel Test", command=lambda: self.stopTest(), width=10, height=2, bg='#DDDDDD', activebackground='#32CD32', wraplength=100)
+        btnY = setY+40
+        print(btnY, setY)
+        self.BtnPreStart = Button(master, text="Start PreTest", command=lambda: self.preTest(), width=10, height=2, bg='#f7a840', activebackground='#DDDDDD', wraplength=100)
+        self.BtnPreStart.place(x=btnX-55,y=btnY)
+        self.BtnStart = Button(master, text="Start Test", command=lambda: self.validateTest(), width=10, height=2, bg='#ffffff', activebackground='#ffffff', wraplength=100, state= DISABLED)
+        self.BtnStart.place(x=btnX+55,y=btnY)
+        self.BtnCancel = Button(master, text="Cancel Test", command=lambda: self.stopTest(), width=10, height=2, bg='#DDDDDD', activebackground='#ff5959', wraplength=100)
         self.BtnCancel.place(x=btnX,y=btnY+50)
-        self.BtnPurge = Button(master, text="Purge Cell", command=lambda: self.validateTest(), width=10, height=2, bg='#DDDDDD', activebackground='#32CD32', wraplength=100)
-        self.BtnPurge.place(x=btnX+130,y=btnY+20)
+        # self.BtnPurge = Button(master, text="Purge Cell", command=lambda: self.validateTest(), width=10, height=2, bg='#DDDDDD', activebackground='#32CD32', wraplength=100)
+        # self.BtnPurge.place(x=btnX+130,y=btnY+20)
         self.BtnDefault = Button(master, text="Save Test Default", command=lambda: self.saveTest())
         self.BtnDefault.place(x=20,y=20)
 
@@ -212,7 +218,6 @@ class controls:
     def saveTest(self):
         global testDefault
         try:
-            #testDefault[0] = float(EntPump[0].get())
             testDefault[1] = float(EntFlow[0].get())
             testDefault[2] = float(EntPower[0].get())
             testDefault[3] = float(EntTime[0].get())
@@ -235,7 +240,13 @@ class controls:
             image_script.terminate()
         if 'power_script' in globals():
             power_script.terminate()
-
+        if not mac:
+            GPIO.setmode(GPIO.BCM)
+            GPIO.setup(17,GPIO.OUT)
+            GPIO.setup(21,GPIO.OUT)
+            GPIO.output(17, GPIO.LOW)
+            GPIO.output(21, GPIO.LOW)
+        
     #closes window
     def close(self):
         if debug:
@@ -245,11 +256,14 @@ class controls:
 
     ##Estop Function //Need to add a reset fuctionality to change estop back to false so tests can be restarted
     def stopTest(self):
-        global estop
+        global estop, testRunning
         if not estop:
             self.killProcesses()
             estop = True
-            self.BtnCancel.config(text="Reset", bg='#FF0000', activebackground='#FF0000')
+            testRunning = False
+            self.BtnCancel.config(text="Reset Test", bg='#FF0000', activebackground='#FF0000')
+            self.BtnPreStart.config(status = DISABLED)
+            self.BtnStart.config(status = DISABLED)
             EntFlow[0].delete(0,'end')
             #EntPump[0].delete(0,'end')
             EntPower[0].delete(0,'end')
@@ -262,31 +276,86 @@ class controls:
             estop = False
             self.BtnCancel.config(text="Cancel Test", bg='#DDDDDD', activebackground='#32CD32')
             self.LblCountdown.config(text = "")
+            self.BtnPreStart.config(status = NORMAL)
 
-    #start of test program, validating all varibles
-    def validateTest(self):
-        global psen_script, image_script, multi, power_script, q
-
-        if debug:
-            print("validating")
+    #Start Pre Test procedure: start pump and gas flowing in cell, call 30 sec wait function
+    def preTest(self):
+        global multi, q, setup
         try:
-            gasFlow = float(EntFlow[0].get())
-            testMin = float(EntTime[0].get())
-            powerVC = float(EntPower[0].get())
+            gasFlow = float(EntFlow[0].get()) #add similiar proportional control calcuations to powerValue
         except:
            func.Missatge("Warning","Numerical Entry Invalid")
-
-        #Multiplexer
+        
+        #Initialization of Multiplexer Process
         q = Queue()
         multi = Process(target= muliplexer, args= (q,))
         multi.start()
+        #Setting up GPIO Pins for Relays
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(17,GPIO.OUT)
+        #Start Gas Flow and Pump
+        #q.put_nowait((3,gasFlow)) #send inital gas flow values
+        GPIO.output(17, GPIO.HIGH) #turning on Pump
+        
+        start = time.time()
+        self.preTestCountDown(30) #Start 30sec preTest loop *** make gobal value, not hardcoded
+        self.preTestCheck(start) #Start checking loop, will shutdown system if test start delay is too long
+        # *** unnecessary if Auto Test start is okay, this version requires user input
+
+    def preTestCountDown(self, i):
+        global estop, setup
+        if i > 0 and estop == False:
+            self.BtnPreStart.config(text = str(i))
+            i -= 1
+            testWait = root.after(1000, lambda: self.preTestCountDown(i))
+        elif estop: #cancled by Estop
+            root.after_cancel(testWait)
+            self.BtnPreStart.config(text = "PreTest Cancelled")
+            self.killProcesses()
+        else: #Completed Successfully
+            root.after_cancel(testWait)
+            self.BtnPreStart.config(text = "PreTest Complete", status= DISABLED)
+            self.BtnStart.config(status= NORMAL)
+
+    def preTestCheck(self, startTime):
+        global estop, testRunning
+        testCancelled = False
+        if not testRunning and not estop and not testCancelled:
+            elaspedTime = time.time()-startTime
+            if elaspedTime > 120:
+                self.stopTest()
+                func.Missatge("Error","Test not initated after 2min of PreTest. Test cancelled")
+                testCancelled = True
+            testCheck = root.after(1000, lambda: self.preTestCheck(startTime))
+        else:
+            root.after_cancel(testCheck)
+
+    #Starting actual program, initiating buffers, starting power delivery to Cell
+    def validateTest(self):
+        global psen_script, image_script, power_script, q, radioVar, testRunning
+        testRunning = True
+        if debug:
+            print("validating")
+        try:
+            testMin = float(EntTime[0].get())
+            powerValue = float(EntPower[0].get())
+            if radioVar == 1:                           ### *** Remove hardcoded numbers, add calibration function
+                powerNormValue = powerValue*5/32.2/3.28 #Voltage 0.8-32.2v Proportial 5v, percentage value for DAC 0-3.28v
+            if radioVar == 2:
+                powerNormValue = powerValue*5/20/3.28  #Current 0-20A Proportial 5v, percentage value for DAC 0-3.28v
+            powerTuple = (radioVar,powerNormValue) #combining volt or current selection and Desired Value
+        except:
+           func.Missatge("Warning","Numerical Entry Invalid")
+
+        #send inital set values
+        # q.put_nowait((2,powerTuple))
 
         #Initiallize pressure sensor process
         psen_pipe, mainp_pipe = Pipe()
         psen_script = Process(target= start_psensor, args= (psen_pipe,q,))
         psen_script.start()
 
-        #power sensor process
+        #Initiallize power sensor process
         power_pipe, mainpower_pipe = Pipe()
         power_script = Process(target= power_log, args= (power_pipe,q,))
         power_script.start()
@@ -295,7 +364,11 @@ class controls:
         # image_pipe, maini_pipe = Pipe()
         # image_script = Process(target= start_imageCapture, args= (image_pipe,))
         # image_script.start()
-        # maini_pipe.send(False)
+        # maini_pipe.send(False)s
+        #Turn on LEDs
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(21,GPIO.OUT)
+        GPIO.output(21,GPIO.HIGH)
 
         #Call repeating functions
         self.button_countdown(int(testMin*60))

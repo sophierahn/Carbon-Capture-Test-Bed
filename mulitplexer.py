@@ -22,6 +22,7 @@ def muliplexer(q):
     mpr_3 = adafruit_mprls.MPRLS(tca[3], psi_min=0, psi_max=25)
     energy = adafruit_ina260.INA260(tca[4])
     dac_1 = adafruit_mcp4725.MCP4725(tca[5], address=0x60)
+    #dac_2 = adafruit_mcp4725.MCP4725(tca[6], address=0x60)
 
     if data:
         now = datetime.now()
@@ -63,7 +64,8 @@ def muliplexer(q):
         queueDump = [] #reseting the local queue list
 
         #Writing data to DACs
-        dac_1.normalized_value = powerLevel
+        ### *** add switching system to select current vs volt control
+        #dac_1.normalized_value = powerLevel[1]
 
         if data:
             pwriter.writerow(pressureList) #writing data to csv
@@ -72,6 +74,7 @@ def muliplexer(q):
     
     #Shutoff Command recieved
     print("Mulit Closed")
+    dac_1.normalized_value = 0 #Setting Dacs to Zero at Shutoff Command
     if data:
         pfile.close() #Closing CSV file
     q.close()

@@ -1,1 +1,5 @@
-TestPreset
+Flow Rate (ml/min): 3
+Power Select (1-Voltage, 2-Current): 1
+Power Value (v or A): 4
+Test Durration (min): 3
+Break

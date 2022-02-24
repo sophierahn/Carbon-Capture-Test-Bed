@@ -6,6 +6,7 @@ import adafruit_mcp4725
 import csv
 from datetime import datetime
 import subprocess
+import random
 
 
 def muliplexer(q):
@@ -18,9 +19,9 @@ def muliplexer(q):
     firstTime = True #used to start data logging once power supply receives a value
     i2c = board.I2C()
     tca = adafruit_tca9548a.TCA9548A(i2c)
-    mpr_0 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25)
+    #mpr_0 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25)
     mpr_1 = adafruit_mprls.MPRLS(tca[1], psi_min=0, psi_max=25)
-    mpr_2 = adafruit_mprls.MPRLS(tca[2], psi_min=0, psi_max=25)
+    #mpr_2 = adafruit_mprls.MPRLS(tca[2], psi_min=0, psi_max=25)
     mpr_3 = adafruit_mprls.MPRLS(tca[3], psi_min=0, psi_max=25)
     energy = adafruit_ina260.INA260(tca[4])
     dac_1 = adafruit_mcp4725.MCP4725(tca[5], address=0x60)
@@ -60,7 +61,8 @@ def muliplexer(q):
                 q.put_nowait((3,shutoff))
 
         #Collecting Data and Writing to lists
-        pressureList = [mpr_0.pressure, mpr_1.pressure, mpr_2.pressure, mpr_3.pressure]
+        #pressureList = [mpr_0.pressure, mpr_1.pressure, mpr_2.pressure, mpr_3.pressure]
+        pressureList = [random.randint(900,950), mpr_1.pressure, random.randint(900,950), mpr_3.pressure]
         powerList = [energy.current, energy.voltage, energy.power]
 
         #Writing data to the Queue

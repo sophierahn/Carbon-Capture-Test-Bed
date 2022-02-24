@@ -10,7 +10,8 @@ def message(cap,msg):
     lmsg = len(msg)/50+1
     tkmsg = tk.Toplevel()
     tkmsg.wm_title("%s"%str(cap))
-    tkmsg.geometry('500x%s'% str(50*int(lmsg)+50))
+    height = str(50*int(lmsg)+50)
+    tkmsg.geometry('500x%s+200+200'%height)
     Lmsg = Label(tkmsg,text="%s"%msg,wraplength=450)
     #Lmsg.place(x=25,y=10)
     Lmsg.pack(pady=20)
@@ -46,7 +47,16 @@ def loadTestPresets():
         for line in lines:
             if line != 'Break':
                 testDefault.append(line.strip())
+    count = 0
     for i in testDefault:
-        testDefault[i] = float(testDefault[i][testDefault[i].find(':')+2:])
+        colon = int(i.find(':')+2)
+        testDefault[count] = i[colon:]
+        count += 1
     return testDefault
 
+def saveTestPreset(testDefault):
+    with open('TestPreset.txt', 'w') as file:
+        newString = "Flow Rate (ml/min): %d \nPower Select (1-Voltage, 2-Current): %d \
+             \nPower Value (v or A): %d \nTest Durration (min): %d \nBreak" % (testDefault[0], testDefault[1],testDefault[2], testDefault[3])
+        file.write(str(newString))
+        #print(newString)

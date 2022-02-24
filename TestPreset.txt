@@ -1,5 +1,5 @@
-Flow Rate (ml/min): 3
-Power Select (1-Voltage, 2-Current): 1
-Power Value (v or A): 4
-Test Durration (min): 3
+Flow Rate (ml/min): 0 
+Power Select (1-Voltage, 2-Current): 2              
+Power Value (v or A): 3 
+Test Durration (min): 4 
 Break

@@ -57,7 +57,7 @@ debug = False
 testRunning = False
 
 class controls:
-    global radioVar, var, estop, countdown, testDefault, graph, setup
+    global radioVar, var, estop, countdown, testDefault, graph, testRunning
     testDefault = func.loadTestPresets()
 
     def __init__(self, master):
@@ -122,7 +122,7 @@ class controls:
         EntFlow[0] = Entry(master, width=5, justify=RIGHT, validate="key", validatecommand=(validation, '%S'))
         self.LblFlow = Label(master, text="Flow Rate:", font=("Calibri",text+4))
         EntFlow[0].place(x=entX,y=setY+130)
-        EntFlow[0].insert(0,testDefault[1])#Set Default
+        EntFlow[0].insert(0,testDefault[0])#Set Default
         self.LblFlow.place(x=setX,y=setY+130)
 
         #Power supply controls
@@ -137,7 +137,7 @@ class controls:
         self.radPowerC = Radiobutton(master, text="Current Control", variable=var, value=2, command=lambda: self.lblChange())
         self.radPowerV.place(x=setX,y=setY+230)
         self.radPowerC.place(x=setX,y=setY+250)
-        var.set(1)
+        var.set(testDefault[1])
 
         #Test Duration
         EntTime[0] = Entry(master, width=5, justify=RIGHT, validate="key", validatecommand=(validation, '%S'))
@@ -185,11 +185,11 @@ class controls:
 
     #### Buttons ####
         btnX = setX+50
-        btnY = setY+40
+        btnY = setY+390
         print(btnY, setY)
-        self.BtnPreStart = Button(master, text="Start PreTest", command=lambda: self.preTest(), width=10, height=2, bg='#f7a840', activebackground='#DDDDDD', wraplength=100)
+        self.BtnPreStart = Button(master, text="Start PreTest", command=lambda: self.preTest(), width=10, height=2, bg='#DDDDDD', activebackground='#f7a840', wraplength=100)
         self.BtnPreStart.place(x=btnX-55,y=btnY)
-        self.BtnStart = Button(master, text="Start Test", command=lambda: self.validateTest(), width=10, height=2, bg='#ffffff', activebackground='#ffffff', wraplength=100, state= DISABLED)
+        self.BtnStart = Button(master, text="Start Test", command=lambda: self.validateTest(), width=10, height=2, bg='#DDDDDD', activebackground='#72d466', wraplength=100, state= DISABLED)
         self.BtnStart.place(x=btnX+55,y=btnY)
         self.BtnCancel = Button(master, text="Cancel Test", command=lambda: self.stopTest(), width=10, height=2, bg='#DDDDDD', activebackground='#ff5959', wraplength=100)
         self.BtnCancel.place(x=btnX,y=btnY+50)
@@ -217,9 +217,10 @@ class controls:
 
     #Save Test Default Values
     def saveTest(self):
-        global testDefault
+        global testDefault, radioVar
         try:
-            testDefault[1] = float(EntFlow[0].get())
+            testDefault[0] = float(EntFlow[0].get())
+            testDefault[1] = float(radioVar)
             testDefault[2] = float(EntPower[0].get())
             testDefault[3] = float(EntTime[0].get())
             print(testDefault)
@@ -231,16 +232,18 @@ class controls:
         global psen_script, image_script, multi, power_script, q
         if debug:
             print("Killing")
-        if 'multi' in globals():
+        if 'psen_script' in globals():
             q.put_nowait((3,True))
             time.sleep(0.05)
-            multi.terminate()
-        if 'psen_script' in globals():
             psen_script.terminate()
         if 'image_script' in globals():
             image_script.terminate()
         if 'power_script' in globals():
             power_script.terminate()
+        if 'multi' in globals():
+            q.put_nowait((3,True))
+            time.sleep(0.05)
+            multi.terminate()
         if not mac:
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(17,GPIO.OUT)
@@ -257,125 +260,125 @@ class controls:
 
     ##Estop Function //Need to add a reset fuctionality to change estop back to false so tests can be restarted
     def stopTest(self):
-        global estop, testRunning
+        global estop, testRunning, testDefault
         if not estop:
             self.killProcesses()
             estop = True
             testRunning = False
-            self.BtnCancel.config(text="Reset Test", bg='#FF0000', activebackground='#FF0000')
-            self.BtnPreStart.config(status = DISABLED)
-            self.BtnStart.config(status = DISABLED)
+            self.BtnCancel.config(text="Reset Test", bg='#ff5959', activebackground='#FF0000')
+            self.BtnPreStart.config(state= DISABLED)
+            self.BtnStart.config(state= DISABLED)
             EntFlow[0].delete(0,'end')
-            #EntPump[0].delete(0,'end')
             EntPower[0].delete(0,'end')
             EntTime[0].delete(0,'end')
             EntFlow[0].insert(0,str(testDefault[0]))
-            #EntPump[0].insert(0,testDefault[1])
-            EntPower[0].insert(0,testDefault[2])
-            EntTime[0].insert(0,testDefault[3])
+            EntPower[0].insert(0,str(testDefault[2]))
+            EntTime[0].insert(0,str(testDefault[3]))
         else:
             estop = False
-            self.BtnCancel.config(text="Cancel Test", bg='#DDDDDD', activebackground='#32CD32')
+            self.BtnCancel.config(text="Cancel Test", bg='#DDDDDD', activebackground='#ff5959')
             self.LblCountdown.config(text = "")
-            self.BtnPreStart.config(status = NORMAL)
+            self.BtnPreStart.config(text="Start PreTest", state = NORMAL)
 
     #Start Pre Test procedure: start pump and gas flowing in cell, call 30 sec wait function
     def preTest(self):
-        global multi, q, setup
+        global multi, q
         try:
             gasFlow = float(EntFlow[0].get()) #add similiar proportional control calcuations to powerValue
         except:
            func.message("Warning","Numerical Entry Invalid")
-        
-        #Initialization of Multiplexer Process
-        q = Queue()
-        multi = Process(target= muliplexer, args= (q,))
-        multi.start()
-        #Setting up GPIO Pins for Relays
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(17,GPIO.OUT)
-        #Start Gas Flow and Pump
-        #q.put_nowait((3,gasFlow)) #send inital gas flow values
-        GPIO.output(17, GPIO.HIGH) #turning on Pump
-        
-        start = time.time()
-        self.preTestCountDown(30) #Start 30sec preTest loop *** make gobal value, not hardcoded
-        self.preTestCheck(start) #Start checking loop, will shutdown system if test start delay is too long
-        # *** unnecessary if Auto Test start is okay, this version requires user input
+        else:
+            #Initialization of Multiplexer Process
+            q = Queue()
+            multi = Process(target= muliplexer, args= (q,))
+            multi.start()
+            #Setting up GPIO Pins for Relays
+            GPIO.setmode(GPIO.BCM)
+            GPIO.setup(17,GPIO.OUT)
+            #Start Gas Flow and Pump
+            #q.put_nowait((3,gasFlow)) #send inital gas flow values
+            GPIO.output(17, GPIO.HIGH) #turning on Pump
+            
+            start = time.time()
+            self.preTestCountDown(10) #Start 30sec preTest loop *** make gobal value, not hardcoded
+            self.preTestCheck(start) #Start checking loop, will shutdown system if test start delay is too long
+            # *** unnecessary if Auto Test start is okay, this version requires user input
 
     def preTestCountDown(self, i):
-        global estop, setup
+        global estop
         if i > 0 and estop == False:
             self.BtnPreStart.config(text = str(i))
             i -= 1
-            testWait = root.after(1000, lambda: self.preTestCountDown(i))
+            self.testWait = root.after(1000, lambda: self.preTestCountDown(i))
         elif estop: #cancled by Estop
-            root.after_cancel(testWait)
+            root.after_cancel(self.testWait)
             self.BtnPreStart.config(text = "PreTest Cancelled")
-            self.killProcesses()
         else: #Completed Successfully
-            root.after_cancel(testWait)
-            self.BtnPreStart.config(text = "PreTest Complete", status= DISABLED)
-            self.BtnStart.config(status= NORMAL)
+            root.after_cancel(self.testWait)
+            self.BtnPreStart.config(text = "PreTest Complete", state= DISABLED)
+            self.BtnStart.config(state= NORMAL)
 
     def preTestCheck(self, startTime):
         global estop, testRunning
         testCancelled = False
         if not testRunning and not estop and not testCancelled:
             elaspedTime = time.time()-startTime
-            if elaspedTime > 120:
+            print(elaspedTime)
+            if elaspedTime > 60:
                 self.stopTest()
-                func.message("Error","Test not initated after 2min of PreTest. Test cancelled")
+                func.message("Error","Test not initated after 2 min of PreTest. Test cancelled")
                 testCancelled = True
-            testCheck = root.after(1000, lambda: self.preTestCheck(startTime))
+            self.testCheck = root.after(1000, lambda: self.preTestCheck(startTime))
         else:
-            root.after_cancel(testCheck)
+            root.after_cancel(self.testCheck)
 
     #Starting actual program, initiating buffers, starting power delivery to Cell
     def validateTest(self):
         global psen_script, image_script, power_script, q, radioVar, testRunning
         testRunning = True
+        valid = False
         if debug:
             print("validating")
         try:
             testMin = float(EntTime[0].get())
             powerValue = float(EntPower[0].get())
-            if radioVar == 1:                           ### *** Remove hardcoded numbers, add calibration function
-                powerNormValue = powerValue*5/32.2/3.28 #Voltage 0.8-32.2v Proportial 5v, percentage value for DAC 0-3.28v
+        except:
+           func.message("Warning","Numerical Entry Invalid")
+        else:
+            if radioVar == 1: ### *** Remove hardcoded numbers, add calibration function
+                    powerNormValue = powerValue*5/32.2/3.28 #Voltage 0.8-32.2v Proportial 5v, percentage value for DAC 0-3.28v
             if radioVar == 2:
                 powerNormValue = powerValue*5/20/3.28  #Current 0-20A Proportial 5v, percentage value for DAC 0-3.28v
             powerTuple = (radioVar,powerNormValue) #combining volt or current selection and Desired Value
-        except:
-           func.message("Warning","Numerical Entry Invalid")
 
-        #send inital set values
-        # q.put_nowait((2,powerTuple))
+            #send inital set values
+            # q.put_nowait((2,powerTuple))
 
-        #Initiallize pressure sensor process
-        psen_pipe, mainp_pipe = Pipe()
-        psen_script = Process(target= start_psensor, args= (psen_pipe,q,))
-        psen_script.start()
+            #Initiallize pressure sensor process
+            psen_pipe, mainp_pipe = Pipe()
+            psen_script = Process(target= start_psensor, args= (psen_pipe,q,))
+            psen_script.start()
 
-        #Initiallize power sensor process
-        power_pipe, mainpower_pipe = Pipe()
-        power_script = Process(target= power_log, args= (power_pipe,q,))
-        power_script.start()
+            #Initiallize power sensor process
+            power_pipe, mainpower_pipe = Pipe()
+            power_script = Process(target= power_log, args= (power_pipe,q,))
+            power_script.start()
 
-        #Initiallize Image Capture Process
-        # image_pipe, maini_pipe = Pipe()
-        # image_script = Process(target= start_imageCapture, args= (image_pipe,))
-        # image_script.start()
-        # maini_pipe.send(False)s
-        #Turn on LEDs
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(21,GPIO.OUT)
-        GPIO.output(21,GPIO.HIGH)
+            #Initiallize Image Capture Process
+            # image_pipe, maini_pipe = Pipe()
+            # image_script = Process(target= start_imageCapture, args= (image_pipe,))
+            # image_script.start()
+            # maini_pipe.send(False)s
+            #Turn on LEDs
+            GPIO.setmode(GPIO.BCM)
+            GPIO.setup(21,GPIO.OUT)
+            GPIO.output(21,GPIO.HIGH)
 
-        #Call repeating functions
-        self.button_countdown(int(testMin*60))
-        self.pressure_sensor(psen_pipe, mainp_pipe,int(testMin*60))
-        self.power_sensor(power_pipe,mainpower_pipe)
-        #self.image_capture(image_pipe, maini_pipe)
+            #Call repeating functions
+            self.button_countdown(int(testMin*60))
+            self.pressure_sensor(psen_pipe, mainp_pipe,int(testMin*60))
+            self.power_sensor(power_pipe,mainpower_pipe)
+            #self.image_capture(image_pipe, maini_pipe)
 
     def button_countdown(self,i):
         if debug:

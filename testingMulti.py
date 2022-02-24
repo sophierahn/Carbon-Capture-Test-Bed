@@ -40,12 +40,12 @@ print(func.loadTestPresets())
     #aim = 1.4
 powerValue = 0
 while powerValue <= 1:
-    powerNormValue = powerValue*5/32.2/3.28
+    #powerNormValue = powerValue*5/32.2/3.28
     #dac.raw_value = 3877
     #time.sleep(1)
     #elec = [energy.current, energy.voltage, energy.power]
     #print(elec[1])
-    dac.normalized_value = powerNormValue
+    dac.normalized_value = powerValue
     #GPIO.output(17, GPIO.HIGH)
     #x = input()
     #r = elec[1]/aim

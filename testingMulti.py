@@ -22,8 +22,6 @@ dac = adafruit_mcp4725.MCP4725(tca[5], address=0x60)
 
 
 
-count = 10
-
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(17,GPIO.OUT)
 
@@ -40,13 +38,14 @@ print(func.loadTestPresets())
     #r = 1
     #setValue = 1748
     #aim = 1.4
-
-#while r > 1.01 or r < 0.99:
+powerValue = 0
+while powerValue <= 1:
+    powerNormValue = powerValue*5/32.2/3.28
     #dac.raw_value = 3877
     #time.sleep(1)
     #elec = [energy.current, energy.voltage, energy.power]
     #print(elec[1])
-    #dac.normalized_value = 0.946826238
+    dac.normalized_value = powerNormValue
     #GPIO.output(17, GPIO.HIGH)
     #x = input()
     #r = elec[1]/aim
@@ -56,11 +55,12 @@ print(func.loadTestPresets())
     #print(elec[1])
     #GPIO.output(17, GPIO.LOW)
     #x = input()
-    # time.sleep(1)
-    #count += 1
+    time.sleep(1)
+    powerValue +=0.1
+    #count -= 1
 
-#dac.normalized_value = 0
-dac.raw_value = 0
+dac.normalized_value = 0
+#dac.raw_value = 0
  
 
 #GPIO.output(17, GPIO.LOW) 

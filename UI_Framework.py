@@ -295,6 +295,12 @@ class controls:
             #Setting up GPIO Pins for Relays
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(17,GPIO.OUT)
+            
+            ### Something to poll pressure sensors####
+            ### Zero Pressure Sensors ###
+            ### Maybe it's just a wait statement of some sort here ###
+            
+            
             #Start Gas Flow and Pump
             #q.put_nowait((3,gasFlow)) #send inital gas flow values
             GPIO.output(17, GPIO.HIGH) #turning on Pump

@@ -8,6 +8,23 @@ from datetime import datetime
 import subprocess
 import random
 
+### Functionality Notes ###
+#The purpose of multiplexer is to poll sensors and activate actuators
+#It collects data directly from the sensors at a frequency matching the run time of the script
+#It saves this data to a CSV uniquely time stamped
+#It checks the contents of the queue, differentiating between shut off, actuators, and sensors based on ID
+#It puts sensor data back immediately without interacting with it - presumably thats old data anyway
+#It enacts actuator instructions
+#It saves the shutoff status, which will allow for graceful shutdown in the case of shutdown - which we like
+#It writes new sensor data to the queue, it will appear after previously placed data
+# ^^this could be space for frequency control, right now we're spitting data as fast as we can
+### Functionality Notes ####
+
+### To Do ###
+#Time the function speed
+##I don't think we could move faster unless we restructured
+#Add option for lower frequency
+
 
 def muliplexer(q):
     queueDump = []
@@ -32,9 +49,6 @@ def muliplexer(q):
         current= now.strftime("%m_%d_%Y_%H_%M_%S")
         pfilename = "./data/" +"Pressure_sensor_data_" + current +".csv"
 
-        #args = ["echo ","test ",">>",pfilename]
-        #subprocess.run(["echo ","test ",">>",pfilename]) 
-
         #creating pressure sensor data csv with current date and time
         pfile = open(pfilename, "w")
         pwriter = csv.writer(pfile)
@@ -46,6 +60,8 @@ def muliplexer(q):
                 queueDump.append(q.get_nowait())
             except:
                 pass
+            
+        #Checking each tuple at a time from the queue
         for i in queueDump:
             if i[0] == 0:
                 q.put_nowait((0,i[1])) #pressure sensor data

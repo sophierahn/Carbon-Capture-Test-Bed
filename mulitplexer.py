@@ -26,7 +26,7 @@ import random
 #Add option for lower frequency
 
 
-def muliplexer(q):
+def muliplexer(testFreq,q):
     queueDump = []
     powerList = [0]*3
     pressureList = [0]*4
@@ -34,6 +34,7 @@ def muliplexer(q):
     shutoff = False
     data = False
     firstTime = True #used to start data logging once power supply receives a value
+    sampleTime = True #used with frequency variance
     i2c = board.I2C()
     tca = adafruit_tca9548a.TCA9548A(i2c)
     #mpr_0 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25)
@@ -60,6 +61,22 @@ def muliplexer(q):
                 queueDump.append(q.get_nowait())
             except:
                 pass
+        
+        
+        #sensor naturally has polling freq of 1 Hz, not sure what to do with it
+        #microS = datetime.microsecond
+        #nextMicro = (microS*testFreq)
+        
+        #right now we're hitting it once per cycle, all we can do is hit it fewer times per cycle
+        #it's dependent on how long a cycle is which we don't know a ton about or have a ton of control over
+        #The sensor will run at 1Hz, the only impactful thing to do is moderate how much data we collect from it
+        #For now, we'll handle how frequently per cycle, but in the future it'll be better to map it 
+        #to some sort of absolute time
+        
+        
+        
+        
+        
             
         #Checking each tuple at a time from the queue
         for i in queueDump:

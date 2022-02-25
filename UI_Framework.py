@@ -351,8 +351,11 @@ class controls:
         except:
            func.message("Warning","Numerical Entry Invalid")
         else:
+            
+            #1 means voltage?
             if radioVar == 1: ### *** Remove hardcoded numbers, add calibration function
-                    powerNormValue = powerValue*5/32.2/3.28 #Voltage 0.8-32.2v Proportial 5v, percentage value for DAC 0-3.28v
+                    powerNormValue = (powerValue*0.0386) - 0.0203 #Calculated Calibration Curve (y=0.0386x - 0.0203)
+            #2 means current?
             if radioVar == 2:
                 powerNormValue = powerValue*5/20/3.28  #Current 0-20A Proportial 5v, percentage value for DAC 0-3.28v
             powerTuple = (radioVar,powerNormValue) #combining volt or current selection and Desired Value

@@ -285,20 +285,25 @@ class controls:
         global multi, q
         try:
             gasFlow = float(EntFlow[0].get()) #add similiar proportional control calcuations to powerValue
+            testFreq = 1 #decimal of full speed *** need to make this user adjustable
         except:
            func.message("Warning","Numerical Entry Invalid")
+           testFreq = 1 #if unspecified, assume full blast data
         else:
+            ### Something to poll pressure sensors####
+            ### Zero Pressure Sensors ###
+            ### Maybe it's just a wait statement of some sort here ###
+            ### seperate calibration function?###
+            
+            
             #Initialization of Multiplexer Process
             q = Queue()
-            multi = Process(target= muliplexer, args= (q,))
+            multi = Process(target= muliplexer, args= (testFreq,q,))
             multi.start()
             #Setting up GPIO Pins for Relays
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(17,GPIO.OUT)
             
-            ### Something to poll pressure sensors####
-            ### Zero Pressure Sensors ###
-            ### Maybe it's just a wait statement of some sort here ###
             
             
             #Start Gas Flow and Pump

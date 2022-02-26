@@ -8,6 +8,7 @@ from datetime import datetime
 import subprocess
 import random
 import math
+import time
 
 ### Functionality Notes ###
 #The purpose of multiplexer is to poll sensors and activate actuators
@@ -39,7 +40,6 @@ def muliplexer(calibrating, testFreq,q):
     calibrationSamples = 500 # probably higher?
     calibrationList =[]
     calibrationValue = 0 #so that if we skip calibration, we see absolute results
-    cycle = 0
     calibrateStatus = 1 #bc we want to hop into calibration mode at startup
     i2c = board.I2C()
     tca = adafruit_tca9548a.TCA9548A(i2c)
@@ -51,7 +51,11 @@ def muliplexer(calibrating, testFreq,q):
     dac_1 = adafruit_mcp4725.MCP4725(tca[5], address=0x60)
     #dac_2 = adafruit_mcp4725.MCP4725(tca[6], address=0x60)
     
-    
+    ### Checking polling type ###
+    #if testFreq > 0:
+        #intermittent = True
+    #else:
+        #intermittent = False
     
     ### Calibration ###
     #if calibrating:
@@ -92,14 +96,7 @@ def muliplexer(calibrating, testFreq,q):
                 queueDump.append(q.get_nowait())
             except:
                 pass
-        
-        ### *** Working on polling variation frequency - currently confused
-        #sensor naturally has polling freq of 1 Hz, not sure what to do with it
-        #microS = datetime.microsecond
-        #nextMicro = (microS*testFreq)
-       
-        
-            
+      
         #Checking each tuple at a time from the queue
         for i in queueDump:
             if i[0] == 0:
@@ -134,12 +131,25 @@ def muliplexer(calibrating, testFreq,q):
         #Writing data to DACs
         ### *** add switching system to select current vs volt control
         #dac_1.normalized_value = powerLevel[1]
-
-        queueDump = [] #reseting the local queue list
-        if data:
-            pwriter.writerow(pressureList) #writing data to csv
         
-        cycle = cycle + 1
+        queueDump = [] #reseting the local queue list
+        
+        
+        ### I think arthmatic SHOULD protect me here, but I'm not sure
+        #If testFreq= 0 in any case where we aren't limiting loggin speed
+        #then I shouldn't need the intermittent flag, adding 0 seconds will always let the new time pass
+        #its possible drift, interal rounding errors, or lack of resolution could interfere with this
+        #in which case the intermittent flag is still useful
+        #but it might be redundant
+        
+        #now = time.time()
+        #if data:
+            #if intermittent and now == next:
+                #pwriter.writerow(pressureList) #writing data to csv
+                #lastWritten = time.time()
+                #next = lastWritten + testFreq
+            #else:
+                #pwriter.writerow(pressureList) #writing data to csv
 
         
     

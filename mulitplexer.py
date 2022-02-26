@@ -27,7 +27,7 @@ import math
 #Add option for lower frequency
 
 
-def muliplexer(testFreq,q):
+def muliplexer(calibrating, testFreq,q):
     queueDump = []
     powerList = [0]*3
     pressureList = [0]*4
@@ -41,7 +41,6 @@ def muliplexer(testFreq,q):
     calibrationValue = 0 #so that if we skip calibration, we see absolute results
     cycle = 0
     calibrateStatus = 1 #bc we want to hop into calibration mode at startup
-    calibrating = True #might add functionality to skip calibration, idk
     i2c = board.I2C()
     tca = adafruit_tca9548a.TCA9548A(i2c)
     #mpr_0 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25)

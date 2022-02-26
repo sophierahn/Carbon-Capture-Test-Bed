@@ -40,6 +40,8 @@ def muliplexer(testFreq,q):
     calibrationList =[]
     calibrationValue = 0 #so that if we skip calibration, we see absolute results
     cycle = 0
+    calibrateStatus = 1 #bc we want to hop into calibration mode at startup
+    calibrating = True #might add functionality to skip calibration, idk
     i2c = board.I2C()
     tca = adafruit_tca9548a.TCA9548A(i2c)
     #mpr_0 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25)
@@ -51,17 +53,27 @@ def muliplexer(testFreq,q):
     #dac_2 = adafruit_mcp4725.MCP4725(tca[6], address=0x60)
     
     
-    ### Calibration ###
-    #while len(calibrationList) =< calibrationSamples:
-        #calibrationList.append(mpr_0.pressure)
-        #calibrationList.append(mpr_1.pressure)
-        #calibrationList.append(mpr_2.pressure)
-        #calibrationList.append(mpr_3.pressure)
     
-    #to eliminate individual sensor drift
-    # *** look into hardware based solutions, this is jank
-    #sum = sum(calibrationList)
-    #calibrationValue = sum/calibrationSamples 
+    ### Calibration ###
+    #if calibrating:
+        #q.put_nowait((4,calibrateStatus))
+        #while len(calibrationList) =< calibrationSamples:
+            #calibrationList.append(mpr_0.pressure)
+            #calibrationList.append(mpr_1.pressure)
+            #calibrationList.append(mpr_2.pressure)
+            #calibrationList.append(mpr_3.pressure)
+        
+    
+        #to eliminate individual sensor drift
+        # *** look into hardware based solutions, this is jank
+        #sum = sum(calibrationList)
+        #calibrationValue = sum/calibrationSamples 
+    
+    #either we've finished calibration or we skipped it
+    #calibrateStatus = 0
+    
+    #tell the main script to continue on
+    #q.put_nowait((4,calibrateStatus))
    
     
 
@@ -103,6 +115,8 @@ def muliplexer(testFreq,q):
             if i[0] == 3:
                 shutoff = i[1]  #shutoff command
                 q.put_nowait((3,shutoff))
+            #if i[0] == 4:
+                #q.put_nowait((4,i[1])) #calibration status
 
         #Collecting Data and Writing to lists
         #p0 = mpr_0.pressure - calibrationValue

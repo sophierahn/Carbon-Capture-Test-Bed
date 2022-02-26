@@ -284,29 +284,55 @@ class controls:
     def preTest(self):
         global multi, q
         try:
-            gasFlow = float(EntFlow[0].get()) #add similiar proportional control calcuations to powerValue
             testFreq = 1 #decimal of full speed *** need to make this user adjustable
+            gasFlow = float(EntFlow[0].get()) #add similiar proportional control calcuations to powerValue
         except:
            func.message("Warning","Numerical Entry Invalid")
-           testFreq = 1 #if unspecified, assume full blast data
+           testFreq = 1 #this one might be unneccessary, I'm not sure
         else:
-            ### Something to poll pressure sensors####
-            ### Zero Pressure Sensors ###
-            ### Maybe it's just a wait statement of some sort here ###
-            ### seperate calibration function?###
+            #### *** Make a button to let a user indicate this as true or false
+            calibrating = False  
+            #if calibrating:
+                #calibrateStatus = 1
+            #else:
+                #calibrateStatus = 0
             
             
             #Initialization of Multiplexer Process
             q = Queue()
-            multi = Process(target= muliplexer, args= (testFreq,q,))
+            multi = Process(target= muliplexer, args= (calibrating,testFreq,q,))
             multi.start()
             #Setting up GPIO Pins for Relays
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(17,GPIO.OUT)
+        
+            #keeps checking for end of calibration signal
+            #while calibrateStatus = 1:
+                ##Checking queue for calibration flag
+                #while not q.empty():
+                    #try:
+                        #queueDump.append(q.get_nowait())
+                    #except:
+                        #pass
+             
+                ##Checking each tuple at a time from the queue
+                #for i in queueDump:
+                    #if i[0] == 0:
+                        #q.put_nowait((0,i[1])) #pressure sensor data
+                   # if i[0] == 1:
+                    #    q.put_nowait((1,i[1])) #power sensor Data
+                    #if i[0] == 2:
+                    #    q.put_nowait((2,i[1])) #DAC instructions
+                    #if i[0] == 3:
+                    #    shutoff = i[1]  #shutoff command
+                    #    q.put_nowait((3,shutoff))
+                    #if i[0] == 4:
+                    #    calibrateStatus = i[1]
+                    #    #I don't think it needs to be put back, it's been recieved
             
             
             
-            #Start Gas Flow and Pump
+            #Start Gas Flow and Pump once calibration is complete
             #q.put_nowait((3,gasFlow)) #send inital gas flow values
             GPIO.output(17, GPIO.HIGH) #turning on Pump
             

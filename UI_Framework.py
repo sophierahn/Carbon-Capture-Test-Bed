@@ -280,15 +280,15 @@ class controls:
             self.LblCountdown.config(text = "")
             self.BtnPreStart.config(text="Start PreTest", state = NORMAL)
 
-    #Start Pre Test procedure: start pump and gas flowing in cell, call 30 sec wait function
+    #Start Pre Test procedure: calibrate pressure sensors, start pump and gas flowing in cell, call 30 sec wait function
     def preTest(self):
         global multi, q
         try:
-            testFreq = 1 #decimal of full speed *** need to make this user adjustable
+            testFreq = 0 #0 for no adjustment or num seconds between recordings *** need to make this user adjustable
             gasFlow = float(EntFlow[0].get()) #add similiar proportional control calcuations to powerValue
         except:
            func.message("Warning","Numerical Entry Invalid")
-           testFreq = 1 #this one might be unneccessary, I'm not sure
+           testFreq = 0 #this one might be unneccessary, I'm not sure
         else:
             #### *** Make a button to let a user indicate this as true or false
             calibrating = False  

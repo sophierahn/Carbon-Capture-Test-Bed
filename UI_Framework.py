@@ -25,7 +25,7 @@ import func
 
 
 #set true to view UI not on RPI
-mac = False
+mac = True
 if not mac:
     from pressure_sensor import start_psensor
     from detect_bright_spots import start_imageCapture
@@ -93,9 +93,9 @@ class controls:
 
     #### Settings Titles ####
         self.TitlFlow = Label(master, text="Flow Controller", font=("Calibri",text+8))
-        self.TitlFlow.place(x=setX,y=setY+100)
+        self.TitlFlow.place(x=setX,y=setY)
         self.TitlPower = Label(master, text="Power Supply", font=("Calibri",text+8))
-        self.TitlPower.place(x=setX,y=setY+200)
+        self.TitlPower.place(x=setX,y=setY+90)
         #Countdown Timer
         self.LblTimer = Label(master, text="Remaining Time:", font=("Calibri",text+6))
         self.LblTimer.place(x=setX,y=setY-50)
@@ -110,41 +110,38 @@ class controls:
                 return False
         validation = root.register(only_numbers)
 
-
-        #Pump controls
-        # EntPump[0] = Entry(master, width=5, justify=RIGHT, validate="key", validatecommand=(validation, '%S'))
-        # self.LblPump = Label(master, text="Flow Rate:", font=("Calibri",text+4))
-        # EntPump[0].place(x=entX,y=setY+30)
-        # EntPump[0].insert(0,testDefault[0])#Set Default
-        # self.LblPump.place(x=setX,y=setY+30)
-
         #Flow Controller controls
         EntFlow[0] = Entry(master, width=5, justify=RIGHT, validate="key", validatecommand=(validation, '%S'))
         self.LblFlow = Label(master, text="Flow Rate:", font=("Calibri",text+4))
-        EntFlow[0].place(x=entX,y=setY+130)
+        EntFlow[0].place(x=entX,y=setY+30)
         EntFlow[0].insert(0,testDefault[0])#Set Default
-        self.LblFlow.place(x=setX,y=setY+130)
+        self.LblFlow.place(x=setX,y=setY+30)
 
         #Power supply controls
         EntPower[0] = Entry(master, width=5, justify=RIGHT, validate="key", validatecommand=(validation, '%S'))
         self.LblPower = Label(master, text="Set Voltage:    ", font=("Calibri",text+4))
-        EntPower[0].place(x=entX,y=setY+280)
+        EntPower[0].place(x=entX,y=setY+150)
         EntPower[0].insert(0,testDefault[2])#Set Default
-        self.LblPower.place(x=setX,y=setY+280)
-        global var #power supply Radio Buttons
-        var = IntVar()
-        self.radPowerV = Radiobutton(master, text="Voltage Control", variable=var, value=1, command=lambda: self.lblChange())
-        self.radPowerC = Radiobutton(master, text="Current Control", variable=var, value=2, command=lambda: self.lblChange())
-        self.radPowerV.place(x=setX,y=setY+230)
-        self.radPowerC.place(x=setX,y=setY+250)
-        var.set(testDefault[1])
+        self.LblPower.place(x=setX,y=setY+150)
+        global var1, var2 #power supply Radio Buttons
+        var1 = IntVar()
+        var2 = IntVar()
+        self.radPowerV = Radiobutton(master, text="Voltage Control", variable=var1, value=1, command=lambda: self.lblChange())
+        self.radPowerC = Radiobutton(master, text="Current Control", variable=var1, value=2, command=lambda: self.lblChange())
+        self.radPowerV.place(x=setX,y=setY+170)
+        self.radPowerC.place(x=setX,y=setY+190)
+        var1.set(testDefault[1])
 
         #Test Duration
         EntTime[0] = Entry(master, width=5, justify=RIGHT, validate="key", validatecommand=(validation, '%S'))
         self.LblTime = Label(master, text="Test Duration:", font=("Calibri",text+6))
-        EntTime[0].place(x=entX,y=setY+340)
+        EntTime[0].place(x=entX,y=setY+280)
         EntTime[0].insert(0,testDefault[3])#Set Default
-        self.LblTime.place(x=setX-20,y=setY+340)
+        self.LblTime.place(x=setX-20,y=setY+280)
+
+        checkPressure = tk.Checkbutton(master, text='Gauge Pressure',variable=var2, onvalue=1, offvalue=0)
+        checkPressure.place(x=entX,y=setY+300)
+        var2.set(1)
 
         datax = 600
         datay = 80
@@ -223,9 +220,9 @@ class controls:
             testDefault[1] = float(radioVar)
             testDefault[2] = float(EntPower[0].get())
             testDefault[3] = float(EntTime[0].get())
-            print(testDefault)
+            func.saveTestPreset(testDefault,False)
         except:
-            func.message("Warning","Numerical Entry Invalid")
+            func.message("Warning","Save Test Settings Failed")
 
     #Kill Processes
     def killProcesses(self):
@@ -258,7 +255,7 @@ class controls:
         self.killProcesses()
         sys.exit(0)
 
-    ##Estop Function //Need to add a reset fuctionality to change estop back to false so tests can be restarted
+    ### Estop Function ###
     def stopTest(self):
         global estop, testRunning, testDefault
         if not estop:
@@ -280,7 +277,8 @@ class controls:
             self.LblCountdown.config(text = "")
             self.BtnPreStart.config(text="Start PreTest", state = NORMAL)
 
-    #Start Pre Test procedure: calibrate pressure sensors, start pump and gas flowing in cell, call 30 sec wait function
+    ### Start Pre Test procedure: 
+            #calibrate pressure sensors, start pump and gas flowing in cell, call 30 sec wait function
     def preTest(self):
         global multi, q
         try:
@@ -292,11 +290,11 @@ class controls:
         else:
             #### *** Make a button to let a user indicate this as true or false
             calibrating = False  
-            #if calibrating:
-                #calibrateStatus = 1
-            #else:
-                #calibrateStatus = 0
-            
+            if calibrating:
+                calibrateStatus = 1
+                self.BtnPreStart.config(text = "Calibrating")
+            else:
+                calibrateStatus = 0
             
             #Initialization of Multiplexer Process
             q = Queue()
@@ -305,49 +303,45 @@ class controls:
             #Setting up GPIO Pins for Relays
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(17,GPIO.OUT)
-        
-            #keeps checking for end of calibration signal
-            #while calibrateStatus = 1:
-                ##Checking queue for calibration flag
-                #while not q.empty():
-                    #try:
-                        #queueDump.append(q.get_nowait())
-                    #except:
-                        #pass
-             
-                ##Checking each tuple at a time from the queue
-                #for i in queueDump:
-                    #if i[0] == 0:
-                        #q.put_nowait((0,i[1])) #pressure sensor data
-                   # if i[0] == 1:
-                    #    q.put_nowait((1,i[1])) #power sensor Data
-                    #if i[0] == 2:
-                    #    q.put_nowait((2,i[1])) #DAC instructions
-                    #if i[0] == 3:
-                    #    shutoff = i[1]  #shutoff command
-                    #    q.put_nowait((3,shutoff))
-                    #if i[0] == 4:
-                    #    calibrateStatus = i[1]
-                    #    #I don't think it needs to be put back, it's been recieved
-            
-            
             
             #Start Gas Flow and Pump once calibration is complete
             #q.put_nowait((3,gasFlow)) #send inital gas flow values
             GPIO.output(17, GPIO.HIGH) #turning on Pump
             
             start = time.time()
-            self.preTestCountDown(10) #Start 30sec preTest loop *** make gobal value, not hardcoded
+            self.preTestCountDown(10, calibrateStatus) #Start 30sec preTest loop *** make gobal value, not hardcoded
             self.preTestCheck(start) #Start checking loop, will shutdown system if test start delay is too long
             # *** unnecessary if Auto Test start is okay, this version requires user input
 
-    def preTestCountDown(self, i):
+    def preTestCountDown(self, i, calibrateStatus):
         global estop
-        if i > 0 and estop == False:
+        queueDump = []
+        
+        while not q.empty():
+            try:
+                queueDump.append(q.get_nowait())
+            except:
+                pass
+        for i in queueDump:
+            if i[0] == 0:
+                shutoff = i[1]         #shutoff command
+                q.put_nowait((0,shutoff))
+            if i[0] == 1:
+                q.put_nowait((1,i[1])) #power sensor Data
+            if i[0] == 2:
+                q.put_nowait((2,i[1])) #DAC instructions
+            if i[0] == 3:
+                q.put_nowait((3,i[1])) #pressure sensor data
+            if i[0] == 4:       
+                calibrateStatus = i[1] #Calibration Status
+
+        if calibrateStatus == 1: #Calibrating
+            self.testWait = root.after(1000, lambda: self.preTestCountDown(i))
+        elif i > 0 and estop == False and calibrateStatus == 0: #Countdown Started
             self.BtnPreStart.config(text = str(i))
             i -= 1
             self.testWait = root.after(1000, lambda: self.preTestCountDown(i))
-        elif estop: #cancled by Estop
+        elif estop: #Cancled by Estop
             root.after_cancel(self.testWait)
             self.BtnPreStart.config(text = "PreTest Cancelled")
         else: #Completed Successfully
@@ -358,12 +352,11 @@ class controls:
     def preTestCheck(self, startTime):
         global estop, testRunning
         testCancelled = False
-        if not testRunning and not estop and not testCancelled:
+        if not testRunning and not estop and not testCancelled: 
             elaspedTime = time.time()-startTime
-            print(elaspedTime)
-            if elaspedTime > 60:
+            if elaspedTime > 60: ## *** Change Time and message based on Joel Feedback
                 self.stopTest()
-                func.message("Error","Test not initated after 2 min of PreTest. Test cancelled")
+                func.message("Error","Test not initated after 1 min of PreTest. Test cancelled")
                 testCancelled = True
             self.testCheck = root.after(1000, lambda: self.preTestCheck(startTime))
         else:

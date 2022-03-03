@@ -9,6 +9,7 @@ import subprocess
 import random
 import math
 import time
+import func
 
 ### Functionality Notes ###
 #The purpose of multiplexer is to poll sensors and activate actuators
@@ -52,43 +53,19 @@ def muliplexer(calibrating, testFreq,q):
     #dac_2 = adafruit_mcp4725.MCP4725(tca[6], address=0x60)
     
     ### Checking polling type ###
-    #if testFreq > 0:
-        #intermittent = True
-    #else:
-        #intermittent = False
+    if testFreq > 0:
+        intermittent = True
+    else:
+        intermittent = False
     
-    ### Calibration ###
-    #if calibrating:
-        #q.put_nowait((4,calibrateStatus))
-        #while len(calibrationList) =< calibrationSamples:
-            #calibrationList.append(mpr_0.pressure)
-            #calibrationList.append(mpr_1.pressure)
-            #calibrationList.append(mpr_2.pressure)
-            #calibrationList.append(mpr_3.pressure)
-        
-    
-        #to eliminate individual sensor drift
-        # *** look into hardware based solutions, this is jank
-        #sum = sum(calibrationList)
-        #calibrationValue = sum/calibrationSamples 
-    
-    #either we've finished calibration or we skipped it
-    #calibrateStatus = 0
-    
-    #tell the main script to continue on
-    #q.put_nowait((4,calibrateStatus))
-   
-    
+    ### Initalize Data File, When pretest is initated 
+    now = datetime.now()
+    current= now.strftime("%m_%d_%Y_%H_%M_%S")
+    pfilename = "./data/" +"Pressure_sensor_data_" + current +".csv"
+    pfile = open(pfilename, "w") #creating pressure sensor data csv with current date and time
+    pwriter = csv.writer(pfile)
+    pwriter.writerow(['0' , '1', '2', '3', 'current', 'voltage', 'power'])
 
-    if data:
-        now = datetime.now()
-        current= now.strftime("%m_%d_%Y_%H_%M_%S")
-        pfilename = "./data/" +"Pressure_sensor_data_" + current +".csv"
-
-        #creating pressure sensor data csv with current date and time
-        pfile = open(pfilename, "w")
-        pwriter = csv.writer(pfile)
-        pwriter.writerow(['0' , '1', '2', '3', 'current', 'voltage', 'power'])
 
     while not shutoff:
         while not q.empty():
@@ -96,11 +73,11 @@ def muliplexer(calibrating, testFreq,q):
                 queueDump.append(q.get_nowait())
             except:
                 pass
-      
         #Checking each tuple at a time from the queue
         for i in queueDump:
             if i[0] == 0:
-                q.put_nowait((0,i[1])) #pressure sensor data
+                shutoff = i[1]  #shutoff command
+                q.put_nowait((0,shutoff))
             if i[0] == 1:
                 q.put_nowait((1,i[1])) #power sensor Data
             if i[0] == 2:
@@ -109,55 +86,65 @@ def muliplexer(calibrating, testFreq,q):
                     data = True
                     firstTime = False
             if i[0] == 3:
-                shutoff = i[1]  #shutoff command
-                q.put_nowait((3,shutoff))
-            #if i[0] == 4:
-                #q.put_nowait((4,i[1])) #calibration status
+                q.put_nowait((3,i[1])) #pressure sensor data
+            if i[0] == 4:
+                q.put_nowait((4,i[1])) #calibration status
+        
+        ### Calibration ###
+        if calibrating:
+            q.put_nowait((4,calibrateStatus))
+            while len(calibrationList) <= calibrationSamples:
+                #calibrationList.append(mpr_0.pressure)
+                calibrationList.append(mpr_1.pressure)
+                #calibrationList.append(mpr_2.pressure)
+                calibrationList.append(mpr_3.pressure)
+            
+            #to eliminate individual sensor drift
+            sum = sum(calibrationList)
+            calibrationValue = sum/calibrationSamples
+            func.saveTestPreset([calibrationValue],True) #Write Calibration value to Test Preset File
+            calibrating = False 
+            calibrateStatus = 0
+            q.put_nowait((4,calibrateStatus)) #tells the main program to contiune
+        
+        ### Normal Opperation ###
+        else: 
+        #either we've finished calibration or we skipped it
+            #Collecting Data and Writing to lists
+            #p0 = mpr_0.pressure - calibrationValue
+            p1 = mpr_1.pressure - calibrationValue
+            #p2 = mpr_2.pressure - calibrationValue
+            p3 = mpr_3.pressure - calibrationValue
+            #pressureList = [p0,p1,p2,p3]
+            pressureList = [random.randint(5,10), p1, random.randint(5,10), p3]
+            powerList = [energy.current, energy.voltage, energy.power]
 
-        #Collecting Data and Writing to lists
-        #p0 = mpr_0.pressure - calibrationValue
-        #p1 = mpr_1.pressure - calibrationValue
-        #p2 = mpr_2.pressure - calibrationValue
-        #p3 = mpr_3.pressure - calibrationValue
-        #pressureList = [p0,p1,p2,p3]
-        pressureList = [random.randint(900,950), mpr_1.pressure, random.randint(900,950), mpr_3.pressure]
-        powerList = [energy.current, energy.voltage, energy.power]
-
-        #Writing data to the Queue
-        q.put_nowait((0,pressureList))
-        q.put_nowait((1,powerList))
+            #Writing Pressure and Power data to the Queue
+            q.put_nowait((0,pressureList))
+            q.put_nowait((1,powerList))
         
-
-        #Writing data to DACs
-        ### *** add switching system to select current vs volt control
-        #dac_1.normalized_value = powerLevel[1]
-        
-        queueDump = [] #reseting the local queue list
-        
-        
-        ### I think arthmatic SHOULD protect me here, but I'm not sure
-        #If testFreq= 0 in any case where we aren't limiting loggin speed
-        #then I shouldn't need the intermittent flag, adding 0 seconds will always let the new time pass
-        #its possible drift, interal rounding errors, or lack of resolution could interfere with this
-        #in which case the intermittent flag is still useful
-        #but it might be redundant
-        
-        #now = time.time()
-        #if data:
-            #if intermittent and now == next:
-                #pwriter.writerow(pressureList) #writing data to csv
-                #lastWritten = time.time()
-                #next = lastWritten + testFreq
-            #else:
-                #pwriter.writerow(pressureList) #writing data to csv
+            #Writing data to DACs
+            ### *** add switching system to select current vs volt control
+            #dac_1.normalized_value = powerLevel[1]
+            
+            queueDump = [] #reseting the local queue list
+            
+            #Logging, intermitant or direct
+            now = time.time()
+            if data:
+                if intermittent and now > next:
+                    pwriter.writerow(pressureList) #writing data to csv
+                    lastWritten = time.time()
+                    next = lastWritten + testFreq
+                else:
+                    pwriter.writerow(pressureList) #writing data to csv
 
         
     
-    #Shutoff Command recieved
+    ### After ShutOff ###
     print("Mulit Closed")
     dac_1.normalized_value = 0 #Setting Dacs to Zero at Shutoff Command
-    if data:
-        pfile.close() #Closing CSV file
+    pfile.close() #Closing CSV file
     q.close()
     q.join_thread()
 

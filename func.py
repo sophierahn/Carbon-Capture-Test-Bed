@@ -45,8 +45,7 @@ def loadTestPresets():
         lines = file.readlines()
         testDefault = []
         for line in lines:
-            if line != 'Break':
-                testDefault.append(line.strip())
+            testDefault.append(line.strip())
     count = 0
     for i in testDefault:
         colon = int(i.find(':')+2)
@@ -54,9 +53,14 @@ def loadTestPresets():
         count += 1
     return testDefault
 
-def saveTestPreset(testDefault):
-    with open('TestPreset.txt', 'w') as file:
-        newString = "Flow Rate (ml/min): %d \nPower Select (1-Voltage, 2-Current): %d \
-             \nPower Value (v or A): %d \nTest Durration (min): %d \nBreak" % (testDefault[0], testDefault[1],testDefault[2], testDefault[3])
-        file.write(str(newString))
-        #print(newString)
+def saveTestPreset(testDefault,calibrate):
+        if calibrate:
+            with open('TestPreset.txt', 'a') as file:
+                newString = "Calibrated Atmospheric Pressure: %d" %(testDefault[0])
+                file.write(str(newString))
+        else:
+            with open('TestPreset.txt', 'w') as file:
+                newString = "Flow Rate (ml/min): %d \nPower Select (1-Voltage, 2-Current): %d \
+                    \nPower Value (v or A): %d \nTest Durration (min): %d \nBreak" % (testDefault[0], testDefault[1],testDefault[2], testDefault[3])
+                file.write(str(newString))
+        

@@ -41,6 +41,7 @@ def muliplexer(calibrating, testFreq,q):
     calibrationList =[]
     calibrationValue = 0 #so that if we skip calibration, we see absolute results
     calibrateStatus = 1 #bc we want to hop into calibration mode at startup
+    next = 0
     i2c = board.I2C()
     tca = adafruit_tca9548a.TCA9548A(i2c)
     #mpr_0 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25)
@@ -57,7 +58,7 @@ def muliplexer(calibrating, testFreq,q):
     #else:
         #intermittent = False
     
-    ### Calibration ###
+    ### Calibration ### ***move to loop
     #if calibrating:
         #q.put_nowait((4,calibrateStatus))
         #while len(calibrationList) =< calibrationSamples:
@@ -133,18 +134,11 @@ def muliplexer(calibrating, testFreq,q):
         #dac_1.normalized_value = powerLevel[1]
         
         queueDump = [] #reseting the local queue list
-        
-        
-        ### I think arthmatic SHOULD protect me here, but I'm not sure
-        #If testFreq= 0 in any case where we aren't limiting loggin speed
-        #then I shouldn't need the intermittent flag, adding 0 seconds will always let the new time pass
-        #its possible drift, interal rounding errors, or lack of resolution could interfere with this
-        #in which case the intermittent flag is still useful
-        #but it might be redundant
+    
         
         #now = time.time()
         #if data:
-            #if intermittent and now == next:
+            #if intermittent and now > next:
                 #pwriter.writerow(pressureList) #writing data to csv
                 #lastWritten = time.time()
                 #next = lastWritten + testFreq

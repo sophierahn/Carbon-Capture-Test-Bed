@@ -306,7 +306,7 @@ class controls:
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(17,GPIO.OUT)
         
-            #keeps checking for end of calibration signal
+            #keeps checking for end of calibration signal ###*** move to repeating fn
             #while calibrateStatus = 1:
                 ##Checking queue for calibration flag
                 #while not q.empty():
@@ -383,10 +383,10 @@ class controls:
            func.message("Warning","Numerical Entry Invalid")
         else:
             
-            #1 means voltage?
+            #1 means voltage
             if radioVar == 1: ### *** Remove hardcoded numbers, add calibration function
                     powerNormValue = (powerValue*0.0386) - 0.0203 #Calculated Calibration Curve (y=0.0386x - 0.0203)
-            #2 means current?
+            #2 means current
             if radioVar == 2:
                 powerNormValue = powerValue*5/20/3.28  #Current 0-20A Proportial 5v, percentage value for DAC 0-3.28v
             powerTuple = (radioVar,powerNormValue) #combining volt or current selection and Desired Value

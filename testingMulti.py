@@ -17,7 +17,7 @@ tca = adafruit_tca9548a.TCA9548A(i2c)
 mpr_1 = adafruit_mprls.MPRLS(tca[1], psi_min=0, psi_max=25)
 #mpr_2 = adafruit_mprls.MPRLS(tca[2], psi_min=0, psi_max=25)
 mpr_3 = adafruit_mprls.MPRLS(tca[3], psi_min=0, psi_max=25)
-energy = adafruit_ina260.INA260(tca[4])
+#energy = adafruit_ina260.INA260(tca[4])
 dac = adafruit_mcp4725.MCP4725(tca[5], address=0x60)
 
 
@@ -39,24 +39,28 @@ print(func.loadTestPresets())
     #setValue = 1748
     #aim = 1.4
 powerValue = 0
-while powerValue <= 1:
+print("Starting")
+while powerValue <= 10:
+
     #powerNormValue = powerValue*5/32.2/3.28
     #dac.raw_value = 3877
     #time.sleep(1)
     #elec = [energy.current, energy.voltage, energy.power]
     #print(elec[1])
-    dac.normalized_value = powerValue
+    powerNormValue = (powerValue*0.0386) + 0.0797
+    print(powerValue, powerNormValue)
+    dac.normalized_value = powerNormValue
     #GPIO.output(17, GPIO.HIGH)
     #x = input()
     #r = elec[1]/aim
     #print (r)
     #time.sleep(4)
     #elec = [energy.current, energy.voltage, energy.power]
-    #print(elec[1])
+    #print(elec[1], elec[0], elec[2])
     #GPIO.output(17, GPIO.LOW)
     #x = input()
-    time.sleep(1)
-    powerValue +=0.1
+    time.sleep(3)
+    powerValue +=1
     #count -= 1
 
 dac.normalized_value = 0

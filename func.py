@@ -5,6 +5,13 @@ from time import sleep
 import sys
 import glob
 import os
+import board
+import adafruit_tca9548a
+import adafruit_mprls
+import adafruit_ina260
+import adafruit_mcp4725
+import math
+
 
 def message(cap,msg):
     lmsg = len(msg)/50+1
@@ -63,4 +70,26 @@ def saveTestPreset(testDefault,calibrate):
                 newString = "Flow Rate (ml/min): %d \nPower Select (1-Voltage, 2-Current): %d \
                     \nPower Value (v or A): %d \nTest Durration (min): %d \nBreak" % (testDefault[0], testDefault[1],testDefault[2], testDefault[3])
                 file.write(str(newString))
-        
+
+def calibration():
+    i2c = board.I2C()
+    tca = adafruit_tca9548a.TCA9548A(i2c)
+    #mpr_0 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25)
+    mpr_1 = adafruit_mprls.MPRLS(tca[1], psi_min=0, psi_max=25)
+    #mpr_2 = adafruit_mprls.MPRLS(tca[2], psi_min=0, psi_max=25)
+    mpr_3 = adafruit_mprls.MPRLS(tca[3], psi_min=0, psi_max=25)
+    calibrationList = []
+    calibrationSamples = 500
+
+    while len(calibrationList) <= calibrationSamples:
+        #calibrationList.append(mpr_0.pressure)
+        calibrationList.append(mpr_1.pressure)
+        #calibrationList.append(mpr_2.pressure)
+        calibrationList.append(mpr_3.pressure)
+    
+    #to eliminate individual sensor drift
+    caliSum = sum(calibrationList)
+    calibrationValue = caliSum/calibrationSamples
+    saveTestPreset([calibrationValue],True) #Write Calibration value to Test Preset File
+    return(calibrationValue)
+    #tells the main program to contiune

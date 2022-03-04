@@ -95,7 +95,8 @@ class controls:
         self.TitlFlow = Label(master, text="Flow Controller", font=("Calibri",text+8))
         self.TitlFlow.place(x=setX,y=setY)
         self.TitlPower = Label(master, text="Power Supply", font=("Calibri",text+8))
-        self.TitlPower.place(x=setX,y=setY+90)
+        self.TitlPower.place(x=setX,y=setY+70)
+        
         #Countdown Timer
         self.LblTimer = Label(master, text="Remaining Time:", font=("Calibri",text+6))
         self.LblTimer.place(x=setX,y=setY-50)
@@ -120,32 +121,47 @@ class controls:
         #Power supply controls
         EntPower[0] = Entry(master, width=5, justify=RIGHT, validate="key", validatecommand=(validation, '%S'))
         self.LblPower = Label(master, text="Set Voltage:    ", font=("Calibri",text+4))
-        EntPower[0].place(x=entX,y=setY+150)
+        EntPower[0].place(x=entX,y=setY+150)#Power Entry Box
         EntPower[0].insert(0,testDefault[2])#Set Default
-        self.LblPower.place(x=setX,y=setY+150)
-        global var1, var2 #power supply Radio Buttons
+        self.LblPower.place(x=setX,y=setY+150)#Power Entry Lable
+        global var1, var2, logScale #power supply Radio Buttons
         var1 = IntVar()
         var2 = IntVar()
         self.radPowerV = Radiobutton(master, text="Voltage Control", variable=var1, value=1, command=lambda: self.lblChange())
         self.radPowerC = Radiobutton(master, text="Current Control", variable=var1, value=2, command=lambda: self.lblChange())
-        self.radPowerV.place(x=setX,y=setY+170)
-        self.radPowerC.place(x=setX,y=setY+190)
+        self.radPowerV.place(x=setX,y=setY+100)#Voltage select 
+        self.radPowerC.place(x=setX,y=setY+120)#Current Select
         var1.set(testDefault[1])
 
         #Test Duration
         EntTime[0] = Entry(master, width=5, justify=RIGHT, validate="key", validatecommand=(validation, '%S'))
-        self.LblTime = Label(master, text="Test Duration:", font=("Calibri",text+6))
-        EntTime[0].place(x=entX,y=setY+280)
+        self.LblTime = Label(master, text="Test Duration:", font=("Calibri",text+8))
+        EntTime[0].place(x=entX,y=setY+190)
         EntTime[0].insert(0,testDefault[3])#Set Default
-        self.LblTime.place(x=setX-20,y=setY+280)
+        self.LblTime.place(x=setX-20,y=setY+190)
 
+        ### Data Settings ###
+        dataX = setX+250
+        dataY = setY+350
+        self.TitlData = Label(master, text="Data Settings", font=("Calibri",text+10))
+        self.TitlData.place(x=dataX+30,y=dataY)
+        #Data Frequancy
+        #LogCheck = tk.Checkbutton(master, text='Gauge Pressure',variable=var2, onvalue=1, offvalue=0)
+        self.LblLog = Label(master, text="Data Log Rate (s)", font=("Calibri",text+6))
+        self.LblLog.place(x=dataX,y=dataY+30)
+        logScale = Scale(master, from_=0, to=20, label = "Set to 0 for <1s Logging", font=("Calibri",text+2), length=150, tickinterval=5, orient=HORIZONTAL,)
+        logScale.place(x=dataX,y=dataY+50)
+        logScale.set(0)
+
+        #Calibration Checkbox
         checkPressure = tk.Checkbutton(master, text='Gauge Pressure',variable=var2, onvalue=1, offvalue=0)
-        checkPressure.place(x=entX,y=setY+300)
+        checkPressure.place(x=dataX,y=dataY+110)
         var2.set(1)
 
+        
+    #### Data ####
         datax = 600
         datay = 80
-    #### Data ####
         #pressure
         self.dataHeading = Label(master, text="Live Data", font=("Calibri",text+8))
         self.dataHeading.place(x=datax+100,y=datay)
@@ -183,7 +199,6 @@ class controls:
     #### Buttons ####
         btnX = setX+50
         btnY = setY+390
-        print(btnY, setY)
         self.BtnPreStart = Button(master, text="Start PreTest", command=lambda: self.preTest(), width=10, height=2, bg='#DDDDDD', activebackground='#f7a840', wraplength=100)
         self.BtnPreStart.place(x=btnX-55,y=btnY)
         self.BtnStart = Button(master, text="Start Test", command=lambda: self.validateTest(), width=10, height=2, bg='#DDDDDD', activebackground='#72d466', wraplength=100, state= DISABLED)
@@ -214,12 +229,14 @@ class controls:
 
     #Save Test Default Values
     def saveTest(self):
-        global testDefault, radioVar
+        global testDefault, radioVar, logScale, var2
         try:
             testDefault[0] = float(EntFlow[0].get())
             testDefault[1] = float(radioVar)
             testDefault[2] = float(EntPower[0].get())
             testDefault[3] = float(EntTime[0].get())
+            testDefault[4] = float(logScale.get()) #Logging Value
+            testDefault[5] = float(var2.get()) #Calibration Setting
             func.saveTestPreset(testDefault,False)
         except:
             func.message("Warning","Save Test Settings Failed")
@@ -282,28 +299,29 @@ class controls:
     def preTest(self):
         global multi, q
         try:
-            testFreq = 0 #0 for no adjustment or num seconds between recordings *** need to make this user adjustable
             gasFlow = float(EntFlow[0].get()) #add similiar proportional control calcuations to powerValue
+            logRate = float(logScale.get()) #Logging Value
+            calibrating = bool(var2.get()) #Calibration Setting
         except:
            func.message("Warning","Numerical Entry Invalid")
-           testFreq = 0 #this one might be unneccessary, I'm not sure
-        else:
-            #### *** Make a button to let a user indicate this as true or false
-            calibrating = False  
+           #testFreq = 0 #this one might be unneccessary, I'm not sure
+        else: #only proceeds if test values pass muster
             if calibrating:
                 calibrateStatus = 1
                 self.BtnPreStart.config(text = "Calibrating")
+                calibratingValue = func.calibration()
             else:
                 calibrateStatus = 0
+                calibratingValue = 0
             
             #Initialization of Multiplexer Process
             q = Queue()
-            multi = Process(target= muliplexer, args= (calibrating,testFreq,q,))
+            multi = Process(target= muliplexer, args= (calibrating,logRate,q,))
             multi.start()
             #Setting up GPIO Pins for Relays
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(17,GPIO.OUT)
-            
+            # *** this can't start yet, messess calibration
             #Start Gas Flow and Pump once calibration is complete
             #q.put_nowait((3,gasFlow)) #send inital gas flow values
             GPIO.output(17, GPIO.HIGH) #turning on Pump

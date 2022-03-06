@@ -1,5 +1,5 @@
-Flow Rate (ml/min): 0 
-Power Select (1-Voltage, 2-Current): 2              
-Power Value (v or A): 3 
-Test Durration (min): 4 
-Break
+Flow Rate (ml/min): 2.000000 
+Power Select (1-Voltage, 2-Current): 1.000000 
+Power Value (v or A): 3.500000 
+Test Durration (min): 4.900000 
+Data Log Rate (0 = As fast as possible): 5.000000 

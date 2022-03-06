@@ -5,20 +5,23 @@ import time
 import RPi.GPIO as GPIO
 import adafruit_ina260
 import adafruit_mcp4725
+import adafruit_ads1x15.ads1015 as ADS
+from adafruit_ads1x15.analog_in import AnalogIn
 import func
 
 pressure = [0]*4
 electricity = [0]*3
 
-
 i2c = board.I2C()
 tca = adafruit_tca9548a.TCA9548A(i2c)
-#mpr_0 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25)
-mpr_1 = adafruit_mprls.MPRLS(tca[1], psi_min=0, psi_max=25)
-#mpr_2 = adafruit_mprls.MPRLS(tca[2], psi_min=0, psi_max=25)
-mpr_3 = adafruit_mprls.MPRLS(tca[3], psi_min=0, psi_max=25)
-energy = adafruit_ina260.INA260(tca[4])
-dac = adafruit_mcp4725.MCP4725(tca[5], address=0x60)
+#mpr_0 = adafruit_mprls.MPRLS(tca[4], psi_min=0, psi_max=25)
+mpr_1 = adafruit_mprls.MPRLS(tca[5], psi_min=0, psi_max=25)
+#mpr_2 = adafruit_mprls.MPRLS(tca[6], psi_min=0, psi_max=25)
+mpr_3 = adafruit_mprls.MPRLS(tca[7], psi_min=0, psi_max=25)
+energy = adafruit_ina260.INA260(tca[3])
+dac = adafruit_mcp4725.MCP4725(tca[2], address=0x60)
+adc = ADS.ADS1015(tca[0])
+chanADC = AnalogIn(adc, ADS.P0)
 
 
 
@@ -46,6 +49,8 @@ while powerValue <= 1:
     #elec = [energy.current, energy.voltage, energy.power]
     #print(elec[1])
     dac.normalized_value = powerValue
+    gasRB = chanADC.voltage
+    print(gasRB)
     #GPIO.output(17, GPIO.HIGH)
     #x = input()
     #r = elec[1]/aim

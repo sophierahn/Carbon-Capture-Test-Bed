@@ -22,9 +22,7 @@ def start_psensor(psen_pipe, q):
             if i[0] == 3:
                 pressure = i[1]
                 psen_pipe.send(pressure) #pressure sensor data
-            if i[0] == 4:
-                q.put_nowait((4,i[1])) #calibration status
-        
+            
         queueDump = []
     print("Pressure Closed")
     psen_pipe.close()

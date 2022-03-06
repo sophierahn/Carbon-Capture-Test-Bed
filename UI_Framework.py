@@ -1,3 +1,4 @@
+from distutils.log import error
 import sys
 import time
 import tkinter as tk
@@ -22,7 +23,6 @@ import func
 #import subprocess
 
 #Using *** to indicate Changes should be made in future
-
 
 #set true to view UI not on RPI
 mac = True
@@ -57,7 +57,7 @@ debug = False
 testRunning = False
 
 class controls:
-    global radioVar, var, estop, countdown, testDefault, graph, testRunning
+    global radioVar, estop, countdown, testDefault, graph, testRunning
     testDefault = func.loadTestPresets()
 
     def __init__(self, master):
@@ -75,12 +75,6 @@ class controls:
         setY = 130
         entX = 190
 
-        #Mac Settings
-        #text = 10
-        #setX = 70
-        #setY = 100
-        #entX = 160
-
         #### Data variables ####
         self.pressure = float(0)
         self.saltArea = float(0)
@@ -90,7 +84,6 @@ class controls:
         self.lblTitle = Label(master, text="MEA Cell Controls", font=("Calibri",text+14))
         self.lblTitle.place(x=400,y=10)
 
-
     #### Settings Titles ####
         self.TitlFlow = Label(master, text="Flow Controller", font=("Calibri",text+8))
         self.TitlFlow.place(x=setX,y=setY)
@@ -98,8 +91,8 @@ class controls:
         self.TitlPower.place(x=setX,y=setY+70)
         
         #Countdown Timer
-        self.LblTimer = Label(master, text="Remaining Time:", font=("Calibri",text+6))
-        self.LblTimer.place(x=setX,y=setY-50)
+        self.LblTimer = Label(master, text="Remaining Time:", font=("Calibri",text+8))
+        self.LblTimer.place(x=setX-40,y=setY-50)
         self.LblCountdown = Label(master, text="", font=("Calibri",text+6))
         self.LblCountdown.place(x=setX+140,y=setY-50)
 
@@ -124,7 +117,7 @@ class controls:
         EntPower[0].place(x=entX,y=setY+150)#Power Entry Box
         EntPower[0].insert(0,testDefault[2])#Set Default
         self.LblPower.place(x=setX,y=setY+150)#Power Entry Lable
-        global var1, var2, logScale #power supply Radio Buttons
+        global var1, var2, logScale #global UI varibles
         var1 = IntVar()
         var2 = IntVar()
         self.radPowerV = Radiobutton(master, text="Voltage Control", variable=var1, value=1, command=lambda: self.lblChange())
@@ -140,7 +133,7 @@ class controls:
         EntTime[0].insert(0,testDefault[3])#Set Default
         self.LblTime.place(x=setX-20,y=setY+190)
 
-        ### Data Settings ###
+    ### Data Settings ###
         dataX = setX+250
         dataY = setY+350
         self.TitlData = Label(master, text="Data Settings", font=("Calibri",text+10))
@@ -157,13 +150,12 @@ class controls:
         checkPressure = tk.Checkbutton(master, text='Gauge Pressure',variable=var2, onvalue=1, offvalue=0)
         checkPressure.place(x=dataX,y=dataY+110)
         var2.set(1)
-
         
-    #### Data ####
+    #### Live Data ####
         datax = 600
         datay = 80
         #pressure
-        self.dataHeading = Label(master, text="Live Data", font=("Calibri",text+8))
+        self.dataHeading = Label(master, text="Live Data", font=("Calibri",text+10))
         self.dataHeading.place(x=datax+100,y=datay)
         self.psen0 = Label(master, text="Inlet 1: 0kPa", font=("Calibri",text+6))
         self.psen0.place(x=datax,y=datay+35)
@@ -182,11 +174,11 @@ class controls:
         self.power2.place(x=datax+250,y=datay+105)
 
         salty = datay + 160
+        self.imageHeading = Label(master, text="Salt Idenification", font=("Calibri",text+8))
+        self.imageHeading.place(x=datax,y=salty)
+        self.saltData = Label(master, text="Total Salt Area: 0 mm2", font=("Calibri",text+6))
+        self.saltData.place(x=datax,y=salty+35)
         if not mac:
-            self.imageHeading = Label(master, text="Salt Idenification", font=("Calibri",text+8))
-            self.imageHeading.place(x=datax,y=salty)
-            self.saltData = Label(master, text="Total Salt Area: 0 mm2", font=("Calibri",text+6))
-            self.saltData.place(x=datax,y=salty+35)
             self.img = Image.open("/home/pi/Carbon-Capture-Test-Bed/test.jpg")
             self.imgW, self.imgH = self.img.size
             self.imgW = round(int(self.imgW)/10)
@@ -205,19 +197,18 @@ class controls:
         self.BtnStart.place(x=btnX+55,y=btnY)
         self.BtnCancel = Button(master, text="Cancel Test", command=lambda: self.stopTest(), width=10, height=2, bg='#DDDDDD', activebackground='#ff5959', wraplength=100)
         self.BtnCancel.place(x=btnX,y=btnY+50)
-        # self.BtnPurge = Button(master, text="Purge Cell", command=lambda: self.validateTest(), width=10, height=2, bg='#DDDDDD', activebackground='#32CD32', wraplength=100)
-        # self.BtnPurge.place(x=btnX+130,y=btnY+20)
+        
         self.BtnDefault = Button(master, text="Save Test Default", command=lambda: self.saveTest())
         self.BtnDefault.place(x=20,y=20)
 
         self.BtnClose = Button(master, text="Close", command=lambda: self.close())
         self.BtnClose.place(x=10,y=580)
 
-
+################################## Main Program ###############################################################
     #Change Powersupply Label
     def lblChange(self):
         global radioVar
-        radioVar = var.get()
+        radioVar = var1.get()
         if radioVar == 1:
             if debug:
                 print("changing voltage")
@@ -237,8 +228,10 @@ class controls:
             testDefault[3] = float(EntTime[0].get())
             testDefault[4] = float(logScale.get()) #Logging Value
             testDefault[5] = float(var2.get()) #Calibration Setting
+            print(testDefault)
             func.saveTestPreset(testDefault,False)
-        except:
+        except Exception as e:
+            print(e)
             func.message("Warning","Save Test Settings Failed")
 
     #Kill Processes
@@ -247,7 +240,7 @@ class controls:
         if debug:
             print("Killing")
         if 'psen_script' in globals():
-            q.put_nowait((3,True))
+            q.put_nowait((0,True)) #Send Shutdown Signal
             time.sleep(0.05)
             psen_script.terminate()
         if 'image_script' in globals():
@@ -255,15 +248,16 @@ class controls:
         if 'power_script' in globals():
             power_script.terminate()
         if 'multi' in globals():
-            q.put_nowait((3,True))
+            q.put_nowait((0,True)) #Send Shutdown Signal
             time.sleep(0.05)
-            multi.terminate()
+            multi.terminate() #Closes the Queue
         if not mac:
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(17,GPIO.OUT)
             GPIO.setup(21,GPIO.OUT)
             GPIO.output(17, GPIO.LOW)
             GPIO.output(21, GPIO.LOW)
+            func.setZero() #Uses tca outside mulitplexer to set DACs to zero (power and CO2)
         
     #closes window
     def close(self):
@@ -294,8 +288,7 @@ class controls:
             self.LblCountdown.config(text = "")
             self.BtnPreStart.config(text="Start PreTest", state = NORMAL)
 
-    ### Start Pre Test procedure: 
-            #calibrate pressure sensors, start pump and gas flowing in cell, call 30 sec wait function
+### Start Pre Test procedure ###  #calibrate pressure sensors, start pump and gas flowing in cell, call 30 sec wait function
     def preTest(self):
         global multi, q
         try:
@@ -307,31 +300,28 @@ class controls:
            #testFreq = 0 #this one might be unneccessary, I'm not sure
         else: #only proceeds if test values pass muster
             if calibrating:
-                calibrateStatus = 1
                 self.BtnPreStart.config(text = "Calibrating")
-                calibratingValue = func.calibration()
+                calibrationValue = func.calibration()
             else:
-                calibrateStatus = 0
-                calibratingValue = 0
+                calibrationValue = 0
             
             #Initialization of Multiplexer Process
             q = Queue()
-            multi = Process(target= muliplexer, args= (calibrating,logRate,q,))
+            multi = Process(target= muliplexer, args= (calibrationValue,logRate,q,))
             multi.start()
             #Setting up GPIO Pins for Relays
+            #Start Gas Flow and Pump once calibration is complete
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(17,GPIO.OUT)
-            # *** this can't start yet, messess calibration
-            #Start Gas Flow and Pump once calibration is complete
-            #q.put_nowait((3,gasFlow)) #send inital gas flow values
             GPIO.output(17, GPIO.HIGH) #turning on Pump
+            #q.put_nowait((3,gasFlow)) #send inital gas flow values
             
             start = time.time()
-            self.preTestCountDown(10, calibrateStatus) #Start 30sec preTest loop *** make gobal value, not hardcoded
+            self.preTestCountDown(10) #Start 30sec preTest loop *** make gobal value, not hardcoded
             self.preTestCheck(start) #Start checking loop, will shutdown system if test start delay is too long
             # *** unnecessary if Auto Test start is okay, this version requires user input
-
-    def preTestCountDown(self, i, calibrateStatus):
+              
+    def preTestCountDown(self, i):
         global estop
         queueDump = []
         
@@ -340,22 +330,8 @@ class controls:
                 queueDump.append(q.get_nowait())
             except:
                 pass
-        for i in queueDump:
-            if i[0] == 0:
-                shutoff = i[1]         #shutoff command
-                q.put_nowait((0,shutoff))
-            if i[0] == 1:
-                q.put_nowait((1,i[1])) #power sensor Data
-            if i[0] == 2:
-                q.put_nowait((2,i[1])) #DAC instructions
-            if i[0] == 3:
-                q.put_nowait((3,i[1])) #pressure sensor data
-            if i[0] == 4:       
-                calibrateStatus = i[1] #Calibration Status
 
-        if calibrateStatus == 1: #Calibrating
-            self.testWait = root.after(1000, lambda: self.preTestCountDown(i))
-        elif i > 0 and estop == False and calibrateStatus == 0: #Countdown Started
+        if i > 0 and estop == False: #Countdown Started
             self.BtnPreStart.config(text = str(i))
             i -= 1
             self.testWait = root.after(1000, lambda: self.preTestCountDown(i))
@@ -380,11 +356,11 @@ class controls:
         else:
             root.after_cancel(self.testCheck)
 
-    #Starting actual program, initiating buffers, starting power delivery to Cell
+### Start Test ###      Starting actual program, initiating buffers, starting power delivery to Cell
     def validateTest(self):
         global psen_script, image_script, power_script, q, radioVar, testRunning
         testRunning = True
-        valid = False
+
         if debug:
             print("validating")
         try:
@@ -393,16 +369,15 @@ class controls:
         except:
            func.message("Warning","Numerical Entry Invalid")
         else:
-            
-            #1 means voltage?
+            #1 means voltage
             if radioVar == 1: ### *** Remove hardcoded numbers, add calibration function
-                    powerNormValue = (powerValue*0.0386) - 0.0203 #Calculated Calibration Curve (y=0.0386x - 0.0203)
-            #2 means current?
+                powerNormValue = (powerValue*0.0386) - 0.0203 #Calculated Calibration Curve (y=0.0386x - 0.0203)
+            #2 means current
             if radioVar == 2:
                 powerNormValue = powerValue*5/20/3.28  #Current 0-20A Proportial 5v, percentage value for DAC 0-3.28v
             powerTuple = (radioVar,powerNormValue) #combining volt or current selection and Desired Value
 
-            #send inital set values
+            #Turn on Power Supply
             # q.put_nowait((2,powerTuple))
 
             #Initiallize pressure sensor process
@@ -419,7 +394,7 @@ class controls:
             # image_pipe, maini_pipe = Pipe()
             # image_script = Process(target= start_imageCapture, args= (image_pipe,))
             # image_script.start()
-            # maini_pipe.send(False)s
+
             #Turn on LEDs
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(21,GPIO.OUT)
@@ -431,39 +406,41 @@ class controls:
             self.power_sensor(power_pipe,mainpower_pipe)
             #self.image_capture(image_pipe, maini_pipe)
 
+### Repeating Functions ###
     def button_countdown(self,i):
+        global estop, countdown
         if debug:
             print("countdown")
-        global estop, countdown
+        
         if i > 0 and estop == False:
             self.LblCountdown.config(text = str(i))
             i -= 1
             countdown = root.after(1000, lambda: self.button_countdown(i))
         elif estop:
-            root.after_cancel(countdown)
             self.LblCountdown.config(text = "Test Cancelled")
+            root.after_cancel(countdown)
         else:
             self.LblCountdown.config(text = "Test Ended")
             self.stopTest()
+            root.after_cancel(countdown)
 
     def pressure_sensor(self, psen_pipe, mainp_pipe, testSec):
         global estop
         if debug:
             print("Pressure Sensor")
-            print("the main pipe poll comes back: ",mainp_pipe.poll())
+
         if not estop:
             pressureList = [0]*4
-            while mainp_pipe.poll():
+            while mainp_pipe.poll(): #empty Pressure Sensor Pipe
                 pressureList= mainp_pipe.recv()
-            #print(pressureList)
-            self.pressure_0 = round(pressureList[0],3)
+            self.pressure_0 = round(pressureList[0],3) #round all pressure values to 3 Decimals
             self.pressure_1 = round(pressureList[1],3)
             self.pressure_2 = round(pressureList[2],3)
             self.pressure_3 = round(pressureList[3],3)
 
-            self.graphing(self.pressure_0,self.pressure_1,self.pressure_2,self.pressure_3, testSec)
+            #self.graphing(self.pressure_0,self.pressure_1,self.pressure_2,self.pressure_3, testSec)
 
-            self.psen0.config(text = "Inlet 1: "+str(self.pressure_0)+"kPa")
+            self.psen0.config(text = "Inlet 1: "+str(self.pressure_0)+"kPa") #Update the pressure sensor labels on UI
             self.psen1.config(text = "Outlet 1: "+str(self.pressure_1)+"kPa")
             self.psen2.config(text = "Inlet 2: "+str(self.pressure_2)+"kPa")
             self.psen3.config(text = "Outlet 2: "+str(self.pressure_3)+"kPa")
@@ -474,17 +451,16 @@ class controls:
     def power_sensor(self, power_pipe, mainpower_pipe):
         global estop
         if debug:
-            print("Pressure Sensor")
-            print("the main pipe poll comes back: ",mainpower_pipe.poll())
+            print("Power Sensor")
         if not estop:
             powerList = [0]*3
-            while mainpower_pipe.poll():
+            while mainpower_pipe.poll(): #Empty power pipe
                 powerList= mainpower_pipe.recv()
             self.power_0 = round(powerList[0],3)
             self.power_1 = round(powerList[1],3)
             self.power_2 = round(powerList[2],3)
 
-            self.power0.config(text = "Current: "+str(self.power_0)+" mA")
+            self.power0.config(text = "Current: "+str(self.power_0)+" mA") #Update Lables
             self.power1.config(text = "Voltage: "+str(self.power_1)+" V")
             self.power2.config(text = "Power: "+str(self.power_2)+" mW")
             power_sensor = root.after(1000, lambda: self.power_sensor(power_pipe, mainpower_pipe))
@@ -495,12 +471,11 @@ class controls:
         global estop
         if debug:
             print("Image Capture Salt Area")
-            print("the main pipe poll comes back: ",maini_pipe.poll())
+       
         if not estop:
-            while maini_pipe.poll():
+            while maini_pipe.poll(): #Empty pipe 
                 self.saltArea = round(maini_pipe.recv(),3)
-            #print(self.saltArea)
-            #testing
+
             self.saltData.config(text = "Total Salt Area: %fmm2"%self.saltArea)
             self.img = Image.open(func.latestFile())
             self.imgW, self.imgH = self.img.size
@@ -513,7 +488,7 @@ class controls:
         else:
             root.after_cancel(self.image_capture)
 
-    def graphing(self, press0, press1, press2, press3, testSec):
+    def graphing(self, press0, press1, press2, press3, testSec): ### Not currently in Use, Last thing to fix, maybe dont bother
         global graph, estop
         while graph and not estop:
             press_0 = []

@@ -55,6 +55,7 @@ graph = False
 countdown = None
 debug = False
 testRunning = False
+testDefault = []
 
 class controls:
     global radioVar, estop, countdown, testDefault, graph, testRunning
@@ -62,13 +63,12 @@ class controls:
 
     def __init__(self, master):
         self.master = master
+        global testDefault
         #Define Window
         master.title("Carbon Capture Control")
         master.geometry('1000x630') #Set Size of GUI window (WxH)
         master.lift()
-        #self.canvas = Canvas(master, width=1000, height=630)
-        #self.canvas.pack()
-        #master.attributes('-topmost',True)
+
         #RPI settings
         text = 6
         setX = 90
@@ -105,17 +105,19 @@ class controls:
         validation = root.register(only_numbers)
 
         #Flow Controller controls
-        EntFlow[0] = Entry(master, width=5, justify=RIGHT, validate="key", validatecommand=(validation, '%S'))
+        EntFlow[0] = Entry(master, width=5, justify=RIGHT)
         self.LblFlow = Label(master, text="Flow Rate:", font=("Calibri",text+4))
         EntFlow[0].place(x=entX,y=setY+30)
-        EntFlow[0].insert(0,testDefault[0])#Set Default
+        EntFlow[0].insert(tk.INSERT,testDefault[0])
+        EntFlow[0].config(validate="key", validatecommand=(validation, '%S'))    
         self.LblFlow.place(x=setX,y=setY+30)
 
         #Power supply controls
-        EntPower[0] = Entry(master, width=5, justify=RIGHT, validate="key", validatecommand=(validation, '%S'))
-        self.LblPower = Label(master, text="Set Voltage:    ", font=("Calibri",text+4))
+        EntPower[0] = Entry(master, width=5, justify=RIGHT)
         EntPower[0].place(x=entX,y=setY+150)#Power Entry Box
-        EntPower[0].insert(0,testDefault[2])#Set Default
+        EntPower[0].insert(tk.INSERT,testDefault[2])#Set Default
+        EntPower[0].config(validate="key", validatecommand=(validation, '%S'))
+        self.LblPower = Label(master, text="Set Voltage:    ", font=("Calibri",text+4))
         self.LblPower.place(x=setX,y=setY+150)#Power Entry Lable
         global var1, var2, logScale #global UI varibles
         var1 = IntVar()
@@ -124,13 +126,15 @@ class controls:
         self.radPowerC = Radiobutton(master, text="Current Control", variable=var1, value=2, command=lambda: self.lblChange())
         self.radPowerV.place(x=setX,y=setY+100)#Voltage select 
         self.radPowerC.place(x=setX,y=setY+120)#Current Select
-        var1.set(testDefault[1])
+        var1.set(int(testDefault[1]))
+        self.lblChange()
 
         #Test Duration
-        EntTime[0] = Entry(master, width=5, justify=RIGHT, validate="key", validatecommand=(validation, '%S'))
-        self.LblTime = Label(master, text="Test Duration:", font=("Calibri",text+8))
+        EntTime[0] = Entry(master, width=5, justify=RIGHT)
         EntTime[0].place(x=entX,y=setY+190)
         EntTime[0].insert(0,testDefault[3])#Set Default
+        EntTime[0].config(validate="key", validatecommand=(validation, '%S'))
+        self.LblTime = Label(master, text="Test Duration:", font=("Calibri",text+8))
         self.LblTime.place(x=setX-20,y=setY+190)
 
     ### Data Settings ###
@@ -144,12 +148,12 @@ class controls:
         self.LblLog.place(x=dataX,y=dataY+30)
         logScale = Scale(master, from_=0, to=20, label = "Set to 0 for <1s Logging", font=("Calibri",text+2), length=150, tickinterval=5, orient=HORIZONTAL,)
         logScale.place(x=dataX,y=dataY+50)
-        logScale.set(0)
+        logScale.set(testDefault[4])
 
         #Calibration Checkbox
         checkPressure = tk.Checkbutton(master, text='Gauge Pressure',variable=var2, onvalue=1, offvalue=0)
         checkPressure.place(x=dataX,y=dataY+110)
-        var2.set(1)
+        var2.set(int(testDefault[5]))
         
     #### Live Data ####
         datax = 600
@@ -221,6 +225,7 @@ class controls:
     #Save Test Default Values
     def saveTest(self):
         global testDefault, radioVar, logScale, var2
+        testDefault = [0]*6
         try:
             testDefault[0] = float(EntFlow[0].get())
             testDefault[1] = float(radioVar)
@@ -295,6 +300,8 @@ class controls:
             gasFlow = float(EntFlow[0].get()) #add similiar proportional control calcuations to powerValue
             logRate = float(logScale.get()) #Logging Value
             calibrating = bool(var2.get()) #Calibration Setting
+            currentLimit = 10
+            voltLimit = 20
         except:
            func.message("Warning","Numerical Entry Invalid")
            #testFreq = 0 #this one might be unneccessary, I'm not sure
@@ -307,7 +314,8 @@ class controls:
             
             #Initialization of Multiplexer Process
             q = Queue()
-            multi = Process(target= muliplexer, args= (calibrationValue,logRate,q,))
+            multi_pipe, mainMulti_pipe = Pipe()
+            multi = Process(target= muliplexer, args= (calibrationValue,logRate,currentLimit,voltLimit,multi_pipe,q,))
             multi.start()
             #Setting up GPIO Pins for Relays
             #Start Gas Flow and Pump once calibration is complete
@@ -319,6 +327,7 @@ class controls:
             start = time.time()
             self.preTestCountDown(10) #Start 30sec preTest loop *** make gobal value, not hardcoded
             self.preTestCheck(start) #Start checking loop, will shutdown system if test start delay is too long
+            self.errorChecking(mainMulti_pipe)
             # *** unnecessary if Auto Test start is okay, this version requires user input
               
     def preTestCountDown(self, i):
@@ -437,7 +446,6 @@ class controls:
             self.pressure_1 = round(pressureList[1],3)
             self.pressure_2 = round(pressureList[2],3)
             self.pressure_3 = round(pressureList[3],3)
-
             #self.graphing(self.pressure_0,self.pressure_1,self.pressure_2,self.pressure_3, testSec)
 
             self.psen0.config(text = "Inlet 1: "+str(self.pressure_0)+"kPa") #Update the pressure sensor labels on UI
@@ -487,6 +495,18 @@ class controls:
             image_capture = root.after(1000, lambda: self.image_capture(image_pipe, maini_pipe))
         else:
             root.after_cancel(self.image_capture)
+
+    def errorChecking(self, mainMulti_pipe):
+        if not estop:
+            while mainMulti_pipe.poll():
+                error = mainMulti_pipe.recv()
+            if error:
+                self.stopTest()
+            error_repeat = root.after(500, lambda: self.errorChecking(mainMulti_pipe))
+        else:
+            root.after_cancel(self.error_repeat)    
+
+
 
     def graphing(self, press0, press1, press2, press3, testSec): ### Not currently in Use, Last thing to fix, maybe dont bother
         global graph, estop

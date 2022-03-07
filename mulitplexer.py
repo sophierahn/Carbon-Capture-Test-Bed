@@ -30,7 +30,7 @@ import func
 #Add option for lower frequency
 
 
-def muliplexer(calibrationValue, testFreq,q):
+def muliplexer(calibrationValue,testFreq,currentLimit,voltLimit,multi_pipe,q):
     queueDump = []
     powerList = [0]*3
     pressureList = [0]*4
@@ -88,6 +88,7 @@ def muliplexer(calibrationValue, testFreq,q):
                     firstTime = False
             if i[0] == 3:
                 q.put_nowait((3,i[1])) #pressure sensor data
+            
         
         ### Normal Opperation ###
         ##Collecting Data and Writing to lists
@@ -101,7 +102,11 @@ def muliplexer(calibrationValue, testFreq,q):
 
         pressureList = [random.randint(5,10), p1, random.randint(5,10), p3]
         powerList = [energy.current, energy.voltage, energy.power]
-        
+
+    ### Error Checking ### *** add pressure fluxuation 
+        if energy.current > currentLimit or energy.voltage > voltLimit:
+            #shutoff = True ### *** sending shutoff signal from here means pressure and power dont have a chance to shutdown
+            multi_pipe.send(True) 
 
         #Writing Pressure and Power data to the Queue
         q.put_nowait((3,pressureList))
@@ -110,7 +115,7 @@ def muliplexer(calibrationValue, testFreq,q):
         #Writing data to DACs
         ### *** add switching system to select current vs volt control
         #dac_1.normalized_value = powerLevel[1]
-        
+    
         queueDump = [] #reseting the local queue list
         
         #Logging, intermitant or direct

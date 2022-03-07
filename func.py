@@ -59,23 +59,24 @@ def loadTestPresets():
     count = 0
     for i in testDefault:
         colon = int(i.find(':')+2)
-        testDefault[count] = i[colon:]
+        testDefault[count] = float(i[colon:])
         count += 1
     return testDefault
 
 def saveTestPreset(testDefault,calibrate):
-        if calibrate:
-            with open('TestPreset.txt', 'a') as file:
-                newString = "Calibrated Atmospheric Pressure: %f" %(testDefault[0])
-                file.write(str(newString))
-        else:
-            with open('TestPreset.txt', 'w') as file:
-                newString = "Flow Rate (ml/min): %f \n\
-Power Select (1-Voltage, 2-Current): %f \n\
-Power Value (v or A): %f \n\
-Test Durration (min): %f \n\
-Data Log Rate (0 = As fast as possible): %f \n" % (testDefault[0], testDefault[1], testDefault[2], testDefault[3], testDefault[4])
-                file.write(str(newString))
+    if calibrate:
+        with open('TestPreset.txt', 'a') as file:
+            newString = "Calibrated Atmospheric Pressure: %f" %(testDefault[0])
+            file.write(str(newString))
+    else:
+        with open('TestPreset.txt', 'w') as file:
+            newString = "Flow Rate (ml/min): %f \n\
+            Power Select (1-Voltage, 2-Current): %f \n\
+            Power Value (v or A): %f \n\
+            Test Durration (min): %f \n\
+            Data Log Rate (0=As fast as possible): %f \n\
+            Calibration Setting (0=absolute, 1=gauge): %f \n" % (testDefault[0], testDefault[1], testDefault[2], testDefault[3], testDefault[4], testDefault[5])
+            file.write(str(newString))
 
 def calibration(): 
     i2c = board.I2C()

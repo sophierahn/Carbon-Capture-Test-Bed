@@ -2,7 +2,6 @@
 
 def power_log (power_pipe, q):
     shutoff = False
-    #dataCheck = []
     queueDump = []
     power = [0]*3
 
@@ -12,16 +11,20 @@ def power_log (power_pipe, q):
                 queueDump.append(q.get_nowait())
             except:
                 pass
+        
         for i in queueDump:
             if i[0] == 0:
-                q.put_nowait((0,i[1]))
+                shutoff = i[1]  #shutoff command
+                q.put_nowait((0,shutoff))
             if i[0] == 1:
                 power = i[1]
-                power_pipe.send(power)
+                power_pipe.send(power) #power sensor Data
             if i[0] == 2:
-                shutoff = i[1]
-                q.put_nowait((2,shutoff))
+                q.put_nowait((2,i[1]))
+            if i[0] == 3:
+                q.put_nowait((3,i[1])) #pressure sensor data
+            
         queueDump = []
+        
     print("Power Closed")
-    #print("Pressure:",dataCheck[-10:-1])
     power_pipe.close()

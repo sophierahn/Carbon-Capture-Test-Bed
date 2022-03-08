@@ -75,7 +75,11 @@ def saveTestPreset(testDefault,calibrate):
             Power Value (v or A): %f \n\
             Test Durration (min): %f \n\
             Data Log Rate (0=As fast as possible): %f \n\
-            Calibration Setting (0=absolute, 1=gauge): %f \n" % (testDefault[0], testDefault[1], testDefault[2], testDefault[3], testDefault[4], testDefault[5])
+            Calibration Setting (0=absolute, 1=gauge): %f \n\
+            Flow Limit: %f \n\
+            Current Limit: %f \n\
+            Voltage Limit: %f\n\
+            Pressure Limit: %f\n" % (testDefault[0], testDefault[1], testDefault[2], testDefault[3], testDefault[4], testDefault[5], testDefault[6],testDefault[7],testDefault[8],testDefault[9])
             file.write(str(newString))
 
 def calibration(): 

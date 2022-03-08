@@ -48,7 +48,10 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 EntFlow = [None]*1
 EntPower = [None]*1
 EntTime = [None]*1
-EntPump = [None]*1
+EntFlowLim = [None]*1
+EntCurrentLim = [None]*1
+EntVoltLim = [None]*1
+EntPressureLim = [None]*1
 
 estop = False
 graph = False
@@ -71,9 +74,9 @@ class controls:
 
         #RPI settings
         text = 6
-        setX = 90
+        setX = 30
         setY = 130
-        entX = 190
+        entX = 130
 
         #### Data variables ####
         self.pressure = float(0)
@@ -89,12 +92,17 @@ class controls:
         self.TitlFlow.place(x=setX,y=setY)
         self.TitlPower = Label(master, text="Power Supply", font=("Calibri",text+8))
         self.TitlPower.place(x=setX,y=setY+70)
+
+        limX = setX+200
+        limY = setY-30
+        self.TitlLimits = Label(master, text="Shutoff Limits", font=("Calibri",text+8))
+        self.TitlLimits.place(x=limX,y=limY)
         
         #Countdown Timer
         self.LblTimer = Label(master, text="Remaining Time:", font=("Calibri",text+8))
-        self.LblTimer.place(x=setX-40,y=setY-50)
+        self.LblTimer.place(x=setX,y=setY-50)
         self.LblCountdown = Label(master, text="", font=("Calibri",text+6))
-        self.LblCountdown.place(x=setX+140,y=setY-50)
+        self.LblCountdown.place(x=setX+100,y=setY-50)
 
     #### Settings Controls ####
         def only_numbers(char):
@@ -105,20 +113,21 @@ class controls:
         validation = root.register(only_numbers)
 
         #Flow Controller controls
-        EntFlow[0] = Entry(master, width=5, justify=RIGHT)
         self.LblFlow = Label(master, text="Flow Rate:", font=("Calibri",text+4))
+        self.LblFlow.place(x=setX,y=setY+30)
+        EntFlow[0] = Entry(master, width=5, justify=RIGHT)
         EntFlow[0].place(x=entX,y=setY+30)
         EntFlow[0].insert(tk.INSERT,testDefault[0])
         EntFlow[0].config(validate="key", validatecommand=(validation, '%S'))    
-        self.LblFlow.place(x=setX,y=setY+30)
-
+        
         #Power supply controls
+        self.LblPower = Label(master, text="Set Voltage:    ", font=("Calibri",text+4))
+        self.LblPower.place(x=setX,y=setY+150)#Power Entry Lable
         EntPower[0] = Entry(master, width=5, justify=RIGHT)
         EntPower[0].place(x=entX,y=setY+150)#Power Entry Box
         EntPower[0].insert(tk.INSERT,testDefault[2])#Set Default
         EntPower[0].config(validate="key", validatecommand=(validation, '%S'))
-        self.LblPower = Label(master, text="Set Voltage:    ", font=("Calibri",text+4))
-        self.LblPower.place(x=setX,y=setY+150)#Power Entry Lable
+        
         global var1, var2, logScale #global UI varibles
         var1 = IntVar()
         var2 = IntVar()
@@ -136,6 +145,35 @@ class controls:
         EntTime[0].config(validate="key", validatecommand=(validation, '%S'))
         self.LblTime = Label(master, text="Test Duration:", font=("Calibri",text+8))
         self.LblTime.place(x=setX-20,y=setY+190)
+
+    ### Shutoff Limits ###
+        self.lblFlowLim = Label(master, text="Flow Rate Cut Off (ml/min):", font=("Calibri",text+4))
+        self.lblFlowLim.place(x=limX,y=limY+30)
+        EntFlowLim[0] = Entry(master, width=5, justify=RIGHT)
+        EntFlowLim[0].place(x=limX+130,y=limY+30)
+        EntFlowLim[0].insert(tk.INSERT,testDefault[6])
+        EntFlowLim[0].config(validate="key", validatecommand=(validation, '%S')) 
+
+        self.lblCurrentLim = Label(master, text="Current Cut Off (mA):", font=("Calibri",text+4))
+        self.lblCurrentLim.place(x=limX,y=limY+60)
+        EntCurrentLim[0] = Entry(master, width=5, justify=RIGHT)
+        EntCurrentLim[0].place(x=limX+130,y=limY+60)
+        EntCurrentLim[0].insert(tk.INSERT,testDefault[7])
+        EntCurrentLim[0].config(validate="key", validatecommand=(validation, '%S')) 
+
+        self.lblVoltLim = Label(master, text="Voltage Cut Off (V):", font=("Calibri",text+4))
+        self.lblVoltLim.place(x=limX,y=limY+90)
+        EntVoltLim[0] = Entry(master, width=5, justify=RIGHT)
+        EntVoltLim[0].place(x=limX+130,y=limY+90)
+        EntVoltLim[0].insert(tk.INSERT,testDefault[8])
+        EntVoltLim[0].config(validate="key", validatecommand=(validation, '%S')) 
+         
+        self.lblPressureLim = Label(master, text="Pressure Flux Limit (kpa):", font=("Calibri",text+4))
+        self.lblPressureLim.place(x=limX,y=limY+120)
+        EntPressureLim[0] = Entry(master, width=5, justify=RIGHT)
+        EntPressureLim[0].place(x=limX+130,y=limY+120)
+        EntPressureLim[0].insert(tk.INSERT,testDefault[9])
+        EntPressureLim[0].config(validate="key", validatecommand=(validation, '%S')) 
 
     ### Data Settings ###
         dataX = setX+250
@@ -225,7 +263,7 @@ class controls:
     #Save Test Default Values
     def saveTest(self):
         global testDefault, radioVar, logScale, var2
-        testDefault = [0]*6
+        testDefault = [0]*10
         try:
             testDefault[0] = float(EntFlow[0].get())
             testDefault[1] = float(radioVar)
@@ -233,6 +271,10 @@ class controls:
             testDefault[3] = float(EntTime[0].get())
             testDefault[4] = float(logScale.get()) #Logging Value
             testDefault[5] = float(var2.get()) #Calibration Setting
+            testDefault[6] = float(EntFlowLim[0].get())
+            testDefault[7] = float(EntCurrentLim[0].get())
+            testDefault[8] = float(EntVoltLim[0].get())
+            testDefault[9] = float(EntPressureLim[0].get())
             print(testDefault)
             func.saveTestPreset(testDefault,False)
         except Exception as e:
@@ -296,12 +338,15 @@ class controls:
 ### Start Pre Test procedure ###  #calibrate pressure sensors, start pump and gas flowing in cell, call 30 sec wait function
     def preTest(self):
         global multi, q
+        limitList = [0]*4
         try:
             gasFlow = float(EntFlow[0].get()) #add similiar proportional control calcuations to powerValue
             logRate = float(logScale.get()) #Logging Value
             calibrating = bool(var2.get()) #Calibration Setting
-            currentLimit = 10
-            voltLimit = 20
+            limitList[0] = float(EntFlowLim[0].get())
+            limitList[1] = float(EntCurrentLim[0].get())
+            limitList[2] = float(EntVoltLim[0].get())
+            limitList[3] = float(EntPressureLim[0].get())
         except:
            func.message("Warning","Numerical Entry Invalid")
            #testFreq = 0 #this one might be unneccessary, I'm not sure
@@ -315,7 +360,7 @@ class controls:
             #Initialization of Multiplexer Process
             q = Queue()
             multi_pipe, mainMulti_pipe = Pipe()
-            multi = Process(target= muliplexer, args= (calibrationValue,logRate,currentLimit,voltLimit,multi_pipe,q,))
+            multi = Process(target= muliplexer, args= (calibrationValue,logRate,limitList,multi_pipe,q,))
             multi.start()
             #Setting up GPIO Pins for Relays
             #Start Gas Flow and Pump once calibration is complete
@@ -332,14 +377,7 @@ class controls:
               
     def preTestCountDown(self, i):
         global estop
-        queueDump = []
-        
-        while not q.empty():
-            try:
-                queueDump.append(q.get_nowait())
-            except:
-                pass
-
+ 
         if i > 0 and estop == False: #Countdown Started
             self.BtnPreStart.config(text = str(i))
             i -= 1
@@ -369,7 +407,6 @@ class controls:
     def validateTest(self):
         global psen_script, image_script, power_script, q, radioVar, testRunning
         testRunning = True
-
         if debug:
             print("validating")
         try:
@@ -502,6 +539,7 @@ class controls:
                 error = mainMulti_pipe.recv()
             if error:
                 self.stopTest()
+                func.message("Error","Test was Ended due to Sensor Reading over Limit")
             error_repeat = root.after(500, lambda: self.errorChecking(mainMulti_pipe))
         else:
             root.after_cancel(self.error_repeat)    

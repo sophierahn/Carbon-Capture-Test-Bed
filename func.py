@@ -86,9 +86,9 @@ def calibration():
     i2c = board.I2C()
     tca = adafruit_tca9548a.TCA9548A(i2c)
     #mpr_0 = adafruit_mprls.MPRLS(tca[4], psi_min=0, psi_max=25) # *** update TCA indexes with new pi setup
-    mpr_1 = adafruit_mprls.MPRLS(tca[6], psi_min=0, psi_max=25)
+    mpr_1 = adafruit_mprls.MPRLS(tca[5], psi_min=0, psi_max=25)
     #mpr_2 = adafruit_mprls.MPRLS(tca[6], psi_min=0, psi_max=25)
-    mpr_3 = adafruit_mprls.MPRLS(tca[7], psi_min=0, psi_max=25)
+    #mpr_3 = adafruit_mprls.MPRLS(tca[7], psi_min=0, psi_max=25)
     calibrationList = []
     calibrationSamples = 500 # ***change value as needed
 
@@ -96,12 +96,12 @@ def calibration():
         #calibrationList.append(mpr_0.pressure)
         calibrationList.append(mpr_1.pressure)
         #calibrationList.append(mpr_2.pressure)
-        calibrationList.append(mpr_3.pressure)
+        #calibrationList.append(mpr_3.pressure)
     
     #to eliminate individual sensor drift
     caliSum = sum(calibrationList)
     calibrationValue = caliSum/calibrationSamples
-    saveTestPreset([calibrationValue],True) #Write Calibration value to Test Preset File
+    #saveTestPreset([calibrationValue],True) #Write Calibration value to Test Preset File
     return(calibrationValue)
 
 

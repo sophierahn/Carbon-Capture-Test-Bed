@@ -17,7 +17,7 @@ tca = adafruit_tca9548a.TCA9548A(i2c)
 #mpr_0 = adafruit_mprls.MPRLS(tca[4], psi_min=0, psi_max=25)
 #mpr_1 = adafruit_mprls.MPRLS(tca[6], psi_min=0, psi_max=25)
 #mpr_2 = adafruit_mprls.MPRLS(tca[6], psi_min=0, psi_max=25)
-mpr_3 = adafruit_mprls.MPRLS(tca[7], psi_min=0, psi_max=25)
+mpr_3 = adafruit_mprls.MPRLS(tca[5], psi_min=0, psi_max=25)
 #energy = adafruit_ina260.INA260(tca[3])
 #dac = adafruit_mcp4725.MCP4725(tca[2], address=0x60)
 #adc = ADS.ADS1015(tca[0])
@@ -25,24 +25,27 @@ mpr_3 = adafruit_mprls.MPRLS(tca[7], psi_min=0, psi_max=25)
 
 
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(17,GPIO.OUT)
+#GPIO.setmode(GPIO.BCM)
+#GPIO.setup(17,GPIO.OUT)
 
 # print(func.loadTestPresets())
 # func.saveTestPreset([0,2,3,4])
 # print(func.loadTestPresets())
 count = 0
-while count <= 10:
-    GPIO.output(17, GPIO.HIGH)
-    pressure[0] = round(mpr_1.pressure,3)
-    pressure[1] = round(mpr_3.pressure,3)
+#while count <= 10:
+    #GPIO.output(17, GPIO.HIGH)
+    #pressure[0] = round(mpr_1.pressure,3)
+    #pressure[1] = round(mpr_3.pressure,3)
     #pressure[2] = round(mpr_2.pressure,3)
 #     pressure[3] = round(mpr_3.pressure,3)
-    print (pressure)
-    count = count +1
+    #print (pressure)
+    #count = count +1
     #r = 1
     #setValue = 1748
     #aim = 1.4
+now = time.time()
+value = func.calibration()
+print(value, now, now-time.time())
 #powerValue = 0
 #print("Starting")
 #while powerValue <= 10:
@@ -59,7 +62,7 @@ while count <= 10:
     #x = input()
     #r = elec[1]/aim
     #print (r)
-    #time.sleep(4)
+    #time.sleep(1)
     #elec = [energy.current, energy.voltage, energy.power]
     #print(elec[1], elec[0], elec[2])
     #GPIO.output(17, GPIO.LOW)

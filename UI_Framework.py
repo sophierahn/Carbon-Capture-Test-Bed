@@ -154,7 +154,7 @@ class controls:
         EntFlowLim[0].insert(tk.INSERT,testDefault[6])
         EntFlowLim[0].config(validate="key", validatecommand=(validation, '%S')) 
 
-        self.lblCurrentLim = Label(master, text="Current Cut Off (mA):", font=("Calibri",text+4))
+        self.lblCurrentLim = Label(master, text="Current Cut Off (A):", font=("Calibri",text+4))
         self.lblCurrentLim.place(x=limX,y=limY+60)
         EntCurrentLim[0] = Entry(master, width=5, justify=RIGHT)
         EntCurrentLim[0].place(x=limX+130,y=limY+60)

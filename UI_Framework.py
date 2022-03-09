@@ -25,7 +25,7 @@ import func
 #Using *** to indicate Changes should be made in future
 
 #set true to view UI not on RPI
-mac = True
+mac = False
 if not mac:
     from pressure_sensor import start_psensor
     from detect_bright_spots import start_imageCapture
@@ -42,6 +42,7 @@ if not mac:
     #This doesn't need to be done in a specific process bc it's interacting with the OS
     #subprocess.run(["udisksctl",  "mount",  "-b",  "/dev/sdc1"])
 
+# *** Error checking function throwing an error, Pressure not displaying on UI, Calibrating tag not showing up
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -81,6 +82,7 @@ class controls:
         #### Data variables ####
         self.pressure = float(0)
         self.saltArea = float(0)
+        self.error = False
         # self.canvas.create_line(1,1,1,255, width = 3, fill="#666666")
 
         #Master Title
@@ -92,11 +94,6 @@ class controls:
         self.TitlFlow.place(x=setX,y=setY)
         self.TitlPower = Label(master, text="Power Supply", font=("Calibri",text+8))
         self.TitlPower.place(x=setX,y=setY+70)
-
-        limX = setX+200
-        limY = setY-30
-        self.TitlLimits = Label(master, text="Shutoff Limits", font=("Calibri",text+8))
-        self.TitlLimits.place(x=limX,y=limY)
         
         #Countdown Timer
         self.LblTimer = Label(master, text="Remaining Time:", font=("Calibri",text+8))
@@ -143,46 +140,50 @@ class controls:
         EntTime[0].place(x=entX,y=setY+190)
         EntTime[0].insert(0,testDefault[3])#Set Default
         EntTime[0].config(validate="key", validatecommand=(validation, '%S'))
-        self.LblTime = Label(master, text="Test Duration:", font=("Calibri",text+8))
+        self.LblTime = Label(master, text="Test Duration:", font=("Calibri",text+6))
         self.LblTime.place(x=setX-20,y=setY+190)
 
     ### Shutoff Limits ###
+        limX = setX+200
+        limY = setY-30
+        self.TitlLimits = Label(master, text="Shutoff Limits", font=("Calibri",text+8))
+        self.TitlLimits.place(x=limX,y=limY)
+
         self.lblFlowLim = Label(master, text="Flow Rate Cut Off (ml/min):", font=("Calibri",text+4))
         self.lblFlowLim.place(x=limX,y=limY+30)
         EntFlowLim[0] = Entry(master, width=5, justify=RIGHT)
-        EntFlowLim[0].place(x=limX+130,y=limY+30)
+        EntFlowLim[0].place(x=limX+180,y=limY+30)
         EntFlowLim[0].insert(tk.INSERT,testDefault[6])
         EntFlowLim[0].config(validate="key", validatecommand=(validation, '%S')) 
 
         self.lblCurrentLim = Label(master, text="Current Cut Off (A):", font=("Calibri",text+4))
         self.lblCurrentLim.place(x=limX,y=limY+60)
         EntCurrentLim[0] = Entry(master, width=5, justify=RIGHT)
-        EntCurrentLim[0].place(x=limX+130,y=limY+60)
+        EntCurrentLim[0].place(x=limX+180,y=limY+60)
         EntCurrentLim[0].insert(tk.INSERT,testDefault[7])
         EntCurrentLim[0].config(validate="key", validatecommand=(validation, '%S')) 
 
         self.lblVoltLim = Label(master, text="Voltage Cut Off (V):", font=("Calibri",text+4))
         self.lblVoltLim.place(x=limX,y=limY+90)
         EntVoltLim[0] = Entry(master, width=5, justify=RIGHT)
-        EntVoltLim[0].place(x=limX+130,y=limY+90)
+        EntVoltLim[0].place(x=limX+180,y=limY+90)
         EntVoltLim[0].insert(tk.INSERT,testDefault[8])
         EntVoltLim[0].config(validate="key", validatecommand=(validation, '%S')) 
          
         self.lblPressureLim = Label(master, text="Pressure Flux Limit (kpa):", font=("Calibri",text+4))
         self.lblPressureLim.place(x=limX,y=limY+120)
         EntPressureLim[0] = Entry(master, width=5, justify=RIGHT)
-        EntPressureLim[0].place(x=limX+130,y=limY+120)
+        EntPressureLim[0].place(x=limX+180,y=limY+120)
         EntPressureLim[0].insert(tk.INSERT,testDefault[9])
         EntPressureLim[0].config(validate="key", validatecommand=(validation, '%S')) 
 
     ### Data Settings ###
-        dataX = setX+250
-        dataY = setY+350
-        self.TitlData = Label(master, text="Data Settings", font=("Calibri",text+10))
-        self.TitlData.place(x=dataX+30,y=dataY)
+        dataX = limX+30
+        dataY = limY+170
+        self.TitlData = Label(master, text="Logging Settings", font=("Calibri",text+8))
+        self.TitlData.place(x=dataX,y=dataY)
         #Data Frequancy
-        #LogCheck = tk.Checkbutton(master, text='Gauge Pressure',variable=var2, onvalue=1, offvalue=0)
-        self.LblLog = Label(master, text="Data Log Rate (s)", font=("Calibri",text+6))
+        self.LblLog = Label(master, text="Data Log Rate (s)", font=("Calibri",text+4))
         self.LblLog.place(x=dataX,y=dataY+30)
         logScale = Scale(master, from_=0, to=20, label = "Set to 0 for <1s Logging", font=("Calibri",text+2), length=150, tickinterval=5, orient=HORIZONTAL,)
         logScale.place(x=dataX,y=dataY+50)
@@ -190,7 +191,7 @@ class controls:
 
         #Calibration Checkbox
         checkPressure = tk.Checkbutton(master, text='Gauge Pressure',variable=var2, onvalue=1, offvalue=0)
-        checkPressure.place(x=dataX,y=dataY+110)
+        checkPressure.place(x=dataX,y=dataY+130)
         var2.set(int(testDefault[5]))
         
     #### Live Data ####
@@ -351,8 +352,8 @@ class controls:
            func.message("Warning","Numerical Entry Invalid")
            #testFreq = 0 #this one might be unneccessary, I'm not sure
         else: #only proceeds if test values pass muster
+            self.BtnPreStart.config(text = "Calibrating")
             if calibrating:
-                self.BtnPreStart.config(text = "Calibrating")
                 calibrationValue = func.calibration()
             else:
                 calibrationValue = 0
@@ -365,8 +366,8 @@ class controls:
             #Setting up GPIO Pins for Relays
             #Start Gas Flow and Pump once calibration is complete
             GPIO.setmode(GPIO.BCM)
-            GPIO.setup(17,GPIO.OUT)
-            GPIO.output(17, GPIO.HIGH) #turning on Pump
+            GPIO.setup(21,GPIO.OUT)
+            #GPIO.output(21, GPIO.HIGH) #turning on Pump
             #q.put_nowait((3,gasFlow)) #send inital gas flow values
             
             start = time.time()
@@ -417,7 +418,7 @@ class controls:
         else:
             #1 means voltage
             if radioVar == 1: ### *** Remove hardcoded numbers, add calibration function
-                powerNormValue = (powerValue*0.0386) - 0.0203 #Calculated Calibration Curve (y=0.0386x - 0.0203)
+                powerNormValue = (powerValue*0.0386) -  0.0797 #Calculated Calibration Curve (y=0.0386x - 0.0203)
             #2 means current
             if radioVar == 2:
                 powerNormValue = powerValue*5/20/3.28  #Current 0-20A Proportial 5v, percentage value for DAC 0-3.28v
@@ -443,8 +444,8 @@ class controls:
 
             #Turn on LEDs
             GPIO.setmode(GPIO.BCM)
-            GPIO.setup(21,GPIO.OUT)
-            GPIO.output(21,GPIO.HIGH)
+            GPIO.setup(17,GPIO.OUT)
+            GPIO.output(17,GPIO.HIGH)
 
             #Call repeating functions
             self.button_countdown(int(testMin*60))
@@ -535,9 +536,10 @@ class controls:
 
     def errorChecking(self, mainMulti_pipe):
         if not estop:
+            isError = False
             while mainMulti_pipe.poll():
-                error = mainMulti_pipe.recv()
-            if error:
+                isError = mainMulti_pipe.recv()
+            if isError:
                 self.stopTest()
                 func.message("Error","Test was Ended due to Sensor Reading over Limit")
             error_repeat = root.after(500, lambda: self.errorChecking(mainMulti_pipe))

@@ -46,12 +46,12 @@ def muliplexer(calibrationValue,testFreq,currentLimit,voltLimit,multi_pipe,q):
     #mpr_0 = adafruit_mprls.MPRLS(tca[4], psi_min=0, psi_max=25) # *** update TCA indexes with new pi setup
     mpr_1 = adafruit_mprls.MPRLS(tca[5], psi_min=0, psi_max=25)
     #mpr_2 = adafruit_mprls.MPRLS(tca[6], psi_min=0, psi_max=25)
-    mpr_3 = adafruit_mprls.MPRLS(tca[7], psi_min=0, psi_max=25)
-    energy = adafruit_ina260.INA260(tca[3])
-    dac_1 = adafruit_mcp4725.MCP4725(tca[2], address=0x60)
-    #dac_2 = adafruit_mcp4725.MCP4725(tca[1], address=0x60)
-    adc = ADS.ADS1015(tca[0])
-    chanADC = AnalogIn(adc, ADS.P0)
+    #mpr_3 = adafruit_mprls.MPRLS(tca[7], psi_min=0, psi_max=25)
+    energy = adafruit_ina260.INA260(tca[4])
+    dac_1 = adafruit_mcp4725.MCP4725(tca[3], address=0x60)
+    dac_2 = adafruit_mcp4725.MCP4725(tca[2], address=0x60)
+    #adc = ADS.ADS1015(tca[0])
+    #chanADC = AnalogIn(adc, ADS.P0)
     
     ### Checking polling type ###
     if testFreq > 0:
@@ -95,12 +95,12 @@ def muliplexer(calibrationValue,testFreq,currentLimit,voltLimit,multi_pipe,q):
         #p0 = mpr_0.pressure - calibrationValue
         p1 = mpr_1.pressure - calibrationValue
         #p2 = mpr_2.pressure - calibrationValue
-        p3 = mpr_3.pressure - calibrationValue
+        #p3 = mpr_3.pressure - calibrationValue
         #pressureList = [p0,p1,p2,p3]
 
-        gasRB = chanADC.voltage #Add proportional conversion to pressure from voltage *** add to pressure or power list 
+        #gasRB = chanADC.voltage #Add proportional conversion to pressure from voltage *** add to pressure or power list 
 
-        pressureList = [random.randint(5,10), p1, random.randint(5,10), p3]
+        pressureList = [random.randint(5,10), p1, random.randint(5,10), random.randint(5,10)]
         powerList = [energy.current, energy.voltage, energy.power]
 
     ### Error Checking ### *** add pressure fluxuation 

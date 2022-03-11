@@ -10,7 +10,7 @@ from random import randint
 import matplotlib
 from matplotlib import pylab
 from numpy import False_
-from sympy import true
+#from sympy import true
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from pylab import plot, show, figure, xlabel, ylabel, draw, pause, ion, close
@@ -26,7 +26,7 @@ import func
 #Using *** to indicate Changes should be made in future
 
 #set true to view UI not on RPI
-mac = True
+mac = False
 if not mac:
     from pressure_sensor import start_psensor
     from detect_bright_spots import start_imageCapture
@@ -306,7 +306,7 @@ class controls:
             GPIO.setup(21,GPIO.OUT)
             GPIO.output(17, GPIO.LOW)
             GPIO.output(21, GPIO.LOW)
-            func.setZero() #Uses tca outside mulitplexer to set DACs to zero (power and CO2)
+            #func.setZero() #Uses tca outside mulitplexer to set DACs to zero (power and CO2)
         
     #closes window
     def close(self):
@@ -354,16 +354,20 @@ class controls:
            #testFreq = 0 #this one might be unneccessary, I'm not sure
         else: #only proceeds if test values pass muster
             self.BtnPreStart.config(text = "Calibrating")
+            time.sleep(0.5)
             if calibrating:
+                #calibrationValue = 0
                 calibrationValue = func.calibration()
             else:
                 calibrationValue = 0
             
             #Initialization of Multiplexer Process
+            print("about to start Multi")
             q = Queue()
-            multi_pipe, mainMulti_pipe = Pipe()
-            multi = Process(target= muliplexer, args= (calibrationValue,logRate,limitList,multi_pipe,q,))
+            #multi_pipe, mainMulti_pipe = Pipe()
+            multi = Process(target= muliplexer, args= (calibrationValue,logRate,limitList,q,))
             multi.start()
+            
             #Setting up GPIO Pins for Relays
             #Start Gas Flow and Pump once calibration is complete
             GPIO.setmode(GPIO.BCM)
@@ -426,7 +430,7 @@ class controls:
             powerTuple = (radioVar,powerNormValue) #combining volt or current selection and Desired Value
 
             #Turn on Power Supply
-            q.put_nowait((2,powerNormValue))
+            q.put_nowait((2,powerTuple))
 
             #Initiallize pressure sensor process
             psen_pipe, mainp_pipe = Pipe()

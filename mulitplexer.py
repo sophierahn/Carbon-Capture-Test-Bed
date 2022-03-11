@@ -30,7 +30,7 @@ import func
 #Add option for lower frequency
 
 
-def muliplexer(calibrationValue,testFreq,currentLimit,voltLimit,multi_pipe,q):
+def muliplexer(calibrationValue,testFreq,limitList,q):
     queueDump = []
     powerList = [0]*3
     pressureList = [0]*4
@@ -40,15 +40,15 @@ def muliplexer(calibrationValue,testFreq,currentLimit,voltLimit,multi_pipe,q):
     firstTime = True #used to start data logging once the power supply receives a value
     next = 0
    
-
+    print("Opening I2C bus")
     i2c = board.I2C()
     tca = adafruit_tca9548a.TCA9548A(i2c)
-    #mpr_0 = adafruit_mprls.MPRLS(tca[4], psi_min=0, psi_max=25) # *** update TCA indexes with new pi setup
+    mpr_0 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25) # *** update TCA indexes with new pi setup
     mpr_1 = adafruit_mprls.MPRLS(tca[5], psi_min=0, psi_max=25)
-    #mpr_2 = adafruit_mprls.MPRLS(tca[6], psi_min=0, psi_max=25)
-    #mpr_3 = adafruit_mprls.MPRLS(tca[7], psi_min=0, psi_max=25)
+    mpr_2 = adafruit_mprls.MPRLS(tca[6], psi_min=0, psi_max=25)
+    mpr_3 = adafruit_mprls.MPRLS(tca[7], psi_min=0, psi_max=25)
     energy = adafruit_ina260.INA260(tca[4])
-    dac_1 = adafruit_mcp4725.MCP4725(tca[3], address=0x60)
+    #dac_1 = adafruit_mcp4725.MCP4725(tca[3], address=0x60)
     dac_2 = adafruit_mcp4725.MCP4725(tca[2], address=0x60)
     #adc = ADS.ADS1015(tca[0])
     #chanADC = AnalogIn(adc, ADS.P0)
@@ -75,6 +75,7 @@ def muliplexer(calibrationValue,testFreq,currentLimit,voltLimit,multi_pipe,q):
                 pass
        
         ### Checking queue Data, acting or putting back
+        #print("reading Queue")
         for i in queueDump:
             if i[0] == 0:
                 shutoff = i[1]  #shutoff command
@@ -92,33 +93,35 @@ def muliplexer(calibrationValue,testFreq,currentLimit,voltLimit,multi_pipe,q):
         
         ### Normal Opperation ###
         ##Collecting Data and Writing to lists
-        #p0 = mpr_0.pressure - calibrationValue
+        #print("reading pressure sensors")
+        p0 = mpr_0.pressure - calibrationValue
         p1 = mpr_1.pressure - calibrationValue
-        #p2 = mpr_2.pressure - calibrationValue
-        #p3 = mpr_3.pressure - calibrationValue
-        #pressureList = [p0,p1,p2,p3]
+        p2 = mpr_2.pressure - calibrationValue
+        p3 = mpr_3.pressure - calibrationValue
+        pressureList = [p0,p1,p2,p3]
 
         #gasRB = chanADC.voltage #Add proportional conversion to pressure from voltage *** add to pressure or power list 
 
-        pressureList = [random.randint(5,10), p1, random.randint(5,10), random.randint(5,10)]
+        #pressureList = [random.randint(5,10), p1, random.randint(5,10), random.randint(5,10)]
         powerList = [energy.current, energy.voltage, energy.power]
 
     ### Error Checking ### *** add pressure fluxuation 
-        if energy.current > currentLimit or energy.voltage > voltLimit:
-            #shutoff = True ### *** sending shutoff signal from here means pressure and power dont have a chance to shutdown
-            multi_pipe.send(True) 
+        # if energy.current > currentLimit or energy.voltage > voltLimit:
+        #     #shutoff = True ### *** sending shutoff signal from here means pressure and power dont have a chance to shutdown
+        #     multi_pipe.send(True) 
 
         #Writing Pressure and Power data to the Queue
         q.put_nowait((3,pressureList))
-        q.put_nowait((1,powerList))
+        #q.put_nowait((1,powerList))
     
         #Writing data to DACs
         ### *** add switching system to select current vs volt control
-        #dac_1.normalized_value = powerLevel[1]
+        dac_2.normalized_value = powerLevel[1]
     
         queueDump = [] #reseting the local queue list
         
         #Logging, intermitant or direct
+        data = False
         now = time.time()
         if data:
             datalist = pressureList + powerList
@@ -132,8 +135,8 @@ def muliplexer(calibrationValue,testFreq,currentLimit,voltLimit,multi_pipe,q):
     
     ### After ShutOff ###
     print("Mulit Closed")
-    dac_1.normalized_value = 0 #Setting Dacs to Zero at Shutoff Command
-    #dac_2.normalized_value = 0
+    #dac_1.normalized_value = 0 #Setting Dacs to Zero at Shutoff Command
+    dac_2.normalized_value = 0
     pfile.close() #Closing CSV file
     q.close()
     q.join_thread()

@@ -10,6 +10,7 @@ from random import randint
 import matplotlib
 from matplotlib import pylab
 from numpy import False_
+from sympy import true
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from pylab import plot, show, figure, xlabel, ylabel, draw, pause, ion, close
@@ -25,7 +26,7 @@ import func
 #Using *** to indicate Changes should be made in future
 
 #set true to view UI not on RPI
-mac = False
+mac = True
 if not mac:
     from pressure_sensor import start_psensor
     from detect_bright_spots import start_imageCapture
@@ -96,10 +97,10 @@ class controls:
         self.TitlPower.place(x=setX,y=setY+70)
         
         #Countdown Timer
-        self.LblTimer = Label(master, text="Remaining Time:", font=("Calibri",text+8))
+        self.LblTimer = Label(master, text="Remaining Time: ", font=("Calibri",text+8))
         self.LblTimer.place(x=setX,y=setY-50)
         self.LblCountdown = Label(master, text="", font=("Calibri",text+6))
-        self.LblCountdown.place(x=setX+100,y=setY-50)
+        self.LblCountdown.place(x=setX+115,y=setY-50)
 
     #### Settings Controls ####
         def only_numbers(char):
@@ -373,7 +374,7 @@ class controls:
             start = time.time()
             self.preTestCountDown(10) #Start 30sec preTest loop *** make gobal value, not hardcoded
             self.preTestCheck(start) #Start checking loop, will shutdown system if test start delay is too long
-            self.errorChecking(mainMulti_pipe)
+            #self.errorChecking(mainMulti_pipe) #*** throwing pipe reading errors
             # *** unnecessary if Auto Test start is okay, this version requires user input
               
     def preTestCountDown(self, i):
@@ -425,7 +426,7 @@ class controls:
             powerTuple = (radioVar,powerNormValue) #combining volt or current selection and Desired Value
 
             #Turn on Power Supply
-            # q.put_nowait((2,powerTuple))
+            q.put_nowait((2,powerNormValue))
 
             #Initiallize pressure sensor process
             psen_pipe, mainp_pipe = Pipe()
@@ -536,52 +537,15 @@ class controls:
 
     def errorChecking(self, mainMulti_pipe):
         if not estop:
-            isError = False
-            while mainMulti_pipe.poll():
-                isError = mainMulti_pipe.recv()
+            #isError = False
+            #while mainMulti_pipe.poll():
+            isError = mainMulti_pipe.recv()
             if isError:
                 self.stopTest()
                 func.message("Error","Test was Ended due to Sensor Reading over Limit")
             error_repeat = root.after(500, lambda: self.errorChecking(mainMulti_pipe))
         else:
             root.after_cancel(self.error_repeat)    
-
-
-
-    def graphing(self, press0, press1, press2, press3, testSec): ### Not currently in Use, Last thing to fix, maybe dont bother
-        global graph, estop
-        while graph and not estop:
-            press_0 = []
-            press_1 = []
-            press_2 = []
-            press_3 = []
-
-            plt.ion()
-            plt.clf()
-            index = list(range(0,testSec+1))
-            press_0.append(press0)
-            press_1.append(press1)
-            press_2.append(press2)
-            press_3.append(press3)
-
-            l = len(press_0)
-            plt.plot(index[0:l],press_0)
-            plt.plot(index[0:l],press_1)
-            plt.plot(index[0:l],press_2)
-            plt.plot(index[0:l],press_3)
-            scroll = index[0:l]
-            if scroll[-1]>10:
-                press_0.pop(0)
-                press_1.pop(1)
-                press_2.pop(2)
-                press_3.pop(3)
-                index.pop(0)
-                plt.xlim([index[-10], index[-1]])
-            else:
-                plt.xlim([0, 10])
-            plt.ylim([0, 100])
-            plt.show
-            plt.pause(0.05)
 
 root = Tk()
 my_gui = controls(root)

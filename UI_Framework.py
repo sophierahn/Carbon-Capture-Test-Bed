@@ -419,7 +419,7 @@ class controls:
         else:
             #1 means voltage
             if radioVar == 1: ### *** Remove hardcoded numbers, add calibration function
-                powerNormValue = (powerValue*0.0386) -  0.0797 #Calculated Calibration Curve (y=0.0386x - 0.0203)
+                powerNormValue = (powerValue*0.0386) + 0.0797 #Calculated Calibration Curve (y=0.0386x + 0.0797)
             #2 means current
             if radioVar == 2:
                 powerNormValue = powerValue*5/20/3.28  #Current 0-20A Proportial 5v, percentage value for DAC 0-3.28v

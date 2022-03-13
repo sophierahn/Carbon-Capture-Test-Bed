@@ -3,7 +3,7 @@ Flow Rate (ml/min): 0.000000
             Power Value (v or A): 7.500000 
             Test Durration (min): 3.000000 
             Data Log Rate (0=As fast as possible): 0.000000 
-            Calibration Setting (0=absolute, 1=gauge): 1.000000 
+            Calibration Setting (0=absolute, 1=gauge): 0.000000 
             Flow Limit: 2.000000 
             Current Limit: 4.000000 
             Voltage Limit: 5.000000

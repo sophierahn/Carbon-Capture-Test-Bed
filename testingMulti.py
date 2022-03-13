@@ -33,7 +33,7 @@ dac = adafruit_mcp4725.MCP4725(tca[2], address=0x60)
 #chan = AnalogIn(adc, ADS.P0)
 
 # Create differential input between channel 0 and 1
-#chan = AnalogIn(ads, ADS.P0, ADS.P1)
+#chan = AnalogIn(adc, ADS.P0, ADS.P1)
 
 
 
@@ -42,7 +42,7 @@ dac = adafruit_mcp4725.MCP4725(tca[2], address=0x60)
 #GPIO.setup(22,GPIO.OUT)
 
 #DAC
-#GPIO.setup(17,GPIO.OUT)
+GPIO.setup(17,GPIO.OUT)
 
 # print(func.loadTestPresets())
 # func.saveTestPreset([0,2,3,4])
@@ -77,18 +77,21 @@ while powerValue <= 10:
     #elec = [energy.current, energy.voltage, energy.power]
     #print(elec[1])
     #dac.normalized_value = powerValue
-    
-
+    GPIO.output(17, GPIO.HIGH)
+    time.sleep(1)
+    GPIO.output(17, GPIO.LOW)
+    time.sleep(1)
     #print("{:>5}\t{:>5.3f}".format(chan.value, chan.voltage))
-    powerNormValue = (powerValue*0.0386) + 0.0797
-    dac.normalized_value = powerNormValue
+    #powerNormValue = (powerValue*0.0386) + 0.0797
+    #dac.normalized_value = 0.8
+    #print(powerValue)
     pressure[0] = round(mpr_1.pressure,3)
     pressure[1] = round(mpr_1.pressure,3)
     pressure[2] = round(mpr_2.pressure,3)
     pressure[3] = round(mpr_3.pressure,3)
     print (pressure)
-    print(func.calibration())
-    time.sleep(1)
+    #print(func.calibration())
+    #time.sleep(1)
 
 
     #gasRB = chanADC.voltage
@@ -106,11 +109,11 @@ while powerValue <= 10:
     powerValue +=1
     #count -= 1
 
-dac.normalized_value = 0
+#dac.normalized_value = 0
 #dac.raw_value = 0
  
 
-#GPIO.output(17, GPIO.LOW) 
+GPIO.output(17, GPIO.LOW) 
 
 
   

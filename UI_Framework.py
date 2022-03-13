@@ -98,9 +98,9 @@ class controls:
         
         #Countdown Timer
         self.LblTimer = Label(master, text="Remaining Time: ", font=("Calibri",text+8))
-        self.LblTimer.place(x=setX,y=setY-50)
-        self.LblCountdown = Label(master, text="", font=("Calibri",text+6))
-        self.LblCountdown.place(x=setX+115,y=setY-50)
+        self.LblTimer.place(x=425,y=50)
+        self.LblCountdown = Label(master, text="80", font=("Calibri",text+6))
+        self.LblCountdown.place(x=590,y=53)
 
     #### Settings Controls ####
         def only_numbers(char):
@@ -431,6 +431,8 @@ class controls:
 
             #Turn on Power Supply
             q.put_nowait((2,powerTuple))
+            GPIO.setup(17,GPIO.OUT)
+            GPIO.output(17, GPIO.HIGH) #Turn on LEDs
 
             #Initiallize pressure sensor process
             psen_pipe, mainp_pipe = Pipe()
@@ -443,9 +445,9 @@ class controls:
             power_script.start()
 
             #Initiallize Image Capture Process
-            # image_pipe, maini_pipe = Pipe()
-            # image_script = Process(target= start_imageCapture, args= (image_pipe,))
-            # image_script.start()
+            image_pipe, maini_pipe = Pipe()
+            image_script = Process(target= start_imageCapture, args= (image_pipe,q,))
+            image_script.start()
 
             #Turn on LEDs
             GPIO.setmode(GPIO.BCM)
@@ -456,7 +458,7 @@ class controls:
             self.button_countdown(int(testMin*60))
             self.pressure_sensor(psen_pipe, mainp_pipe,int(testMin*60))
             self.power_sensor(power_pipe,mainpower_pipe)
-            #self.image_capture(image_pipe, maini_pipe)
+            self.image_capture(image_pipe, maini_pipe)
 
 ### Repeating Functions ###
     def button_countdown(self,i):
@@ -520,8 +522,8 @@ class controls:
 
     def image_capture(self, image_pipe, maini_pipe):
         global estop
-        if debug:
-            print("Image Capture Salt Area")
+        #if debug:
+        print("Image Capture Starting")
        
         if not estop:
             while maini_pipe.poll(): #Empty pipe 
@@ -530,8 +532,8 @@ class controls:
             self.saltData.config(text = "Total Salt Area: %fmm2"%self.saltArea)
             self.img = Image.open(func.latestFile())
             self.imgW, self.imgH = self.img.size
-            self.imgW = round(int(self.imgW)/4)
-            self.imgH = round(int(self.imgH)/4)
+            self.imgW = round(int(self.imgW)/6)
+            self.imgH = round(int(self.imgH)/6)
             self.imgSmall = self.img.resize((self.imgW,self.imgH))
             self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
             self.saltImage.config(image=self.imgSmall)

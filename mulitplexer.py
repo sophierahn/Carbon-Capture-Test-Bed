@@ -121,7 +121,7 @@ def muliplexer(calibrationValue,testFreq,limitList,q):
         queueDump = [] #reseting the local queue list
         
         #Logging, intermitant or direct
-        data = False
+        data = False #*** Remove
         now = time.time()
         if data:
             datalist = pressureList + powerList

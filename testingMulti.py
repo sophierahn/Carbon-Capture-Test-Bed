@@ -83,7 +83,7 @@ while powerValue <= 10:
     time.sleep(1)
     #print("{:>5}\t{:>5.3f}".format(chan.value, chan.voltage))
     #powerNormValue = (powerValue*0.0386) + 0.0797
-    #dac.normalized_value = 0.8
+    dac.normalized_value = 0
     #print(powerValue)
     pressure[0] = round(mpr_1.pressure,3)
     pressure[1] = round(mpr_1.pressure,3)

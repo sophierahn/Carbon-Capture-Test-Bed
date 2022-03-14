@@ -52,6 +52,7 @@ def muliplexer(calibrationValue,testFreq,limitList,q):
     dac_2 = adafruit_mcp4725.MCP4725(tca[2], address=0x60)
     #adc = ADS.ADS1015(tca[0])
     #chanADC = AnalogIn(adc, ADS.P0)
+    dac_2.normalized_value = powerLevel[1]
     
     ### Checking polling type ###
     if testFreq > 0:
@@ -112,7 +113,7 @@ def muliplexer(calibrationValue,testFreq,limitList,q):
 
         #Writing Pressure and Power data to the Queue
         q.put_nowait((3,pressureList))
-        #q.put_nowait((1,powerList))
+        q.put_nowait((1,powerList))
     
         #Writing data to DACs
         ### *** add switching system to select current vs volt control

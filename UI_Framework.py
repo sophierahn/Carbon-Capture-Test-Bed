@@ -223,10 +223,10 @@ class controls:
         self.saltData = Label(master, text="Total Salt Area: 0 mm2", font=("Calibri",text+6))
         self.saltData.place(x=datax,y=salty+35)
         if not mac:
-            self.img = Image.open("/home/pi/Carbon-Capture-Test-Bed/test.jpg")
+            self.img = Image.open(func.latestFile())
             self.imgW, self.imgH = self.img.size
-            self.imgW = round(int(self.imgW)/10)
-            self.imgH = round(int(self.imgH)/10)
+            self.imgW = round(int(self.imgW)/3)
+            self.imgH = round(int(self.imgH)/3)
             self.imgSmall = self.img.resize((self.imgW,self.imgH))
             self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
             self.saltImage = Label(master,image=self.imgSmall)
@@ -303,9 +303,9 @@ class controls:
         if not mac:
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(17,GPIO.OUT)
-            GPIO.setup(21,GPIO.OUT)
+            GPIO.setup(22,GPIO.OUT)
             GPIO.output(17, GPIO.LOW)
-            GPIO.output(21, GPIO.LOW)
+            GPIO.output(22, GPIO.LOW)
             #func.setZero() #Uses tca outside mulitplexer to set DACs to zero (power and CO2)
         
     #closes window
@@ -371,8 +371,8 @@ class controls:
             #Setting up GPIO Pins for Relays
             #Start Gas Flow and Pump once calibration is complete
             GPIO.setmode(GPIO.BCM)
-            GPIO.setup(21,GPIO.OUT)
-            #GPIO.output(21, GPIO.HIGH) #turning on Pump
+            GPIO.setup(22,GPIO.OUT)
+            GPIO.output(22, GPIO.HIGH) #turning on Pump
             #q.put_nowait((3,gasFlow)) #send inital gas flow values
             
             start = time.time()
@@ -523,7 +523,7 @@ class controls:
     def image_capture(self, image_pipe, maini_pipe):
         global estop
         #if debug:
-        print("Image Capture Starting")
+        #print("Image Capture Starting")
        
         if not estop:
             while maini_pipe.poll(): #Empty pipe 
@@ -532,8 +532,8 @@ class controls:
             self.saltData.config(text = "Total Salt Area: %fmm2"%self.saltArea)
             self.img = Image.open(func.latestFile())
             self.imgW, self.imgH = self.img.size
-            self.imgW = round(int(self.imgW)/6)
-            self.imgH = round(int(self.imgH)/6)
+            self.imgW = round(int(self.imgW)/3)
+            self.imgH = round(int(self.imgH)/3)
             self.imgSmall = self.img.resize((self.imgW,self.imgH))
             self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
             self.saltImage.config(image=self.imgSmall)

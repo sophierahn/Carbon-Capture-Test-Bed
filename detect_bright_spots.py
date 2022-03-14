@@ -27,9 +27,10 @@ def start_imageCapture(image_pipe,q):
 
     # initalize camera, set exposure and attempt to capture image
     camera = PiCamera()
-    camera.brightness = 50
-    camera.contrast = 60
-    camera.iso = 800
+    camera.resolution = (3280,2464)
+    camera.brightness = 40
+    camera.contrast = 80
+    camera.iso = 700
     #shutoff = image_pipe.recv()
 
     print("Starting Camera Loop")
@@ -66,7 +67,7 @@ def start_imageCapture(image_pipe,q):
                 print(h, w)
 
             # cropping Image
-            image = image[round(h/2-400):round(h/2+900),round(w/2-600):round(w/2+600)]
+            image = image[round(h/2-400):round(h/2+600),round(w/2-500):round(w/2+500)]
             h = image.shape[0]
             w = image.shape[1]
             hSmall = round(h/2)
@@ -146,9 +147,9 @@ def start_imageCapture(image_pipe,q):
 
                     # print("X:"+ str(cX) + " Y:" + str(cY) + " Radius:" + str(radius))
                     cv2.circle(image, (int(cX), int(cY)), int(radius),
-                        (0, 0, 255), 3)
+                        (0, 255, 0), 4)
                     cv2.putText(image, "#{}".format(i + 1), (x, y - 15),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
 
                 # show the output image
                 if debug:
@@ -167,7 +168,7 @@ def start_imageCapture(image_pipe,q):
                 cv2.imwrite(fileName, gray)
                 image_pipe.send(area)
             print("Image Completed")
-            sleep(10)
+            sleep(5)
             queueDump = []
 
     print("Image Closed")

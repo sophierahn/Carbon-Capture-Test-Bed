@@ -21,6 +21,7 @@ sudo nano /etc/wpa_supplicant/wpa
 # To-Do: Urgent
 1. Integrate Error Checking
 2. Add image processing data logging in image processing script
+3. Get rid of sleep in image processing and get pipe working
 
 # To-Do: Nice to have 
 1. Add power sensor PID loop or make a more precise calibration curve

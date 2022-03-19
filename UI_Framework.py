@@ -26,7 +26,7 @@ import func
 #Using *** to indicate Changes should be made in future
 
 #set true to view UI not on RPI
-mac = False
+mac = True
 if not mac:
     from pressure_sensor import start_psensor
     from detect_bright_spots import start_imageCapture
@@ -54,6 +54,7 @@ EntFlowLim = [None]*1
 EntCurrentLim = [None]*1
 EntVoltLim = [None]*1
 EntPressureLim = [None]*1
+EntImageRate = [None]*1
 
 estop = False
 graph = False
@@ -83,7 +84,7 @@ class controls:
         #### Data variables ####
         self.pressure = float(0)
         self.saltArea = float(0)
-        self.error = False
+        self.errorTuple = (False,0)
         # self.canvas.create_line(1,1,1,255, width = 3, fill="#666666")
 
         #Master Title
@@ -99,7 +100,7 @@ class controls:
         #Countdown Timer
         self.LblTimer = Label(master, text="Remaining Time: ", font=("Calibri",text+8))
         self.LblTimer.place(x=425,y=50)
-        self.LblCountdown = Label(master, text="80", font=("Calibri",text+6))
+        self.LblCountdown = Label(master, text="", font=("Calibri",text+6))
         self.LblCountdown.place(x=590,y=53)
 
     #### Settings Controls ####
@@ -111,7 +112,7 @@ class controls:
         validation = root.register(only_numbers)
 
         #Flow Controller controls
-        self.LblFlow = Label(master, text="Flow Rate:", font=("Calibri",text+4))
+        self.LblFlow = Label(master, text="Flow Rate (SCCM):", font=("Calibri",text+4))
         self.LblFlow.place(x=setX,y=setY+30)
         EntFlow[0] = Entry(master, width=5, justify=RIGHT)
         EntFlow[0].place(x=entX,y=setY+30)
@@ -119,7 +120,7 @@ class controls:
         EntFlow[0].config(validate="key", validatecommand=(validation, '%S'))    
         
         #Power supply controls
-        self.LblPower = Label(master, text="Set Voltage:    ", font=("Calibri",text+4))
+        self.LblPower = Label(master, text="Set Voltage (V):    ", font=("Calibri",text+4))
         self.LblPower.place(x=setX,y=setY+150)#Power Entry Lable
         EntPower[0] = Entry(master, width=5, justify=RIGHT)
         EntPower[0].place(x=entX,y=setY+150)#Power Entry Box
@@ -141,7 +142,7 @@ class controls:
         EntTime[0].place(x=entX,y=setY+190)
         EntTime[0].insert(0,testDefault[3])#Set Default
         EntTime[0].config(validate="key", validatecommand=(validation, '%S'))
-        self.LblTime = Label(master, text="Test Duration:", font=("Calibri",text+6))
+        self.LblTime = Label(master, text="Test Duration (min):", font=("Calibri",text+6))
         self.LblTime.place(x=setX-20,y=setY+190)
 
     ### Shutoff Limits ###
@@ -150,7 +151,7 @@ class controls:
         self.TitlLimits = Label(master, text="Shutoff Limits", font=("Calibri",text+8))
         self.TitlLimits.place(x=limX,y=limY)
 
-        self.lblFlowLim = Label(master, text="Flow Rate Cut Off (ml/min):", font=("Calibri",text+4))
+        self.lblFlowLim = Label(master, text="Flow Rate Cut Off (SCCM):", font=("Calibri",text+4))
         self.lblFlowLim.place(x=limX,y=limY+30)
         EntFlowLim[0] = Entry(master, width=5, justify=RIGHT)
         EntFlowLim[0].place(x=limX+180,y=limY+30)
@@ -183,16 +184,21 @@ class controls:
         dataY = limY+170
         self.TitlData = Label(master, text="Logging Settings", font=("Calibri",text+8))
         self.TitlData.place(x=dataX,y=dataY)
+        #Image Frequancy 
+        self.lblImage = Label(master, text="Image Capture Rate (s)", font=("Calibri",text+6))
+        self.lblImage.place(x=dataX,y=dataY+30)
+        EntImageRate[0] = Entry(master, width=5, justify=RIGHT)
+        EntImageRate[0].place(x=dataX+150,y=dataY+30)
+        EntImageRate[0].insert(tk.INSERT,testDefault[5])
         #Data Frequancy
         self.LblLog = Label(master, text="Data Log Rate (s)", font=("Calibri",text+4))
-        self.LblLog.place(x=dataX,y=dataY+30)
+        self.LblLog.place(x=dataX,y=dataY+60)
         logScale = Scale(master, from_=0, to=20, label = "Set to 0 for <1s Logging", font=("Calibri",text+2), length=150, tickinterval=5, orient=HORIZONTAL,)
-        logScale.place(x=dataX,y=dataY+50)
+        logScale.place(x=dataX,y=dataY+80)
         logScale.set(testDefault[4])
-
         #Calibration Checkbox
         checkPressure = tk.Checkbutton(master, text='Gauge Pressure',variable=var2, onvalue=1, offvalue=0)
-        checkPressure.place(x=dataX,y=dataY+130)
+        checkPressure.place(x=dataX,y=dataY+150)
         var2.set(int(testDefault[5]))
         
     #### Live Data ####
@@ -247,6 +253,7 @@ class controls:
 
         self.BtnClose = Button(master, text="Close", command=lambda: self.close())
         self.BtnClose.place(x=10,y=580)
+        
 
 ################################## Main Program ###############################################################
     #Change Powersupply Label
@@ -256,11 +263,11 @@ class controls:
         if radioVar == 1:
             if debug:
                 print("changing voltage")
-            self.LblPower.config(text = "Set Voltage:")
+            self.LblPower.config(text = "Set Voltage (V):")
         else:
             if debug:
                 print("changing current")
-            self.LblPower.config(text = "Set Current:")
+            self.LblPower.config(text = "Set Current (A):")
 
     #Save Test Default Values
     def saveTest(self):
@@ -313,6 +320,10 @@ class controls:
         if debug:
             print("closing")
         self.killProcesses()
+        list_of_files = glob.glob('/home/pi/Carbon-Capture-Test-Bed/Images_Raw/*.jpg')
+        list_of_files.sort(key=os.path.getctime)
+        for file in list_of_files[:-1]:
+            os.remove(file)
         sys.exit(0)
 
     ### Estop Function ###
@@ -524,11 +535,16 @@ class controls:
         global estop
         #if debug:
         #print("Image Capture Starting")
-       
         if not estop:
             while maini_pipe.poll(): #Empty pipe 
-                self.saltArea = round(maini_pipe.recv(),3)
+                pipeContents = maini_pipe.recv()
 
+            if type(pipeContents) == float:
+                self.saltArea = round(pipeContents,3)
+            if type(pipeContents) == str:
+                maini_pipe.send(pipeContents)
+                
+            maini_pipe.send("run")
             self.saltData.config(text = "Total Salt Area: %fmm2"%self.saltArea)
             self.img = Image.open(func.latestFile())
             self.imgW, self.imgH = self.img.size
@@ -537,18 +553,27 @@ class controls:
             self.imgSmall = self.img.resize((self.imgW,self.imgH))
             self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
             self.saltImage.config(image=self.imgSmall)
+            
             image_capture = root.after(1000, lambda: self.image_capture(image_pipe, maini_pipe))
         else:
+            maini_pipe.send("stop")
             root.after_cancel(self.image_capture)
 
     def errorChecking(self, mainMulti_pipe):
         if not estop:
             #isError = False
-            #while mainMulti_pipe.poll():
-            isError = mainMulti_pipe.recv()
-            if isError:
+            while mainMulti_pipe.poll():
+                self.errorTuple = mainMulti_pipe.recv()
+            if self.errorTuple[0]:
                 self.stopTest()
-                func.message("Error","Test was Ended due to Sensor Reading over Limit")
+                if self.errorTuple[1] == 1:
+                    func.message("Error","Test was Ended Due to CO2 Flow Rate measured over Limit")
+                if self.errorTuple[1] == 2:
+                    func.message("Error","Test was Ended Due to Current measured over Limit")
+                if self.errorTuple[1] == 3:
+                    func.message("Error","Test was Ended Due to Voltage measured over Limit")
+                if self.errorTuple[1] == 4:
+                    func.message("Error","Test was Ended Due to Pressure Flux measured over Limit")
             error_repeat = root.after(500, lambda: self.errorChecking(mainMulti_pipe))
         else:
             root.after_cancel(self.error_repeat)    

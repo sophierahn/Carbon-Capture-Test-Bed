@@ -6,7 +6,7 @@ import sys
 import glob
 import os
 
-mac = False
+mac = True
 
 if not mac:
     import board
@@ -47,7 +47,7 @@ def isint(x):
         return True
 
 def latestFile():
-        list_of_files = glob.glob('/home/pi/Carbon-Capture-Test-Bed/Edited_Images/*.jpg')
+        list_of_files = glob.glob('/home/pi/Carbon-Capture-Test-Bed/Images_Edited/*.jpg')
         return max(list_of_files, key=os.path.getctime)
 
 def loadTestPresets():

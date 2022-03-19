@@ -100,16 +100,31 @@ def muliplexer(calibrationValue,testFreq,limitList,q):
         p2 = mpr_2.pressure - calibrationValue
         p3 = mpr_3.pressure - calibrationValue
         pressureList = [p0,p1,p2,p3]
+        pressureAve = (p0+p1+p2+p3)/4
 
         #gasRB = chanADC.voltage #Add proportional conversion to pressure from voltage *** add to pressure or power list 
 
         #pressureList = [random.randint(5,10), p1, random.randint(5,10), random.randint(5,10)]
         powerList = [energy.current, energy.voltage, energy.power]
 
+
+        if self.errorTuple[1] == 1:
+            func.message("Error","Test was Ended Due to CO2 Flow Rate measured over Limit")
+        if self.errorTuple[1] == 2:
+            func.message("Error","Test was Ended Due to Current measured over Limit")
+        if self.errorTuple[1] == 3:
+            func.message("Error","Test was Ended Due to Voltage measured over Limit")
+        if self.errorTuple[1] == 4:
+            func.message("Error","Test was Ended Due to Pressure Flux measured over Limit")
     ### Error Checking ### *** add pressure fluxuation 
-        # if energy.current > currentLimit or energy.voltage > voltLimit:
-        #     #shutoff = True ### *** sending shutoff signal from here means pressure and power dont have a chance to shutdown
-        #     multi_pipe.send(True) 
+        if gasRB > limitList[1]:
+            multi_pipe.send((True,1)) 
+        if energy.current > limitList[1]: 
+            multi_pipe.send((True,2)) 
+        if energy.voltage > limitList[2]:
+            multi_pipe.send((True,3)) 
+        if pressureAve > limitList[3]:
+            multi_pipe.send((True,4)) 
 
         #Writing Pressure and Power data to the Queue
         q.put_nowait((3,pressureList))
@@ -125,7 +140,7 @@ def muliplexer(calibrationValue,testFreq,limitList,q):
         data = False #*** Remove
         now = time.time()
         if data:
-            datalist = pressureList + powerList
+            datalist = [time.time()]+pressureList + powerList
             if intermittent and now > next:
                 pwriter.writerow(datalist) #writing data to csv
                 next = time.time() + testFreq

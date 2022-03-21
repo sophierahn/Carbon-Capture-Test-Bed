@@ -108,15 +108,13 @@ def muliplexer(calibrationValue,testFreq,limitList,q):
         powerList = [energy.current, energy.voltage, energy.power]
 
 
-        if self.errorTuple[1] == 1:
-            func.message("Error","Test was Ended Due to CO2 Flow Rate measured over Limit")
-        if self.errorTuple[1] == 2:
-            func.message("Error","Test was Ended Due to Current measured over Limit")
-        if self.errorTuple[1] == 3:
-            func.message("Error","Test was Ended Due to Voltage measured over Limit")
-        if self.errorTuple[1] == 4:
-            func.message("Error","Test was Ended Due to Pressure Flux measured over Limit")
     ### Error Checking ### *** add pressure fluxuation 
+    #Legend:
+    # msg = 1, C02 overflow
+    # msg = 2, current over
+    # msg = 3, voltage over
+    # msg = 4, pressure over
+
         if gasRB > limitList[1]:
             multi_pipe.send((True,1)) 
         if energy.current > limitList[1]: 

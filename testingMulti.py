@@ -15,10 +15,10 @@ electricity = [0]*3
 
 i2c = board.I2C()
 tca = adafruit_tca9548a.TCA9548A(i2c)
-mpr_0 = adafruit_mprls.MPRLS(tca[5], psi_min=0, psi_max=25)
-mpr_1 = adafruit_mprls.MPRLS(tca[6], psi_min=0, psi_max=25)
-mpr_2 = adafruit_mprls.MPRLS(tca[7], psi_min=0, psi_max=25)
-mpr_3 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25)
+# mpr_0 = adafruit_mprls.MPRLS(tca[5], psi_min=0, psi_max=25)
+# mpr_1 = adafruit_mprls.MPRLS(tca[6], psi_min=0, psi_max=25)
+# mpr_2 = adafruit_mprls.MPRLS(tca[7], psi_min=0, psi_max=25)
+# mpr_3 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25)
 #energy = adafruit_ina260.INA260(tca[3])
 dac = adafruit_mcp4725.MCP4725(tca[2], address=0x60)
 #adc = ADS.ADS1015(tca[1])
@@ -42,7 +42,7 @@ dac = adafruit_mcp4725.MCP4725(tca[2], address=0x60)
 #GPIO.setup(22,GPIO.OUT)
 
 #DAC
-GPIO.setup(17,GPIO.OUT)
+#GPIO.setup(17,GPIO.OUT)
 
 # print(func.loadTestPresets())
 # func.saveTestPreset([0,2,3,4])
@@ -68,6 +68,7 @@ GPIO.setup(17,GPIO.OUT)
 #print(value, now, now-time.time())
 powerValue = 0
 print("Starting")
+flowfraction = 0
 #print("{:>5}\t{:>5}".format('raw', 'v'))
 while powerValue <= 10:
 
@@ -77,19 +78,19 @@ while powerValue <= 10:
     #elec = [energy.current, energy.voltage, energy.power]
     #print(elec[1])
     #dac.normalized_value = powerValue
-    GPIO.output(17, GPIO.HIGH)
-    time.sleep(1)
-    GPIO.output(17, GPIO.LOW)
-    time.sleep(1)
+    # GPIO.output(17, GPIO.HIGH)
+    # time.sleep(1)
+    # GPIO.output(17, GPIO.LOW)
+    # time.sleep(1)
     #print("{:>5}\t{:>5.3f}".format(chan.value, chan.voltage))
     #powerNormValue = (powerValue*0.0386) + 0.0797
-    dac.normalized_value = 0
+    dac.normalized_value = flowfraction
     #print(powerValue)
-    pressure[0] = round(mpr_1.pressure,3)
-    pressure[1] = round(mpr_1.pressure,3)
-    pressure[2] = round(mpr_2.pressure,3)
-    pressure[3] = round(mpr_3.pressure,3)
-    print (pressure)
+    # pressure[0] = round(mpr_1.pressure,3)
+    # pressure[1] = round(mpr_1.pressure,3)
+    # pressure[2] = round(mpr_2.pressure,3)
+    # pressure[3] = round(mpr_3.pressure,3)
+    # print (pressure)
     #print(func.calibration())
     #time.sleep(1)
 
@@ -106,14 +107,16 @@ while powerValue <= 10:
     #GPIO.output(17, GPIO.LOW)
     #x = input()
     #time.sleep(3)
+    flowfraction += 0.1
     powerValue +=1
+    time.sleep(2)
     #count -= 1
 
 #dac.normalized_value = 0
 #dac.raw_value = 0
  
 
-GPIO.output(17, GPIO.LOW) 
+#GPIO.output(17, GPIO.LOW) 
 
 
   

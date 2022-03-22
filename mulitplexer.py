@@ -30,7 +30,7 @@ import func
 #Add option for lower frequency
 
 
-def muliplexer(calibrationValue,testFreq,limitList,q):
+def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
     queueDump = []
     powerList = [0]*3
     pressureList = [0]*4
@@ -47,12 +47,12 @@ def muliplexer(calibrationValue,testFreq,limitList,q):
     mpr_1 = adafruit_mprls.MPRLS(tca[5], psi_min=0, psi_max=25)
     mpr_2 = adafruit_mprls.MPRLS(tca[6], psi_min=0, psi_max=25)
     mpr_3 = adafruit_mprls.MPRLS(tca[7], psi_min=0, psi_max=25)
-    energy = adafruit_ina260.INA260(tca[4])
-    #dac_1 = adafruit_mcp4725.MCP4725(tca[3], address=0x60)
-    dac_2 = adafruit_mcp4725.MCP4725(tca[2], address=0x60)
+    energy = adafruit_ina260.INA260(tca[4]) 
+    dac_1 = adafruit_mcp4725.MCP4725(tca[3], address=0x60)#to the power supply
+    #dac_2 = adafruit_mcp4725.MCP4725(tca[2], address=0x60) #to the flow controller
     #adc = ADS.ADS1015(tca[0])
     #chanADC = AnalogIn(adc, ADS.P0)
-    dac_2.normalized_value = powerLevel[1]
+    dac_1.normalized_value = powerLevel[1]
     
     ### Checking polling type ###
     if testFreq > 0:
@@ -66,7 +66,7 @@ def muliplexer(calibrationValue,testFreq,limitList,q):
     pfilename = "./data/" +"Pressure_sensor_data_" + current +".csv"
     pfile = open(pfilename, "w") #creating pressure sensor data csv with current date and time
     pwriter = csv.writer(pfile)
-    pwriter.writerow(['0' , '1', '2', '3', 'current', 'voltage', 'power'])
+    pwriter.writerow(['time', '0' , '1', '2', '3', 'current', 'voltage', 'power'])
 
     while not shutoff:
         while not q.empty():
@@ -85,6 +85,7 @@ def muliplexer(calibrationValue,testFreq,limitList,q):
                 q.put_nowait((1,i[1])) #power sensor Data
             if i[0] == 2:
                 powerLevel = i[1]  #power supply DAC
+                print(powerLevel)
                 if firstTime: #start data logging when the actual test starts
                     data = True
                     firstTime = False
@@ -115,8 +116,8 @@ def muliplexer(calibrationValue,testFreq,limitList,q):
     # msg = 3, voltage over
     # msg = 4, pressure over
 
-        if gasRB > limitList[1]:
-            multi_pipe.send((True,1)) 
+        #if gasRB > limitList[1]: # not using flow controller right now
+            #multi_pipe.send((True,1)) 
         if energy.current > limitList[1]: 
             multi_pipe.send((True,2)) 
         if energy.voltage > limitList[2]:
@@ -130,7 +131,7 @@ def muliplexer(calibrationValue,testFreq,limitList,q):
     
         #Writing data to DACs
         ### *** add switching system to select current vs volt control
-        dac_2.normalized_value = powerLevel[1]
+        dac_1.normalized_value = powerLevel[1]
     
         queueDump = [] #reseting the local queue list
         
@@ -150,7 +151,7 @@ def muliplexer(calibrationValue,testFreq,limitList,q):
     ### After ShutOff ###
     print("Mulit Closed")
     #dac_1.normalized_value = 0 #Setting Dacs to Zero at Shutoff Command
-    dac_2.normalized_value = 0
+    dac_1.normalized_value = 0
     pfile.close() #Closing CSV file
     q.close()
     q.join_thread()

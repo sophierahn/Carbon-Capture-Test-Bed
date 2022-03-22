@@ -7,13 +7,13 @@ from tkinter import messagebox
 from tkinter import Canvas
 from PIL import ImageTk, Image, ImageFile
 from random import randint
-import matplotlib
-from matplotlib import pylab
+#import matplotlib
+#from matplotlib import pylab
 from numpy import False_
 #from sympy import true
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-from pylab import plot, show, figure, xlabel, ylabel, draw, pause, ion, close
+#matplotlib.use('TkAgg')
+#import matplotlib.pyplot as plt
+#from pylab import plot, show, figure, xlabel, ylabel, draw, pause, ion, close
 import os
 import glob
 import csv
@@ -26,7 +26,7 @@ import func
 #Using *** to indicate Changes should be made in future
 
 #set true to view UI not on RPI
-mac = false
+mac = False
 if not mac:
     from pressure_sensor import start_psensor
     from detect_bright_spots import start_imageCapture
@@ -375,8 +375,8 @@ class controls:
             #Initialization of Multiplexer Process
             print("about to start Multi")
             q = Queue()
-            #multi_pipe, mainMulti_pipe = Pipe()
-            multi = Process(target= muliplexer, args= (calibrationValue,logRate,limitList,q,))
+            multi_pipe, mainMulti_pipe = Pipe()
+            multi = Process(target= muliplexer, args= (calibrationValue,logRate,limitList,q,multi_pipe,))
             multi.start()
             
             #Setting up GPIO Pins for Relays
@@ -389,7 +389,7 @@ class controls:
             start = time.time()
             self.preTestCountDown(10) #Start 30sec preTest loop *** make gobal value, not hardcoded
             self.preTestCheck(start) #Start checking loop, will shutdown system if test start delay is too long
-            #self.errorChecking(mainMulti_pipe) #*** throwing pipe reading errors
+            self.errorChecking(mainMulti_pipe) #*** throwing pipe reading errors
             # *** unnecessary if Auto Test start is okay, this version requires user input
               
     def preTestCountDown(self, i):
@@ -457,7 +457,7 @@ class controls:
 
             #Initiallize Image Capture Process
             image_pipe, maini_pipe = Pipe()
-            image_script = Process(target= start_imageCapture, args= (image_pipe,q,))
+            image_script = Process(target= start_imageCapture, args= (image_pipe,))
             image_script.start()
 
             #Turn on LEDs
@@ -535,7 +535,9 @@ class controls:
         global estop
         #if debug:
         #print("Image Capture Starting")
+        pipeContents = 0.0
         if not estop:
+
             while maini_pipe.poll(): #Empty pipe 
                 pipeContents = maini_pipe.recv()
 
@@ -548,8 +550,8 @@ class controls:
             self.saltData.config(text = "Total Salt Area: %fmm2"%self.saltArea)
             self.img = Image.open(func.latestFile())
             self.imgW, self.imgH = self.img.size
-            self.imgW = round(int(self.imgW)/3)
-            self.imgH = round(int(self.imgH)/3)
+            self.imgW = round(int(self.imgW)/2)
+            self.imgH = round(int(self.imgH)/2)
             self.imgSmall = self.img.resize((self.imgW,self.imgH))
             self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
             self.saltImage.config(image=self.imgSmall)
@@ -574,9 +576,9 @@ class controls:
                     func.message("Error","Test was Ended Due to Voltage measured over Limit")
                 if self.errorTuple[1] == 4:
                     func.message("Error","Test was Ended Due to Pressure Flux measured over Limit")
-            error_repeat = root.after(500, lambda: self.errorChecking(mainMulti_pipe))
+            errorChecking = root.after(500, lambda: self.errorChecking(mainMulti_pipe))
         else:
-            root.after_cancel(self.error_repeat)    
+            root.after_cancel(self.errorChecking)    
 
 root = Tk()
 my_gui = controls(root)

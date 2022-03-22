@@ -25,19 +25,19 @@ camera = PiCamera()
 camera.resolution = (3280,2464)
 camera.rotation = 180
 camera.brightness = 40
-camera.contrast = 50
+camera.contrast = 80
 camera.sharpness = 50
 # camera.sensor_mode=3
 # camera.framerate=Fraction(1, 6)
 # camera.shutter_speed = 6000000
-camera.iso = 600
+camera.iso = 300
 print("Start Camera")
 
-#camera.start_preview()
+camera.start_preview()
 # for i in range(0,10):
 #     print(i)
 #     sleep(1)
-sleep(5)
+sleep(3)
 #camera.exposure_mode = 'off'
 
 #print(camera.exposure_time)
@@ -50,11 +50,11 @@ sleep(5)
 #input("enter when finished")
 #sleep(1)
 try:
-    camera.capture("/home/pi/Carbon-Capture-Test-Bed/testnew2.jpg")
+    camera.capture("/home/pi/Carbon-Capture-Test-Bed/testnew1.jpg")
 except:
     print("error")
 
-image = cv2.imread("/home/pi/Carbon-Capture-Test-Bed/testnew2.jpg")
+image = cv2.imread("/home/pi/Carbon-Capture-Test-Bed/testnew1.jpg")
 h = image.shape[0]
 w = image.shape[1]
 image = image[round(h/2-400):round(h/2+400),round(w/2-400):round(w/2+400)]
@@ -63,12 +63,16 @@ w = image.shape[1]
 hSmall = round(h/2)
 wSmall = round(w/2)
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-thresh = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)[1]
+thresh = cv2.threshold(gray, 70, 255, cv2.THRESH_BINARY)[1]
+
 
 # cv2.imshow("gray", image)
 # cv2.waitKey(0)
 imagesmall = cv2.resize(image, (hSmall, wSmall))
 cv2.imshow("gray", imagesmall)
+cv2.waitKey(0)
+graysmall = cv2.resize(gray, (hSmall, wSmall))
+cv2.imshow("gray", graysmall)
 cv2.waitKey(0)
 threshSmall = cv2.resize(thresh, (hSmall, wSmall))
 cv2.imshow("gray", threshSmall)
@@ -77,7 +81,7 @@ cv2.waitKey(0)
 
 
 
-#camera.stop_preview()
+camera.stop_preview()
 GPIO.output(17, GPIO.LOW)
 
 

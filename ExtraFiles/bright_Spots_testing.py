@@ -33,9 +33,10 @@ debug = True
 # initalize camera, set exposure and attempt to capture image
 camera = PiCamera()
 camera.resolution = (3280,2464)
+camera.rotation = 180
 camera.brightness = 40
 camera.contrast = 80
-camera.iso = 700
+camera.iso = 300
 #shutoff = image_pipe.recv()
 time.sleep(2)
 print("Starting Camera Loop")
@@ -64,7 +65,7 @@ else:
         
 
     # cropping Image
-    image = image[round(h/2-400):round(h/2+600),round(w/2-500):round(w/2+500)]
+    image = image[round(h/2-500):round(h/2+500),round(w/2-500):round(w/2+500)]
     h = image.shape[0]
     w = image.shape[1]
     hSmall = round(h/2)
@@ -86,7 +87,7 @@ else:
     # threshold the image to reveal light regions in the
     # blurred image
     ####### change colour cut off to fine tune #####
-    thresh = cv2.threshold(gray, 80, 255, cv2.THRESH_BINARY)[1]
+    thresh = cv2.threshold(gray, 70, 255, cv2.THRESH_BINARY)[1]
 
     # perform a series of erosions and dilations to remove
     # any small blobs of noise from the thresholded image
@@ -160,8 +161,8 @@ else:
             cv2.waitKey(0)
             print(area)
 
-        fileID = datetime.now().strftime("%Y%m%d-%H%M%S")
-        fileName = "/home/pi/Carbon-Capture-Test-Bed/Edited_Images/%s_identified.jpg" % (fileID)
+        fileID = datetime.now().strftime("%H%M%S")
+        fileName = "/home/pi/Carbon-Capture-Test-Bed/Images_Edited/%s_Testing.jpg" % (fileID)
         cv2.imwrite(fileName, image)
         
     else:
@@ -173,6 +174,7 @@ else:
     #sleep(10)
     shutoff = True
     queueDump = []
+    GPIO.output(17, GPIO.LOW)
 
     print("Image Closed")
 

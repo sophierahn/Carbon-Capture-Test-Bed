@@ -11,7 +11,7 @@ import imutils
 import cv2
 import math
 
-from sympy import true
+#from sympy import true
 from picamera import PiCamera
 import time 
 import func
@@ -182,7 +182,7 @@ def start_imageCapture(image_pipe,):
                 else:
                     image_pipe.send(area)
 
-                print("Image Completed")
+                #print("Image Completed")
                 runStatus = "wait"
                 pwriter2.writerow([''])
                 if data:
@@ -191,6 +191,7 @@ def start_imageCapture(image_pipe,):
                     
                
         if runStatus == "stop":
+            print("closing")
             shutoff = True
     
     print("Image Closed")

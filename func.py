@@ -6,7 +6,7 @@ import sys
 import glob
 import os
 
-mac = False
+mac = True
 
 if not mac:
     import board
@@ -79,7 +79,8 @@ def saveTestPreset(testDefault,calibrate):
             Flow Limit: %f \n\
             Current Limit: %f \n\
             Voltage Limit: %f\n\
-            Pressure Limit: %f\n" % (testDefault[0], testDefault[1], testDefault[2], testDefault[3], testDefault[4], testDefault[5], testDefault[6],testDefault[7],testDefault[8],testDefault[9])
+            Pressure Limit: %f\n\
+            Image Capture Rate: %f\n" % (testDefault[0], testDefault[1], testDefault[2], testDefault[3], testDefault[4], testDefault[5], testDefault[6],testDefault[7],testDefault[8],testDefault[9],testDefault[10])
             file.write(str(newString))
 
 def calibration(): 

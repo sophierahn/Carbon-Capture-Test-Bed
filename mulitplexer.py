@@ -32,7 +32,7 @@ import func
 
 def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
     queueDump = []
-    powerList = [0]*3
+    powerList = [0]*4
     pressureList = [0]*4
     powerLevel = (0,0)
     shutoff = False
@@ -49,10 +49,11 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
     mpr_3 = adafruit_mprls.MPRLS(tca[7], psi_min=0, psi_max=25)
     energy = adafruit_ina260.INA260(tca[4]) 
     dac_1 = adafruit_mcp4725.MCP4725(tca[3], address=0x60)#to the power supply
-    #dac_2 = adafruit_mcp4725.MCP4725(tca[2], address=0x60) #to the flow controller
-    #adc = ADS.ADS1015(tca[0])
-    #chanADC = AnalogIn(adc, ADS.P0)
-    dac_1.normalized_value = powerLevel[1]
+    dac_2 = adafruit_mcp4725.MCP4725(tca[2], address=0x60) #to the flow controller
+    adc = ADS.ADS1015(tca[1])
+    chan = AnalogIn(adc, ADS.P0, ADS.P1)
+ 
+    #dac_1.normalized_value = powerLevel[1]
     
     ### Checking polling type ###
     if testFreq > 0:
@@ -61,12 +62,13 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
         intermittent = False
     
     ### Initalize Data File, When pretest is started  ***this will create blank files if the pretest is cancled -> move to func and use firstTime?
-    now = datetime.now()
-    current= now.strftime("%m_%d_%Y_%H_%M_%S")
-    pfilename = "./data/" +"Pressure_sensor_data_" + current +".csv"
-    pfile = open(pfilename, "w") #creating pressure sensor data csv with current date and time
-    pwriter = csv.writer(pfile)
-    pwriter.writerow(['time', '0' , '1', '2', '3', 'current', 'voltage', 'power'])
+    if data: #*** Remove
+        now = datetime.now()
+        current= now.strftime("%m_%d_%Y_%H_%M_%S")
+        pfilename = "./data/" +"Pressure_sensor_data_" + current +".csv"
+        pfile = open(pfilename, "w") #creating pressure sensor data csv with current date and time
+        pwriter = csv.writer(pfile)
+        pwriter.writerow(['time', '0' , '1', '2', '3', 'current', 'voltage', 'power'])
 
     while not shutoff:
         while not q.empty():
@@ -76,7 +78,6 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
                 pass
        
         ### Checking queue Data, acting or putting back
-        #print("reading Queue")
         for i in queueDump:
             if i[0] == 0:
                 shutoff = i[1]  #shutoff command
@@ -85,54 +86,53 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
                 q.put_nowait((1,i[1])) #power sensor Data
             if i[0] == 2:
                 powerLevel = i[1]  #power supply DAC
-                print(powerLevel)
+                print(powerLevel[1])
                 if firstTime: #start data logging when the actual test starts
                     data = True
                     firstTime = False
             if i[0] == 3:
                 q.put_nowait((3,i[1])) #pressure sensor data
+            if i[0] == 4:
+                gasFlow = i[1] #CO2 Flow Rate
             
         
-        ### Normal Opperation ###
-        ##Collecting Data and Writing to lists
-        #print("reading pressure sensors")
+    ### Normal Opperation ###
+        # Collecting Data and Writing to lists
         p0 = mpr_0.pressure - calibrationValue
         p1 = mpr_1.pressure - calibrationValue
         p2 = mpr_2.pressure - calibrationValue
         p3 = mpr_3.pressure - calibrationValue
         pressureList = [p0,p1,p2,p3]
         pressureAve = (p0+p1+p2+p3)/4
-
-        #gasRB = chanADC.voltage #Add proportional conversion to pressure from voltage *** add to pressure or power list 
-
+        flowRB = chan.voltage*40 
+        powerList = [energy.current, energy.voltage, energy.power,flowRB]
         #pressureList = [random.randint(5,10), p1, random.randint(5,10), random.randint(5,10)]
-        powerList = [energy.current, energy.voltage, energy.power]
-
-
-    ### Error Checking ### *** add pressure fluxuation 
-    #Legend:
-    # msg = 1, C02 overflow
-    # msg = 2, current over
-    # msg = 3, voltage over
-    # msg = 4, pressure over
-
-        #if gasRB > limitList[1]: # not using flow controller right now
-            #multi_pipe.send((True,1)) 
-        if energy.current > limitList[1]: 
-            multi_pipe.send((True,2)) 
-        if energy.voltage > limitList[2]:
-            multi_pipe.send((True,3)) 
-        if pressureAve > limitList[3]:
-            multi_pipe.send((True,4)) 
-
+       
         #Writing Pressure and Power data to the Queue
         q.put_nowait((3,pressureList))
         q.put_nowait((1,powerList))
     
         #Writing data to DACs
-        ### *** add switching system to select current vs volt control
         dac_1.normalized_value = powerLevel[1]
+        dac_2.normalized_value = gasFlow
     
+
+        ### Error Checking ### 
+        #Legend:
+        # msg = 1, C02 overflow
+        # msg = 2, current over
+        # msg = 3, voltage over
+        # msg = 4, pressure over
+
+        if flowRB > limitList[1]:       #CO2 Flow Rate Check
+            multi_pipe.send((True,1)) 
+        if powerList[0] > limitList[1]: #Voltage Check
+            multi_pipe.send((True,2)) 
+        if powerList[1] > limitList[2]: #Current Check
+            multi_pipe.send((True,3)) 
+        if pressureAve > limitList[3]:  #Pressure Sensor Check
+            multi_pipe.send((True,4)) 
+
         queueDump = [] #reseting the local queue list
         
         #Logging, intermitant or direct
@@ -146,12 +146,10 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
             else:
                 pwriter.writerow(datalist) #writing data to csv
 
-        
-    
     ### After ShutOff ###
     print("Mulit Closed")
-    #dac_1.normalized_value = 0 #Setting Dacs to Zero at Shutoff Command
-    dac_1.normalized_value = 0
+    dac_1.normalized_value = 0 #Setting DACs to Zero at Shutoff 
+    dac_2.normalized_value = 0
     pfile.close() #Closing CSV file
     q.close()
     q.join_thread()

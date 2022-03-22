@@ -26,7 +26,7 @@ import func
 #Using *** to indicate Changes should be made in future
 
 #set true to view UI not on RPI
-mac = True
+mac = False
 if not mac:
     from pressure_sensor import start_psensor
     from detect_bright_spots import start_imageCapture

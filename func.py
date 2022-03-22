@@ -6,7 +6,7 @@ import sys
 import glob
 import os
 
-mac = True
+mac = False
 
 if not mac:
     import board

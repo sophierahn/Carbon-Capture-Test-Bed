@@ -65,7 +65,7 @@ else:
         
 
     # cropping Image
-    image = image[round(h/2-500):round(h/2+500),round(w/2-500):round(w/2+500)]
+    image = image[round(h/2-600):round(h/2+400),round(w/2-500):round(w/2+500)]
     h = image.shape[0]
     w = image.shape[1]
     hSmall = round(h/2)

@@ -50,7 +50,7 @@ sleep(3)
 #input("enter when finished")
 #sleep(1)
 try:
-    camera.capture("/home/pi/Carbon-Capture-Test-Bed/testnew1.jpg")
+    camera.capture("/media/pi/Lexar/C02_Sensor_Data/testnew1.jpg")
 except:
     print("error")
 

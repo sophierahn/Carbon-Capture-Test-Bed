@@ -85,6 +85,7 @@ class controls:
         self.pressure = float(0)
         self.saltArea = float(0)
         self.errorTuple = (False,0)
+        func.setZero()
         # self.canvas.create_line(1,1,1,255, width = 3, fill="#666666")
 
         #Master Title

@@ -106,10 +106,10 @@ def calibration():
     return(calibrationValue)
 
 
-# def setZero():
-#     i2c = board.I2C()
-#     tca = adafruit_tca9548a.TCA9548A(i2c)
-#     dac_1 = adafruit_mcp4725.MCP4725(tca[2], address=0x60)
-#     #dac_2 = adafruit_mcp4725.MCP4725(tca[1], address=0x60)
-#     dac_1.normalized_value = 0
-#     #dac_2.normalized_value = 0
+def setZero():
+    i2c = board.I2C()
+    tca = adafruit_tca9548a.TCA9548A(i2c)
+    dac_1 = adafruit_mcp4725.MCP4725(tca[2], address=0x60)
+    dac_2 = adafruit_mcp4725.MCP4725(tca[3], address=0x60)
+    dac_1.normalized_value = 0
+    dac_2.normalized_value = 0

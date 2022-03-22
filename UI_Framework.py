@@ -61,7 +61,7 @@ testDefault = []
 class controls:
     global radioVar, estop, countdown, testDefault, graph, testRunning
     testDefault = func.loadTestPresets()
-
+    func.setZero()
     def __init__(self, master):
         self.master = master
         global testDefault

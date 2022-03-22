@@ -12,6 +12,7 @@ from adafruit_ads1x15.analog_in import AnalogIn
 
 pressure = [0]*4
 electricity = [0]*3
+func.setZero()
 
 i2c = board.I2C()
 tca = adafruit_tca9548a.TCA9548A(i2c)

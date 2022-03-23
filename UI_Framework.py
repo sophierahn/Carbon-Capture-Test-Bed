@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from distutils.log import error
 import sys
 import time
@@ -33,6 +35,7 @@ if not mac:
     from mulitplexer import muliplexer
     from power_sensor import power_log
     import RPi.GPIO as GPIO
+    func.setZero()
 
 
    
@@ -57,6 +60,8 @@ countdown = None
 debug = False
 testRunning = False
 testDefault = []
+preTestWait = 5
+preTestDelay = 120
 
 class controls:
     global radioVar, estop, countdown, testDefault, graph, testRunning
@@ -67,7 +72,7 @@ class controls:
         global testDefault
         #Define Window
         master.title("Carbon Capture Control")
-        master.geometry('1000x630') #Set Size of GUI window (WxH)
+        master.geometry('1100x700') #Set Size of GUI window (WxH)
         master.lift()
 
         #RPI settings
@@ -80,6 +85,7 @@ class controls:
         self.pressure = float(0)
         self.saltArea = float(0)
         self.errorTuple = (False,0)
+        
         # self.canvas.create_line(1,1,1,255, width = 3, fill="#666666")
 
         #Master Title
@@ -184,7 +190,7 @@ class controls:
         self.lblImage.place(x=dataX,y=dataY+30)
         EntImageRate[0] = Entry(master, width=5, justify=RIGHT)
         EntImageRate[0].place(x=dataX+150,y=dataY+30)
-        EntImageRate[0].insert(tk.INSERT,testDefault[5])
+        EntImageRate[0].insert(tk.INSERT,testDefault[10])
         #Data Frequancy
         self.LblLog = Label(master, text="Data Log Rate (s)", font=("Calibri",text+4))
         self.LblLog.place(x=dataX,y=dataY+60)
@@ -205,20 +211,23 @@ class controls:
         self.psen0 = Label(master, text="Inlet 1: 0kPa", font=("Calibri",text+6))
         self.psen0.place(x=datax,y=datay+35)
         self.psen1 = Label(master, text="Outlet 1: 0kPa", font=("Calibri",text+6))
-        self.psen1.place(x=datax+170,y=datay+35)
+        self.psen1.place(x=datax,y=datay+70)
         self.psen2 = Label(master, text="Inlet 2: 0kPa", font=("Calibri",text+6))
-        self.psen2.place(x=datax,y=datay+70)
+        self.psen2.place(x=datax,y=datay+105)
         self.psen3 = Label(master, text="Outlet 2: 0kPa", font=("Calibri",text+6))
-        self.psen3.place(x=datax+170,y=datay+70)
+        self.psen3.place(x=datax,y=datay+140)
+        #CO2 Flow
+        self.flowRB = Label(master, text="CO2 Flow Rate: 0 SCCM", font=("Calibri",text+6))
+        self.flowRB.place(x=datax+200,y=datay+35)
         #power
         self.power0 = Label(master, text="Current: 0 mA", font=("Calibri",text+6))
-        self.power0.place(x=datax-50,y=datay+105)
+        self.power0.place(x=datax+200,y=datay+70)
         self.power1 = Label(master, text="Voltage: 0 V", font=("Calibri",text+6))
-        self.power1.place(x=datax+110,y=datay+105)
+        self.power1.place(x=datax+200,y=datay+105)
         self.power2 = Label(master, text="Power: 0 mW", font=("Calibri",text+6))
-        self.power2.place(x=datax+250,y=datay+105)
-
-        salty = datay + 160
+        self.power2.place(x=datax+200,y=datay+140)
+        
+        salty = datay + 240
         self.imageHeading = Label(master, text="Salt Idenification", font=("Calibri",text+8))
         self.imageHeading.place(x=datax,y=salty)
         self.saltData = Label(master, text="Total Salt Area: 0 mm2", font=("Calibri",text+6))
@@ -267,7 +276,7 @@ class controls:
     #Save Test Default Values
     def saveTest(self):
         global testDefault, radioVar, logScale, var2
-        testDefault = [0]*10
+        testDefault = [0]*11
         try:
             testDefault[0] = float(EntFlow[0].get())
             testDefault[1] = float(radioVar)
@@ -279,6 +288,7 @@ class controls:
             testDefault[7] = float(EntCurrentLim[0].get())
             testDefault[8] = float(EntVoltLim[0].get())
             testDefault[9] = float(EntPressureLim[0].get())
+            testDefault[10] = float(EntImageRate[0].get())
             print(testDefault)
             func.saveTestPreset(testDefault,False)
         except Exception as e:
@@ -288,8 +298,8 @@ class controls:
     #Kill Processes
     def killProcesses(self):
         global psen_script, image_script, multi, power_script, q
-        if debug:
-            print("Killing")
+        # if debug:
+        print("Killing")
         if 'psen_script' in globals():
             q.put_nowait((0,True)) #Send Shutdown Signal
             time.sleep(0.05)
@@ -300,7 +310,7 @@ class controls:
             power_script.terminate()
         if 'multi' in globals():
             q.put_nowait((0,True)) #Send Shutdown Signal
-            time.sleep(0.05)
+            time.sleep(0.5)
             multi.terminate() #Closes the Queue
         if not mac:
             GPIO.setmode(GPIO.BCM)
@@ -308,7 +318,7 @@ class controls:
             GPIO.setup(22,GPIO.OUT)
             GPIO.output(17, GPIO.LOW)
             GPIO.output(22, GPIO.LOW)
-            #func.setZero() #Uses tca outside mulitplexer to set DACs to zero (power and CO2)
+            func.setZero() #Uses tca outside mulitplexer to set DACs to zero (power and CO2)
         
     #closes window
     def close(self):
@@ -349,6 +359,9 @@ class controls:
         limitList = [0]*4
         try:
             gasFlow = float(EntFlow[0].get()) #add similiar proportional control calcuations to powerValue
+            if gasFlow > 131:
+                func.message("Warning","Gas Flow Rate must not exceed 131 SCCM")
+                raise Exception("Gas Flow rate over 131")
             logRate = float(logScale.get()) #Logging Value
             calibrating = bool(var2.get()) #Calibration Setting
             limitList[0] = float(EntFlowLim[0].get())
@@ -359,8 +372,8 @@ class controls:
            func.message("Warning","Numerical Entry Invalid")
            #testFreq = 0 #this one might be unneccessary, I'm not sure
         else: #only proceeds if test values pass muster
-            self.BtnPreStart.config(text = "Calibrating")
-            time.sleep(0.5)
+            # self.BtnPreStart.config(text = "Calibrating")
+            # time.sleep(0.5)
             if calibrating:
                 #calibrationValue = 0
                 calibrationValue = func.calibration()
@@ -379,14 +392,17 @@ class controls:
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(22,GPIO.OUT)
             GPIO.output(22, GPIO.HIGH) #turning on Pump
-            #q.put_nowait((3,gasFlow)) #send inital gas flow values
+
+            gasFlowNorm = gasFlow*5/200/3.28 #convert to percent fraction
+            q.put_nowait((4,gasFlowNorm)) #send inital gas flow values
+            print("Sending Gas Flow", gasFlow)
             
             start = time.time()
-            self.preTestCountDown(10) #Start 30sec preTest loop *** make gobal value, not hardcoded
+            self.preTestCountDown(preTestWait) #Start 30sec preTest loop *** make gobal value, not hardcoded
             self.preTestCheck(start) #Start checking loop, will shutdown system if test start delay is too long
-            self.errorChecking(mainMulti_pipe) #*** throwing pipe reading errors
-            # *** unnecessary if Auto Test start is okay, this version requires user input
-              
+            self.errorChecking(mainMulti_pipe) 
+            # *** unnecessary if Auto Test start is okay, this version requires user input  
+
     def preTestCountDown(self, i):
         global estop
  
@@ -407,7 +423,7 @@ class controls:
         testCancelled = False
         if not testRunning and not estop and not testCancelled: 
             elaspedTime = time.time()-startTime
-            if elaspedTime > 60: ## *** Change Time and message based on Joel Feedback
+            if elaspedTime > preTestDelay: ## *** Change Time and message based on Joel Feedback
                 self.stopTest()
                 func.message("Error","Test not initated after 1 min of PreTest. Test cancelled")
                 testCancelled = True
@@ -424,6 +440,16 @@ class controls:
         try:
             testMin = float(EntTime[0].get())
             powerValue = float(EntPower[0].get())
+            if powerValue > 24:
+                func.message("Warning","Voltage Must not exceed 24V")
+                raise Exception("Voltage above max 24v")
+            if radioVar == 2:
+                func.message("Warning","Current Control not Currently Enabled")
+                raise Exception("Current Selected")
+            repeatRate = int(EntImageRate[0].get())*1000
+            if repeatRate < 1000 or type(repeatRate) != 'int':
+                func.message("Warning","Image Capture rate must be greater than 1 second and an interger value")
+                raise Exception("Value must be greater than 1")
         except:
            func.message("Warning","Numerical Entry Invalid")
         else:
@@ -437,8 +463,11 @@ class controls:
 
             #Turn on Power Supply
             q.put_nowait((2,powerTuple))
+
+            #Turn on LEDs
+            GPIO.setmode(GPIO.BCM)
             GPIO.setup(17,GPIO.OUT)
-            GPIO.output(17, GPIO.HIGH) #Turn on LEDs
+            GPIO.output(17, GPIO.HIGH) 
 
             #Initiallize pressure sensor process
             psen_pipe, mainp_pipe = Pipe()
@@ -455,16 +484,11 @@ class controls:
             image_script = Process(target= start_imageCapture, args= (image_pipe,))
             image_script.start()
 
-            #Turn on LEDs
-            GPIO.setmode(GPIO.BCM)
-            GPIO.setup(17,GPIO.OUT)
-            GPIO.output(17,GPIO.HIGH)
-
             #Call repeating functions
             self.button_countdown(int(testMin*60))
             self.pressure_sensor(psen_pipe, mainp_pipe,int(testMin*60))
             self.power_sensor(power_pipe,mainpower_pipe)
-            self.image_capture(image_pipe, maini_pipe)
+            self.image_capture(image_pipe, maini_pipe, repeatRate)
 
 ### Repeating Functions ###
     def button_countdown(self,i):
@@ -512,24 +536,26 @@ class controls:
         if debug:
             print("Power Sensor")
         if not estop:
-            powerList = [0]*3
+            powerList = [0]*4
             while mainpower_pipe.poll(): #Empty power pipe
                 powerList= mainpower_pipe.recv()
             self.power_0 = round(powerList[0],3)
             self.power_1 = round(powerList[1],3)
             self.power_2 = round(powerList[2],3)
+            self.flow_RB = round(powerList[3],3)
 
             self.power0.config(text = "Current: "+str(self.power_0)+" mA") #Update Lables
             self.power1.config(text = "Voltage: "+str(self.power_1)+" V")
             self.power2.config(text = "Power: "+str(self.power_2)+" mW")
+            self.flowRB.config(text = "CO2 Flow Rate: "+str(self.power_2)+" SCCM")
             power_sensor = root.after(1000, lambda: self.power_sensor(power_pipe, mainpower_pipe))
         else:
             root.after_cancel(self.pressure_sensor)
 
-    def image_capture(self, image_pipe, maini_pipe):
+    def image_capture(self, image_pipe, maini_pipe, repeatRate):
         global estop
-        #if debug:
-        #print("Image Capture Starting")
+        if debug:
+            print("Image Capture Starting")
         pipeContents = 0.0
         if not estop:
 
@@ -551,7 +577,7 @@ class controls:
             self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
             self.saltImage.config(image=self.imgSmall)
             
-            image_capture = root.after(1000, lambda: self.image_capture(image_pipe, maini_pipe))
+            image_capture = root.after(repeatRate, lambda: self.image_capture(image_pipe, maini_pipe, repeatRate))
         else:
             maini_pipe.send("stop")
             root.after_cancel(self.image_capture)

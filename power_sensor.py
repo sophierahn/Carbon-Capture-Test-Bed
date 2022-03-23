@@ -23,6 +23,8 @@ def power_log (power_pipe, q):
                 q.put_nowait((2,i[1]))
             if i[0] == 3:
                 q.put_nowait((3,i[1])) #pressure sensor data
+            if i[0] == 4:
+                q.put_nowait((4,i[1])) #CO2 Flow Rate
             
         queueDump = []
         

@@ -79,7 +79,8 @@ def saveTestPreset(testDefault,calibrate):
             Flow Limit: %f \n\
             Current Limit: %f \n\
             Voltage Limit: %f\n\
-            Pressure Limit: %f\n" % (testDefault[0], testDefault[1], testDefault[2], testDefault[3], testDefault[4], testDefault[5], testDefault[6],testDefault[7],testDefault[8],testDefault[9])
+            Pressure Limit: %f\n\
+            Image Capture Rate: %f\n" % (testDefault[0], testDefault[1], testDefault[2], testDefault[3], testDefault[4], testDefault[5], testDefault[6],testDefault[7],testDefault[8],testDefault[9],testDefault[10])
             file.write(str(newString))
 
 def calibration(): 
@@ -110,6 +111,6 @@ def setZero():
     i2c = board.I2C()
     tca = adafruit_tca9548a.TCA9548A(i2c)
     dac_1 = adafruit_mcp4725.MCP4725(tca[2], address=0x60)
-    #dac_2 = adafruit_mcp4725.MCP4725(tca[1], address=0x60)
+    dac_2 = adafruit_mcp4725.MCP4725(tca[3], address=0x60)
     dac_1.normalized_value = 0
-    #dac_2.normalized_value = 0
+    dac_2.normalized_value = 0

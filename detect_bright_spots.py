@@ -69,6 +69,7 @@ def start_imageCapture(image_pipe,):
 
 
         if runStatus == "run":
+            print("starting Image Loop")
             fileID = datetime.now().strftime("%Y%m%d-%H%M%S")
             fileName = "/home/pi/Carbon-Capture-Test-Bed/Images_Raw/%s_salt.jpg" %(fileID)
             try:

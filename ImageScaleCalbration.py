@@ -70,10 +70,6 @@ else:
     w = image.shape[1]
     hSmall = round(h/2)
     wSmall = round(w/2)
-    imageSmall = cv2.resize(image, (hSmall, wSmall))
-    print(imageSmall.shape[:2])
-
-
     pts = np.array([[0,400], [240, 240], [400, 0], 
                     [1000, 0], [1000, 600], [730, 750],
                     [600, 1000], [0, 1000]],
@@ -82,7 +78,6 @@ else:
     mask = np.zeros(image.shape[:2], dtype="uint8")
     cv2.fillPoly(mask, [pts], 255)
     masked = cv2.bitwise_and(image, image, mask=mask)
- 
 
 
     # convert it to grayscale, and blur it
@@ -101,7 +96,7 @@ else:
     # threshold the image to reveal light regions in the
     # blurred image
     ####### change colour cut off to fine tune #####
-    thresh = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY)[1]
+    thresh = cv2.threshold(gray, 40, 255, cv2.THRESH_BINARY)[1]
 
     # perform a series of erosions and dilations to remove
     # any small blobs of noise from the thresholded image
@@ -130,13 +125,13 @@ else:
         # number of pixels
         labelMask = np.zeros(thresh.shape, dtype="uint8")
         labelMask[labels == label] = 255
-        #numPixels = cv2.countNonZero(labelMask)
+        numPixels = cv2.countNonZero(labelMask)
 
         # if the number of pixels in the component is sufficiently
         # large, then add it to our mask of "large blobs"
-        # if numPixels > 300:
-        mask = cv2.add(mask, labelMask)
-        count += 1
+        if numPixels > 1000:
+            mask = cv2.add(mask, labelMask)
+            count += 1
     #print(count)
 
     # find the contours in the mask, then sort them from left to
@@ -154,6 +149,7 @@ else:
             ((cX, cY), radius) = cv2.minEnclosingCircle(c)
             if i == 0:
                 scaleFactor = (math.sqrt(200)/2)/radius
+                print("Scale: ",scaleFactor)
             else:
                 xPos.append(round(cX*scaleFactor, 4))
                 yPos.append(round(cY*scaleFactor, 4))
@@ -190,7 +186,7 @@ else:
     queueDump = []
     GPIO.output(17, GPIO.LOW)
 
-    print("Image Closed")
+
 
     
     

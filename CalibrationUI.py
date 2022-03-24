@@ -1,17 +1,9 @@
 #Calibration UI
 
 import sys
-import time
 import tkinter as tk
 from tkinter import *
-from tkinter import messagebox
 from tkinter import Canvas
-import os
-import glob
-import csv
-from datetime import datetime
-from datetime import timedelta
-from multiprocessing import Process, Pipe, Queue
 import func
 from ImageScaleCalibration import imageScaleCalibration
 
@@ -51,7 +43,6 @@ BtnClose.place(x=10,y=270)
 
 def runImageCalibration():
     global scaleFactor
-    
     imageButton.config(text="Running")
     #scaleFactor = 40
     scaleFactor = imageScaleCalibration()
@@ -62,7 +53,7 @@ def runPowerCalibration():
     global powerLine
     func.message("Warning","This process will cycle the Power supply up to 24 Volts. Please ensure the cell is not engerized and the power leads are safe\n\nThe process will start when you hit Okay")
     powerButton.config(text="Running")
-    powerLine = (7,0.0912)
+    powerLine = 0.0912
     #powerLine = powerCalibrator()
     lblPowerCurve.config(text=powerLine)
     powerButton.config(text="Complete")

@@ -83,7 +83,7 @@ class controls:
         text = 6
         setX = 30
         setY = 130
-        entX = 130
+        entX = 150
 
         #### Data variables ####
         self.pressure = float(0)
@@ -110,10 +110,10 @@ class controls:
 
     #### Settings Controls ####
         def only_numbers(char):
-            if char.isdigit() or char == ".":
+            if char.isnumeric() or char == ".":
                 return True
             else:
-                return False
+                return True
         validation = root.register(only_numbers)
 
         #Flow Controller controls
@@ -147,8 +147,8 @@ class controls:
         EntTime[0].place(x=entX,y=setY+190)
         EntTime[0].insert(0,testDefault[3])#Set Default
         EntTime[0].config(validate="key", validatecommand=(validation, '%S'))
-        self.LblTime = Label(master, text="Test Duration (min):", font=("Calibri",text+6))
-        self.LblTime.place(x=setX-20,y=setY+190)
+        self.LblTime = Label(master, text="Test Duration (min):", font=("Calibri",text+5))
+        self.LblTime.place(x=setX-30,y=setY+190)
 
     ### Shutoff Limits ###
         limX = setX+200
@@ -159,28 +159,28 @@ class controls:
         self.lblFlowLim = Label(master, text="Flow Rate Cut Off (SCCM):", font=("Calibri",text+4))
         self.lblFlowLim.place(x=limX,y=limY+30)
         EntFlowLim[0] = Entry(master, width=5, justify=RIGHT)
-        EntFlowLim[0].place(x=limX+180,y=limY+30)
+        EntFlowLim[0].place(x=limX+200,y=limY+30)
         EntFlowLim[0].insert(tk.INSERT,testDefault[6])
         EntFlowLim[0].config(validate="key", validatecommand=(validation, '%S')) 
 
         self.lblCurrentLim = Label(master, text="Current Cut Off (A):", font=("Calibri",text+4))
         self.lblCurrentLim.place(x=limX,y=limY+60)
         EntCurrentLim[0] = Entry(master, width=5, justify=RIGHT)
-        EntCurrentLim[0].place(x=limX+180,y=limY+60)
+        EntCurrentLim[0].place(x=limX+200,y=limY+60)
         EntCurrentLim[0].insert(tk.INSERT,testDefault[7])
         EntCurrentLim[0].config(validate="key", validatecommand=(validation, '%S')) 
 
         self.lblVoltLim = Label(master, text="Voltage Cut Off (V):", font=("Calibri",text+4))
         self.lblVoltLim.place(x=limX,y=limY+90)
         EntVoltLim[0] = Entry(master, width=5, justify=RIGHT)
-        EntVoltLim[0].place(x=limX+180,y=limY+90)
+        EntVoltLim[0].place(x=limX+200,y=limY+90)
         EntVoltLim[0].insert(tk.INSERT,testDefault[8])
         EntVoltLim[0].config(validate="key", validatecommand=(validation, '%S')) 
          
         self.lblPressureLim = Label(master, text="Pressure Flux Limit (kpa):", font=("Calibri",text+4))
         self.lblPressureLim.place(x=limX,y=limY+120)
         EntPressureLim[0] = Entry(master, width=5, justify=RIGHT)
-        EntPressureLim[0].place(x=limX+180,y=limY+120)
+        EntPressureLim[0].place(x=limX+200,y=limY+120)
         EntPressureLim[0].insert(tk.INSERT,testDefault[9])
         EntPressureLim[0].config(validate="key", validatecommand=(validation, '%S')) 
 
@@ -288,7 +288,7 @@ class controls:
     #Save Test Default Values
     def saveTest(self):
         global testDefault, radioVar, logScale, var2
-        testDefault = [0]*12
+        testDefault = [0]*13
         try:
             testDefault[0] = float(EntFlow[0].get())
             testDefault[1] = float(radioVar)
@@ -302,6 +302,7 @@ class controls:
             testDefault[9] = float(EntPressureLim[0].get())
             testDefault[10] = float(EntImageRate[0].get())
             testDefault[11] = testDefault[11]
+            testDefault[12] = testDefault[12]
             print(testDefault)
             func.saveTestPreset(testDefault,False)
         except Exception as e:
@@ -310,14 +311,16 @@ class controls:
 
     #Kill Processes
     def killProcesses(self):
-        global psen_script, image_script, multi, power_script, q
-        # if debug:
-        print("Killing")
+        global psen_script, image_script, multi, power_script, q, maini_pipe
+        if debug:
+            print("Killing")
         if 'psen_script' in globals():
             q.put_nowait((0,True)) #Send Shutdown Signal
             time.sleep(0.05)
             psen_script.terminate()
         if 'image_script' in globals():
+            maini_pipe.send("stop")
+            time.sleep(0.05)
             image_script.terminate()
         if 'power_script' in globals():
             power_script.terminate()
@@ -348,8 +351,8 @@ class controls:
     def stopTest(self):
         global estop, testRunning, testDefault
         if not estop:
-            self.killProcesses()
             estop = True
+            self.killProcesses()
             testRunning = False
             self.BtnCancel.config(text="Reset Test", bg='#ff5959', activebackground='#FF0000')
             self.BtnPreStart.config(state= DISABLED)
@@ -372,8 +375,8 @@ class controls:
         limitList = [0]*4
         try:
             gasFlow = float(EntFlow[0].get()) #add similiar proportional control calcuations to powerValue
-            if gasFlow > 131:
-                func.message("Warning","Gas Flow Rate must not exceed 131 SCCM")
+            if gasFlow > 131 or gasFlow < 0:
+                func.message("Warning","Gas Flow Rate must not exceed 131 SCCM and must be a postive value")
                 raise Exception("Gas Flow rate over 131")
             logRate = float(logScale.get()) #Logging Value
             calibrating = bool(var2.get()) #Calibration Setting
@@ -381,18 +384,19 @@ class controls:
             limitList[1] = float(EntCurrentLim[0].get())
             limitList[2] = float(EntVoltLim[0].get())
             limitList[3] = float(EntPressureLim[0].get())
+            for i in limitList:
+                if i < 0:
+                    func.message("Error","Limit Values must be Postive")
+                    raise Exception("Negative Values")
         except:
-           func.message("Warning","Numerical Entry Invalid")
-           #testFreq = 0 #this one might be unneccessary, I'm not sure
+           #func.message("Warning","Numerical Entry Invalid")
+           print("Error in Numerical Entry: ", Exception)
         else: #only proceeds if test values pass muster
-            # self.BtnPreStart.config(text = "Calibrating")
-            # time.sleep(0.5)
             if calibrating:
                 #calibrationValue = 0
                 calibrationValue = func.calibration()
             else:
                 calibrationValue = 0
-            
             #Initialization of Multiplexer Process
             print("about to start Multi")
             q = Queue()
@@ -418,7 +422,6 @@ class controls:
 
     def preTestCountDown(self, i):
         global estop
- 
         if i > 0 and estop == False: #Countdown Started
             self.BtnPreStart.config(text = str(i))
             i -= 1
@@ -438,23 +441,24 @@ class controls:
             elaspedTime = time.time()-startTime
             if elaspedTime > preTestDelay: ## *** Change Time and message based on Joel Feedback
                 self.stopTest()
-                func.message("Error","Test not initated after 1 min of PreTest. Test cancelled")
+                func.message("Error","Test not initated after %f s of PreTest. Test cancelled" %(preTestDelay))
                 testCancelled = True
             self.testCheck = root.after(1000, lambda: self.preTestCheck(startTime))
         else:
             root.after_cancel(self.testCheck)
+            
 
 ### Start Test ###      Starting actual program, initiating buffers, starting power delivery to Cell
     def validateTest(self):
-        global psen_script, image_script, power_script, q, radioVar, testRunning
+        global psen_script, image_script, power_script, q, radioVar, testRunning, maini_pipe
         testRunning = True
         if debug:
             print("validating")
         try:
             testMin = float(EntTime[0].get())
             powerValue = float(EntPower[0].get())
-            if powerValue > 24:
-                func.message("Warning","Voltage cannot not exceed 24V")
+            if powerValue > 24 or powerValue < 0:
+                func.message("Warning","Voltage cannot not exceed 24V and must be a Postive Value")
                 raise Exception("Voltage above Max 24v")
             if radioVar == 2:
                 func.message("Warning","Current Control not Currently Enabled")
@@ -464,7 +468,8 @@ class controls:
                 func.message("Warning","Image Capture rate must be greater than 1 second and an interger value")
                 raise Exception("Value must be greater than 1")
         except:
-           func.message("Warning","Numerical Entry Invalid")
+            print("Error in Numerical Entry: ", Exception)
+           #func.message("Warning","Numerical Entry Invalid")
         else:
             #1 means voltage
             if radioVar == 1: ### *** Remove hardcoded numbers, add calibration function
@@ -570,19 +575,15 @@ class controls:
         if debug:
             print("Image Capture Starting")
 
-        print(repeatRate)
         pipeContents = []
         if not estop:
-            
             while maini_pipe.poll(): #Empty pipe 
                 pipeContents.append(maini_pipe.recv())
-
             for i in pipeContents:
                 if type(i) == float:
                     self.saltArea = round(i,3)
-                if type(i) == str:
-                    maini_pipe.send(i)
-                
+                # if type(i) == str:
+                #     maini_pipe.send(i)
             maini_pipe.send("run")
             self.saltData.config(text = "Total Salt Area: %fmm2"%self.saltArea)
             self.img = Image.open(func.latestFile())
@@ -592,17 +593,17 @@ class controls:
             self.imgSmall = self.img.resize((self.imgW,self.imgH))
             self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
             self.saltImage.config(image=self.imgSmall)
-            
             image_capture = root.after(repeatRate, lambda: self.image_capture(image_pipe, maini_pipe, repeatRate))
         else:
             maini_pipe.send("stop")
+            time.sleep(0.5)
             root.after_cancel(self.image_capture)
 
     def errorChecking(self, mainMulti_pipe):
         if not estop:
-            #isError = False
             while mainMulti_pipe.poll():
                 self.errorTuple = mainMulti_pipe.recv()
+
             if self.errorTuple[0]:
                 self.stopTest()
                 if self.errorTuple[1] == 1:

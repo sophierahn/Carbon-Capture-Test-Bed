@@ -38,11 +38,9 @@ def start_imageCapture(image_pipe,scaleFactor):
     camera.contrast = 80
     camera.iso = 700
     time.sleep(2)
-    #shutoff = image_pipe.recv()
 
     print("Starting Camera Loop")
     shutoff = False
-    queueDump = []
     data = True
 
     if data:
@@ -82,7 +80,7 @@ def start_imageCapture(image_pipe,scaleFactor):
                 # Look at image folder, load most recent file
                 # * means all if need specific format then *.csv
                 list_of_files = glob.glob('/home/pi/Carbon-Capture-Test-Bed/Images_Raw/*.jpg')
-                elapsed = time.time()-now
+                elapsed = round(time.time()-now,3)
                 pwriter2.writerow([elapsed , 'X Postion', 'Y Postion', 'Radius'])
                 latest_file = max(list_of_files, key=os.path.getctime)
                 image = cv2.imread(latest_file)
@@ -100,7 +98,7 @@ def start_imageCapture(image_pipe,scaleFactor):
                 wSmall = round(w/2)
 
                 #Masking the connectors out of the image
-                pts = np.array([[0,400], [240, 240], [400, 0], # *** points of the polygon, may need to fine tune 
+                pts = np.array([[0,400], [250, 240], [400, 0], # *** points of the polygon, may need to fine tune 
                                 [1000, 0], [1000, 600], [730, 750],
                                 [600, 1000], [0, 1000]],
                             np.int32)
@@ -118,9 +116,10 @@ def start_imageCapture(image_pipe,scaleFactor):
                     cv2.waitKey(0)
 
                 # threshold the image to reveal light regions in the
-                # blurred image
-                ####### change colour cut off to fine tune #####
+  
+####### change colour cut off to fine tune #####
                 thresh = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY)[1]
+####### Fine Tune Here ###################
 
                 # perform a series of erosions and dilations to remove
                 # any small blobs of noise from the thresholded image
@@ -169,11 +168,11 @@ def start_imageCapture(image_pipe,scaleFactor):
                         ((cX, cY), radius) = cv2.minEnclosingCircle(c)
                         
                         #saving the x and y position, adding to the total error 
-                        xPos.append(round(cX*scaleFactor, 4))
-                        yPos.append(round(cY*scaleFactor, 4))
-                        radiusList.append(round(radius*scaleFactor, 4))
+                        #xPos.append(round(cX*scaleFactor, 4))
+                        #yPos.append(round(cY*scaleFactor, 4))
+                        #radiusList.append(round(radius*scaleFactor, 4))
                         area += math.pi*(scaleFactor*radius)**2
-                        pwriter2.writerow(['' , xPos, yPos, radius])
+                        pwriter2.writerow(['' , cX, cY, radius])
                         
                         cv2.circle(image, (int(cX), int(cY)), int(radius),(0, 255, 0), 4)
                         cv2.putText(image, "#{}".format(i + 1), (x, y - 15),cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
@@ -196,6 +195,7 @@ def start_imageCapture(image_pipe,scaleFactor):
                 #print("Image Completed")
                 runStatus = "wait"
                 pwriter2.writerow([''])
+                data = True
                 if data:
                     datalist = [time.time(),area, count]
                     pwriter1.writerow(datalist) #writing data to csv

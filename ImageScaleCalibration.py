@@ -61,7 +61,7 @@ def imageScaleCalibration():
         wSmall = round(w/2)
 
         # Apply a mask to cut off connectors in the corners
-        pts = np.array([[0,400], [240, 240], [400, 0], 
+        pts = np.array([[0,400], [250, 240], [400, 0], 
                         [1000, 0], [1000, 600], [730, 750],
                         [600, 1000], [0, 1000]],
                     np.int32)
@@ -81,15 +81,6 @@ def imageScaleCalibration():
         # any small blobs of noise from the thresholded image
         thresh = cv2.erode(thresh, None, iterations=2)
         thresh = cv2.dilate(thresh, None, iterations=4)
-
-        if debug:
-            threshSmall = cv2.resize(thresh, (hSmall, wSmall))
-            graySmall = cv2.resize(gray, (hSmall, wSmall))
-            imageSmall = cv2.resize(image, (hSmall, wSmall))
-            cv2.imshow("2", threshSmall)
-            cv2.imshow("image", imageSmall)
-            cv2.imshow("gray", graySmall)
-            cv2.waitKey(0)
 
         # perform a connected component analysis on the thresholded
         # image, then initialize a mask to store only the "large"
@@ -136,8 +127,12 @@ def imageScaleCalibration():
 
             # show the output image
             if debug:
-                threshSmall = cv2.resize(image, (hSmall, wSmall))
-                cv2.imshow("Image", threshSmall)
+                finalSmall = cv2.resize(image, (hSmall, wSmall))
+                threshSmall = cv2.resize(thresh, (hSmall, wSmall))
+                imageSmall = cv2.resize(image, (hSmall, wSmall))
+                cv2.imshow("Image", imageSmall)
+                cv2.imshow("Thresholded", threshSmall)
+                cv2.imshow("Identified", finalSmall)
                 cv2.waitKey(0)
         
             fileName = "/home/pi/Carbon-Capture-Test-Bed/ExtraFiles/CalibrationImage_Identified.jpg"

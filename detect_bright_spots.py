@@ -23,7 +23,7 @@ import csv
 from datetime import datetime
 
 
-def start_imageCapture(image_pipe,):
+def start_imageCapture(image_pipe,scaleFactor):
     global xPos, yPos, area, radiusList
     xPos = []
     yPos = []
@@ -60,16 +60,18 @@ def start_imageCapture(image_pipe,):
         
 
     while not shutoff:
-        while image_pipe.poll(): #Empty pipe 
-            pipeContents = image_pipe.recv()
-        if type(pipeContents) == str:
-            runStatus = pipeContents
-        if type(pipeContents) == float:
-            image_pipe.send(pipeContents)
+        pipeContents = []
 
+        while image_pipe.poll(): #Empty pipe 
+                pipeContents.append(image_pipe.recv())
+
+        for i in pipeContents:
+            if type(i) == float:
+                image_pipe.send(i)
+            if type(i) == str:
+                runStatus = i
 
         if runStatus == "run":
-            print("starting Image Loop")
             fileID = datetime.now().strftime("%Y%m%d-%H%M%S")
             fileName = "/home/pi/Carbon-Capture-Test-Bed/Images_Raw/%s_salt.jpg" %(fileID)
             try:
@@ -165,14 +167,13 @@ def start_imageCapture(image_pipe,):
                         # draw the bright spot on the image
                         (x, y, w, h) = cv2.boundingRect(c)
                         ((cX, cY), radius) = cv2.minEnclosingCircle(c)
-                        if i == 0:
-                            scaleFactor = (math.sqrt(200)/2)/radius
-                        else: #saving the x and y position, adding to the total error 
-                            xPos.append(round(cX*scaleFactor, 4))
-                            yPos.append(round(cY*scaleFactor, 4))
-                            #radiusList.append(round(radius*scaleFactor, 4))
-                            area += math.pi*(scaleFactor*radius)**2
-                            pwriter2.writerow(['' , xPos, yPos, radius])
+                        
+                        #saving the x and y position, adding to the total error 
+                        xPos.append(round(cX*scaleFactor, 4))
+                        yPos.append(round(cY*scaleFactor, 4))
+                        radiusList.append(round(radius*scaleFactor, 4))
+                        area += math.pi*(scaleFactor*radius)**2
+                        pwriter2.writerow(['' , xPos, yPos, radius])
                         
                         cv2.circle(image, (int(cX), int(cY)), int(radius),(0, 255, 0), 4)
                         cv2.putText(image, "#{}".format(i + 1), (x, y - 15),cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)

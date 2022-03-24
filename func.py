@@ -59,7 +59,10 @@ def loadTestPresets():
     count = 0
     for i in testDefault:
         colon = int(i.find(':')+2)
-        testDefault[count] = float(i[colon:])
+        if count <= 11:
+            testDefault[count] = float(i[colon:])
+        else:
+            testDefault[count] = tuple(i[colon:])
         count += 1
     return testDefault
 
@@ -80,7 +83,9 @@ def saveTestPreset(testDefault,calibrate):
             Current Limit: %f \n\
             Voltage Limit: %f\n\
             Pressure Limit: %f\n\
-            Image Capture Rate: %f\n" % (testDefault[0], testDefault[1], testDefault[2], testDefault[3], testDefault[4], testDefault[5], testDefault[6],testDefault[7],testDefault[8],testDefault[9],testDefault[10])
+            Image Capture Rate: %f\n\
+            Image Calibration (mm/pixel): %f\n\
+            Power Line: %s" % (testDefault[0], testDefault[1], testDefault[2], testDefault[3], testDefault[4], testDefault[5], testDefault[6],testDefault[7],testDefault[8],testDefault[9],testDefault[10],testDefault[11],testDefault[12])
             file.write(str(newString))
 
 def calibration(): 

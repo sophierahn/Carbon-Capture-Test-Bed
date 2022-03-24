@@ -35,7 +35,7 @@ adc = ADS.ADS1015(tca[1])
 # print("zero")
 
 
-#GPIO.setmode(GPIO.BCM)
+GPIO.setmode(GPIO.BCM)
 
 
 # Create single-ended input on channel 0
@@ -48,7 +48,7 @@ chan = AnalogIn(adc, ADS.P0, ADS.P1)
 
 
 #pump
-#GPIO.setup(22,GPIO.OUT)
+GPIO.setup(22,GPIO.OUT)
 
 #DAC
 #GPIO.setup(17,GPIO.OUT)
@@ -72,11 +72,14 @@ powerValue = 0
 #     #print (pressure)
     
 #     powerValue += 0.1
-time.sleep(4)
-dac.normalized_value = 0
 
-    #GPIO.output(22, GPIO.LOW)
-    #count = count +1
+#dac.normalized_value = 0
+
+GPIO.output(22, GPIO.HIGH)
+time.sleep(20)
+GPIO.output(22, GPIO.LOW)
+    #count = count +
+    # 1
     #r = 1
     #setValue = 1748
     #aim = 1.4

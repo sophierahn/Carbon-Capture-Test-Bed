@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
+from cgi import test
 from distutils.log import error
+from re import I
 import sys
 import time
 import tkinter as tk
@@ -22,6 +24,7 @@ import csv
 from datetime import datetime
 from datetime import timedelta
 from multiprocessing import Process, Pipe, Queue
+from subprocess import Popen
 import func
 #import subprocess
 
@@ -40,8 +43,8 @@ if not mac:
 
    
 # USB is automatically mounted as media/pi/Lexar no matter what plug is used
-# A folder named C02_Sensor_Data has been made
-# *** Error checking function throwing an error, Pressure not displaying on UI, Calibrating tag not showing up
+# A folder named C02_Sensor_Data has been made *** switch data to save there
+
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -60,13 +63,14 @@ countdown = None
 debug = False
 testRunning = False
 testDefault = []
+
+#User Editable Settings
 preTestWait = 5
 preTestDelay = 120
 
 class controls:
     global radioVar, estop, countdown, testDefault, graph, testRunning
     testDefault = func.loadTestPresets()
-    func.setZero()
     def __init__(self, master):
         self.master = master
         global testDefault
@@ -257,6 +261,10 @@ class controls:
 
         self.BtnClose = Button(master, text="Close", command=lambda: self.close())
         self.BtnClose.place(x=10,y=580)
+
+        self.BtnDefault = Button(master, text="Calibrate System", command=lambda: self.calibrate())
+        self.BtnDefault.place(x=20,y=50)
+        
         
 
 ################################## Main Program ###############################################################
@@ -273,10 +281,14 @@ class controls:
                 print("changing current")
             self.LblPower.config(text = "Set Current (A):")
 
+    def calibrate(self):
+        p1 = Popen(['python3','CalibrationUI.py'])
+        p1.wait()
+        
     #Save Test Default Values
     def saveTest(self):
         global testDefault, radioVar, logScale, var2
-        testDefault = [0]*11
+        testDefault = [0]*12
         try:
             testDefault[0] = float(EntFlow[0].get())
             testDefault[1] = float(radioVar)
@@ -289,6 +301,7 @@ class controls:
             testDefault[8] = float(EntVoltLim[0].get())
             testDefault[9] = float(EntPressureLim[0].get())
             testDefault[10] = float(EntImageRate[0].get())
+            testDefault[11] = testDefault[11]
             print(testDefault)
             func.saveTestPreset(testDefault,False)
         except Exception as e:
@@ -441,8 +454,8 @@ class controls:
             testMin = float(EntTime[0].get())
             powerValue = float(EntPower[0].get())
             if powerValue > 24:
-                func.message("Warning","Voltage Must not exceed 24V")
-                raise Exception("Voltage above max 24v")
+                func.message("Warning","Voltage cannot not exceed 24V")
+                raise Exception("Voltage above Max 24v")
             if radioVar == 2:
                 func.message("Warning","Current Control not Currently Enabled")
                 raise Exception("Current Selected")
@@ -455,7 +468,7 @@ class controls:
         else:
             #1 means voltage
             if radioVar == 1: ### *** Remove hardcoded numbers, add calibration function
-                powerNormValue = (powerValue*0.0386) + 0.0797 #Calculated Calibration Curve (y=0.0386x + 0.0797)
+                powerNormValue = (powerValue*0.0386) + 0.0797 #*** use calibration fucntion Calculated Calibration Curve (y=0.0386x + 0.0797)
             #2 means current
             if radioVar == 2:
                 powerNormValue = powerValue*5/20/3.28  #Current 0-20A Proportial 5v, percentage value for DAC 0-3.28v
@@ -481,7 +494,7 @@ class controls:
 
             #Initiallize Image Capture Process
             image_pipe, maini_pipe = Pipe()
-            image_script = Process(target= start_imageCapture, args= (image_pipe,))
+            image_script = Process(target= start_imageCapture, args= (image_pipe,testDefault[11]))
             image_script.start()
 
             #Call repeating functions
@@ -556,16 +569,19 @@ class controls:
         global estop
         if debug:
             print("Image Capture Starting")
-        pipeContents = 0.0
+
+        print(repeatRate)
+        pipeContents = []
         if not estop:
-
+            
             while maini_pipe.poll(): #Empty pipe 
-                pipeContents = maini_pipe.recv()
+                pipeContents.append(maini_pipe.recv())
 
-            if type(pipeContents) == float:
-                self.saltArea = round(pipeContents,3)
-            if type(pipeContents) == str:
-                maini_pipe.send(pipeContents)
+            for i in pipeContents:
+                if type(i) == float:
+                    self.saltArea = round(i,3)
+                if type(i) == str:
+                    maini_pipe.send(i)
                 
             maini_pipe.send("run")
             self.saltData.config(text = "Total Salt Area: %fmm2"%self.saltArea)

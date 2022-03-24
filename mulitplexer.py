@@ -44,7 +44,7 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
     print("Opening I2C bus")
     i2c = board.I2C()
     tca = adafruit_tca9548a.TCA9548A(i2c)
-    mpr_0 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25) # *** update TCA indexes with new pi setup
+    mpr_0 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25) 
     mpr_1 = adafruit_mprls.MPRLS(tca[5], psi_min=0, psi_max=25)
     mpr_2 = adafruit_mprls.MPRLS(tca[6], psi_min=0, psi_max=25)
     mpr_3 = adafruit_mprls.MPRLS(tca[7], psi_min=0, psi_max=25)

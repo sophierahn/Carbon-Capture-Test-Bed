@@ -45,7 +45,7 @@ sleep(3)
 #     camera.annotate_text = "Brightness: " +str(i)
 #     camera.brightness = i
 #     sleep(.5)
-    
+
 #camera.annotate_text = "10 seconds:"
 #input("enter when finished")
 #sleep(1)

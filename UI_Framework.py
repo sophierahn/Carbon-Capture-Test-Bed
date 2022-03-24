@@ -42,8 +42,8 @@ if not mac:
 
    
 # USB is automatically mounted as media/pi/Lexar no matter what plug is used
-# A folder named C02_Sensor_Data has been made
-# *** Error checking function throwing an error, Pressure not displaying on UI, Calibrating tag not showing up
+# A folder named C02_Sensor_Data has been made *** switch data to save there
+
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -453,13 +453,13 @@ class controls:
             testMin = float(EntTime[0].get())
             powerValue = float(EntPower[0].get())
             if powerValue > 24:
-                func.message("Warning","Voltage Must not exceed 24V")
-                raise Exception("Voltage above max 24v")
+                func.message("Warning","Voltage cannot not exceed 24V")
+                raise Exception("Voltage above Max 24v")
             if radioVar == 2:
                 func.message("Warning","Current Control not Currently Enabled")
                 raise Exception("Current Selected")
-            repeatRate = int(EntImageRate[0].get())*1000
-            if repeatRate < 1000 or type(repeatRate) != 'int':
+            repeatRate = round(float(EntImageRate[0].get()))*1000
+            if repeatRate < 1000:
                 func.message("Warning","Image Capture rate must be greater than 1 second and an interger value")
                 raise Exception("Value must be greater than 1")
         except:
@@ -467,7 +467,7 @@ class controls:
         else:
             #1 means voltage
             if radioVar == 1: ### *** Remove hardcoded numbers, add calibration function
-                powerNormValue = (powerValue*0.0386) + 0.0797 #Calculated Calibration Curve (y=0.0386x + 0.0797)
+                powerNormValue = (powerValue*0.0386) + 0.0797 #*** use calibration fucntion Calculated Calibration Curve (y=0.0386x + 0.0797)
             #2 means current
             if radioVar == 2:
                 powerNormValue = powerValue*5/20/3.28  #Current 0-20A Proportial 5v, percentage value for DAC 0-3.28v

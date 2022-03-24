@@ -9,3 +9,5 @@ Flow Rate (ml/min): 20.000000
             Voltage Limit: 6.000000
             Pressure Limit: 1200.000000
             Image Capture Rate: 10.000000
+            Image Calibration (mm/pixel): 40.000000
+            Power Line: (7, 0.0912)

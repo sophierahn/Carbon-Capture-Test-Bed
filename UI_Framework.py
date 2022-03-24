@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+from cgi import test
 from distutils.log import error
 import sys
 import time
@@ -22,6 +23,7 @@ import csv
 from datetime import datetime
 from datetime import timedelta
 from multiprocessing import Process, Pipe, Queue
+from subprocess import Popen
 import func
 #import subprocess
 
@@ -60,13 +62,14 @@ countdown = None
 debug = False
 testRunning = False
 testDefault = []
+
+#User Editable Settings
 preTestWait = 5
 preTestDelay = 120
 
 class controls:
     global radioVar, estop, countdown, testDefault, graph, testRunning
     testDefault = func.loadTestPresets()
-    func.setZero()
     def __init__(self, master):
         self.master = master
         global testDefault
@@ -257,6 +260,10 @@ class controls:
 
         self.BtnClose = Button(master, text="Close", command=lambda: self.close())
         self.BtnClose.place(x=10,y=580)
+
+        self.BtnDefault = Button(master, text="Calibrate System", command=lambda: self.calibrate())
+        self.BtnDefault.place(x=20,y=50)
+        
         
 
 ################################## Main Program ###############################################################
@@ -273,10 +280,14 @@ class controls:
                 print("changing current")
             self.LblPower.config(text = "Set Current (A):")
 
+    def calibrate(self):
+        p1 = Popen(['python3','CalibrationUI.py'])
+        p1.wait()
+        
     #Save Test Default Values
     def saveTest(self):
         global testDefault, radioVar, logScale, var2
-        testDefault = [0]*11
+        testDefault = [0]*12
         try:
             testDefault[0] = float(EntFlow[0].get())
             testDefault[1] = float(radioVar)
@@ -289,6 +300,7 @@ class controls:
             testDefault[8] = float(EntVoltLim[0].get())
             testDefault[9] = float(EntPressureLim[0].get())
             testDefault[10] = float(EntImageRate[0].get())
+            testDefault[11] = testDefault[11]
             print(testDefault)
             func.saveTestPreset(testDefault,False)
         except Exception as e:
@@ -481,7 +493,7 @@ class controls:
 
             #Initiallize Image Capture Process
             image_pipe, maini_pipe = Pipe()
-            image_script = Process(target= start_imageCapture, args= (image_pipe,))
+            image_script = Process(target= start_imageCapture, args= (image_pipe,testDefault[11]))
             image_script.start()
 
             #Call repeating functions

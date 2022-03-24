@@ -446,8 +446,8 @@ class controls:
             if radioVar == 2:
                 func.message("Warning","Current Control not Currently Enabled")
                 raise Exception("Current Selected")
-            repeatRate = int(EntImageRate[0].get())*1000
-            if repeatRate < 1000 or type(repeatRate) != 'int':
+            repeatRate = round(float(EntImageRate[0].get()))*1000
+            if repeatRate < 1000:
                 func.message("Warning","Image Capture rate must be greater than 1 second and an interger value")
                 raise Exception("Value must be greater than 1")
         except:

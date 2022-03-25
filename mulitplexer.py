@@ -95,7 +95,6 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
                 q.put_nowait((3,i[1])) #pressure sensor data
             if i[0] == 4:
                 gasFlow = i[1] #CO2 Flow Rate
-                print(gasFlow)
             
         
     ### Normal Opperation ###
@@ -127,12 +126,14 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
         # msg = 3, voltage over
         # msg = 4, pressure over
 
-        if flowRB > limitList[1]:       #CO2 Flow Rate Check
+        if flowRB > limitList[0]:  
+            print("what!!!",flowRB, limitList)      #CO2 Flow Rate Check
             multi_pipe.send((True,1)) 
-        if powerList[0] > limitList[1]: #Voltage Check
+        if powerList[0] > limitList[1]: #Current Check
+            print("why?",powerList) 
             multi_pipe.send((True,2)) 
-        if powerList[1] > limitList[2]: #Current Check
-            multi_pipe.send((True,3)) 
+        if powerList[1] > limitList[2]: #Voltage Check
+            multi_pipe.send((True,3))
         if pressureAve > limitList[3]:  #Pressure Sensor Check
             multi_pipe.send((True,4)) 
 

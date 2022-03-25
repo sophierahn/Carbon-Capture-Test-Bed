@@ -80,7 +80,7 @@ def start_imageCapture(image_pipe,scaleFactor):
                 # Look at image folder, load most recent file
                 # * means all if need specific format then *.csv
                 list_of_files = glob.glob('/home/pi/Carbon-Capture-Test-Bed/Images_Raw/*.jpg')
-                elapsed = round(time.time()-now,3)
+                elapsed = round(time.time()-now,2)
                 pwriter2.writerow([elapsed , 'X Postion', 'Y Postion', 'Radius'])
                 latest_file = max(list_of_files, key=os.path.getctime)
                 image = cv2.imread(latest_file)
@@ -98,8 +98,8 @@ def start_imageCapture(image_pipe,scaleFactor):
                 wSmall = round(w/2)
 
                 #Masking the connectors out of the image
-                pts = np.array([[0,400], [250, 240], [400, 0], # *** points of the polygon, may need to fine tune 
-                                [1000, 0], [1000, 600], [730, 750],
+                pts = np.array([[0,400], [260, 260], [400, 0], # *** points of the polygon, may need to fine tune 
+                                [1000, 0], [1000, 600], [730, 730],
                                 [600, 1000], [0, 1000]],
                             np.int32)
                 pts = pts.reshape((-1, 1, 2))
@@ -146,12 +146,12 @@ def start_imageCapture(image_pipe,scaleFactor):
                     # otherwise, construct the label mask and count the number of pixels
                     labelMask = np.zeros(thresh.shape, dtype="uint8")
                     labelMask[labels == label] = 255
-                    #numPixels = cv2.countNonZero(labelMask)
+                    numPixels = cv2.countNonZero(labelMask)
 
                     # (Not used) if the number of pixels in the component is sufficiently large, then add it to our mask of "large blobs"
-                    # if numPixels > 300:
-                    mask = cv2.add(mask, labelMask)
-                    count += 1
+                    if numPixels > 150:
+                        mask = cv2.add(mask, labelMask)
+                        count += 1
                 #print(count)
 
                 # find the contours in the mask, then sort them from left to right
@@ -172,10 +172,10 @@ def start_imageCapture(image_pipe,scaleFactor):
                         #yPos.append(round(cY*scaleFactor, 4))
                         #radiusList.append(round(radius*scaleFactor, 4))
                         area += math.pi*(scaleFactor*radius)**2
-                        pwriter2.writerow(['' , cX, cY, radius])
+                        pwriter2.writerow(['' , cX*scaleFactor, cY*scaleFactor, radius*scaleFactor])
                         
-                        cv2.circle(image, (int(cX), int(cY)), int(radius),(0, 255, 0), 4)
-                        cv2.putText(image, "#{}".format(i + 1), (x, y - 15),cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
+                        cv2.circle(masked, (int(cX), int(cY)), int(radius),(0, 255, 0), 4)
+                        cv2.putText(masked, "#{}".format(i + 1), (x, y - 15),cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
 
                     # show the output image
                     if debug:
@@ -186,7 +186,7 @@ def start_imageCapture(image_pipe,scaleFactor):
 
                     fileID = datetime.now().strftime("%Y%m%d-%H%M%S")
                     fileName = "/home/pi/Carbon-Capture-Test-Bed/Images_Edited/%s_identified.jpg" % (fileID)
-                    imageSmall = cv2.resize(image, (hSmall, wSmall),interpolation=cv2.INTER_AREA)
+                    imageSmall = cv2.resize(masked, (hSmall, wSmall),interpolation=cv2.INTER_AREA)
                     cv2.imwrite(fileName, imageSmall)
                     image_pipe.send(area)
                 else:
@@ -197,12 +197,11 @@ def start_imageCapture(image_pipe,scaleFactor):
                 pwriter2.writerow([''])
                 data = True
                 if data:
-                    datalist = [time.time(),area, count]
+                    datalist = [round(time.time(),2),area, count]
                     pwriter1.writerow(datalist) #writing data to csv
                     
                
         if runStatus == "stop":
-            print("closing")
             shutoff = True
     
     print("Image Closed")

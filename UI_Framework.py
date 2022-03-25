@@ -83,7 +83,7 @@ class controls:
         text = 6
         setX = 30
         setY = 130
-        entX = 150
+        entX = 155
 
         #### Data variables ####
         self.pressure = float(0)
@@ -147,8 +147,8 @@ class controls:
         EntTime[0].place(x=entX,y=setY+190)
         EntTime[0].insert(0,testDefault[3])#Set Default
         EntTime[0].config(validate="key", validatecommand=(validation, '%S'))
-        self.LblTime = Label(master, text="Test Duration (min):", font=("Calibri",text+5))
-        self.LblTime.place(x=setX-30,y=setY+190)
+        self.LblTime = Label(master, text="Test Duration (min):", font=("Calibri",text+4))
+        self.LblTime.place(x=setX-25,y=setY+190)
 
     ### Shutoff Limits ###
         limX = setX+200
@@ -158,28 +158,28 @@ class controls:
 
         self.lblFlowLim = Label(master, text="Flow Rate Cut Off (SCCM):", font=("Calibri",text+4))
         self.lblFlowLim.place(x=limX,y=limY+30)
-        EntFlowLim[0] = Entry(master, width=5, justify=RIGHT)
+        EntFlowLim[0] = Entry(master, width=7, justify=RIGHT)
         EntFlowLim[0].place(x=limX+200,y=limY+30)
         EntFlowLim[0].insert(tk.INSERT,testDefault[6])
         EntFlowLim[0].config(validate="key", validatecommand=(validation, '%S')) 
 
         self.lblCurrentLim = Label(master, text="Current Cut Off (A):", font=("Calibri",text+4))
         self.lblCurrentLim.place(x=limX,y=limY+60)
-        EntCurrentLim[0] = Entry(master, width=5, justify=RIGHT)
+        EntCurrentLim[0] = Entry(master, width=7, justify=RIGHT)
         EntCurrentLim[0].place(x=limX+200,y=limY+60)
         EntCurrentLim[0].insert(tk.INSERT,testDefault[7])
         EntCurrentLim[0].config(validate="key", validatecommand=(validation, '%S')) 
 
         self.lblVoltLim = Label(master, text="Voltage Cut Off (V):", font=("Calibri",text+4))
         self.lblVoltLim.place(x=limX,y=limY+90)
-        EntVoltLim[0] = Entry(master, width=5, justify=RIGHT)
+        EntVoltLim[0] = Entry(master, width=7, justify=RIGHT)
         EntVoltLim[0].place(x=limX+200,y=limY+90)
         EntVoltLim[0].insert(tk.INSERT,testDefault[8])
         EntVoltLim[0].config(validate="key", validatecommand=(validation, '%S')) 
          
         self.lblPressureLim = Label(master, text="Pressure Flux Limit (kpa):", font=("Calibri",text+4))
         self.lblPressureLim.place(x=limX,y=limY+120)
-        EntPressureLim[0] = Entry(master, width=5, justify=RIGHT)
+        EntPressureLim[0] = Entry(master, width=7, justify=RIGHT)
         EntPressureLim[0].place(x=limX+200,y=limY+120)
         EntPressureLim[0].insert(tk.INSERT,testDefault[9])
         EntPressureLim[0].config(validate="key", validatecommand=(validation, '%S')) 
@@ -190,10 +190,10 @@ class controls:
         self.TitlData = Label(master, text="Logging Settings", font=("Calibri",text+8))
         self.TitlData.place(x=dataX,y=dataY)
         #Image Frequancy 
-        self.lblImage = Label(master, text="Image Capture Rate (s)", font=("Calibri",text+6))
+        self.lblImage = Label(master, text="Image Capture Rate (s):", font=("Calibri",text+4))
         self.lblImage.place(x=dataX,y=dataY+30)
-        EntImageRate[0] = Entry(master, width=5, justify=RIGHT)
-        EntImageRate[0].place(x=dataX+150,y=dataY+30)
+        EntImageRate[0] = Entry(master, width=7, justify=RIGHT)
+        EntImageRate[0].place(x=limX+200,y=dataY+30)
         EntImageRate[0].insert(tk.INSERT,testDefault[10])
         #Data Frequancy
         self.LblLog = Label(master, text="Data Log Rate (s)", font=("Calibri",text+4))
@@ -207,29 +207,29 @@ class controls:
         var2.set(int(testDefault[5]))
         
     #### Live Data ####
-        datax = 600
+        datax = 550
         datay = 80
         #pressure
         self.dataHeading = Label(master, text="Live Data", font=("Calibri",text+10))
-        self.dataHeading.place(x=datax+100,y=datay)
-        self.psen0 = Label(master, text="Inlet 1: 0kPa", font=("Calibri",text+6))
+        self.dataHeading.place(x=datax+120,y=datay)
+        self.psen0 = Label(master, text="KHCO3 Inlet: 0kPa", font=("Calibri",text+6))
         self.psen0.place(x=datax,y=datay+35)
-        self.psen1 = Label(master, text="Outlet 1: 0kPa", font=("Calibri",text+6))
+        self.psen1 = Label(master, text="KHCO3 Outlet: 0kPa", font=("Calibri",text+6))
         self.psen1.place(x=datax,y=datay+70)
-        self.psen2 = Label(master, text="Inlet 2: 0kPa", font=("Calibri",text+6))
+        self.psen2 = Label(master, text="CO2 Inlet: 0kPa", font=("Calibri",text+6))
         self.psen2.place(x=datax,y=datay+105)
-        self.psen3 = Label(master, text="Outlet 2: 0kPa", font=("Calibri",text+6))
+        self.psen3 = Label(master, text="CO2 Outlet: 0kPa", font=("Calibri",text+6))
         self.psen3.place(x=datax,y=datay+140)
         #CO2 Flow
         self.flowRB = Label(master, text="CO2 Flow Rate: 0 SCCM", font=("Calibri",text+6))
-        self.flowRB.place(x=datax+200,y=datay+35)
+        self.flowRB.place(x=datax+240,y=datay+35)
         #power
         self.power0 = Label(master, text="Current: 0 mA", font=("Calibri",text+6))
-        self.power0.place(x=datax+200,y=datay+70)
+        self.power0.place(x=datax+240,y=datay+70)
         self.power1 = Label(master, text="Voltage: 0 V", font=("Calibri",text+6))
-        self.power1.place(x=datax+200,y=datay+105)
+        self.power1.place(x=datax+240,y=datay+105)
         self.power2 = Label(master, text="Power: 0 mW", font=("Calibri",text+6))
-        self.power2.place(x=datax+200,y=datay+140)
+        self.power2.place(x=datax+240,y=datay+140)
         
         salty = datay + 240
         self.imageHeading = Label(master, text="Salt Idenification", font=("Calibri",text+8))
@@ -239,8 +239,8 @@ class controls:
         if not mac:
             self.img = Image.open(func.latestFile())
             self.imgW, self.imgH = self.img.size
-            self.imgW = round(int(self.imgW)/3)
-            self.imgH = round(int(self.imgH)/3)
+            self.imgW = round(int(self.imgW)/2)
+            self.imgH = round(int(self.imgH)/2)
             self.imgSmall = self.img.resize((self.imgW,self.imgH))
             self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
             self.saltImage = Label(master,image=self.imgSmall)
@@ -249,9 +249,9 @@ class controls:
     #### Buttons ####
         btnX = setX+50
         btnY = setY+390
-        self.BtnPreStart = Button(master, text="Start PreTest", command=lambda: self.preTest(), width=10, height=2, bg='#DDDDDD', activebackground='#f7a840', wraplength=100)
+        self.BtnPreStart = Button(master, text="Start PreTest", command=lambda: self.preTest(), width=10, height=2, bg='#f7d240', activebackground='#f7a840', wraplength=100)
         self.BtnPreStart.place(x=btnX-55,y=btnY)
-        self.BtnStart = Button(master, text="Start Test", command=lambda: self.validateTest(), width=10, height=2, bg='#DDDDDD', activebackground='#72d466', wraplength=100, state= DISABLED)
+        self.BtnStart = Button(master, text="Start Test", command=lambda: self.validateTest(), width=10, height=2, bg='#DDDDDD', activebackground='#a6e89e', wraplength=100, state= DISABLED)
         self.BtnStart.place(x=btnX+55,y=btnY)
         self.BtnCancel = Button(master, text="Cancel Test", command=lambda: self.stopTest(), width=10, height=2, bg='#DDDDDD', activebackground='#ff5959', wraplength=100)
         self.BtnCancel.place(x=btnX,y=btnY+50)
@@ -263,7 +263,7 @@ class controls:
         self.BtnClose.place(x=10,y=580)
 
         self.BtnDefault = Button(master, text="Calibrate System", command=lambda: self.calibrate())
-        self.BtnDefault.place(x=20,y=50)
+        self.BtnDefault.place(x=22,y=60)
         
         
 
@@ -322,6 +322,7 @@ class controls:
             maini_pipe.send("stop")
             time.sleep(0.05)
             image_script.terminate()
+            del image_script
         if 'power_script' in globals():
             power_script.terminate()
         if 'multi' in globals():
@@ -355,8 +356,8 @@ class controls:
             self.killProcesses()
             testRunning = False
             self.BtnCancel.config(text="Reset Test", bg='#ff5959', activebackground='#FF0000')
-            self.BtnPreStart.config(state= DISABLED)
-            self.BtnStart.config(state= DISABLED)
+            self.BtnPreStart.config(state= DISABLED, bg='#DDDDDD')
+            self.BtnStart.config(state= DISABLED, bg='#DDDDDD')
             EntFlow[0].delete(0,'end')
             EntPower[0].delete(0,'end')
             EntTime[0].delete(0,'end')
@@ -367,7 +368,7 @@ class controls:
             estop = False
             self.BtnCancel.config(text="Cancel Test", bg='#DDDDDD', activebackground='#ff5959')
             self.LblCountdown.config(text = "")
-            self.BtnPreStart.config(text="Start PreTest", state = NORMAL)
+            self.BtnPreStart.config(text="Start PreTest", bg='#f7d240', state = NORMAL)
 
 ### Start Pre Test procedure ###  #calibrate pressure sensors, start pump and gas flowing in cell, call 30 sec wait function
     def preTest(self):
@@ -388,10 +389,13 @@ class controls:
                 if i < 0:
                     func.message("Error","Limit Values must be Postive")
                     raise Exception("Negative Values")
-        except:
+        except ValueError:
+            func.message("Error","Please Enter Numbers Only")
+        except Exception as e:
            #func.message("Warning","Numerical Entry Invalid")
-           print("Error in Numerical Entry: ", Exception)
+           print("Error in Numerical Entry: ", e)
         else: #only proceeds if test values pass muster
+            print(limitList)
             if calibrating:
                 #calibrationValue = 0
                 calibrationValue = func.calibration()
@@ -412,7 +416,7 @@ class controls:
 
             gasFlowNorm = gasFlow*5/200/3.28 #convert to percent fraction
             q.put_nowait((4,gasFlowNorm)) #send inital gas flow values
-            print("Sending Gas Flow", gasFlow)
+            #print("Sending Gas Flow", gasFlow)
             
             start = time.time()
             self.preTestCountDown(preTestWait) #Start 30sec preTest loop *** make gobal value, not hardcoded
@@ -431,8 +435,8 @@ class controls:
             self.BtnPreStart.config(text = "PreTest Cancelled")
         else: #Completed Successfully
             root.after_cancel(self.testWait)
-            self.BtnPreStart.config(text = "PreTest Complete", state= DISABLED)
-            self.BtnStart.config(state= NORMAL)
+            self.BtnPreStart.config(text = "PreTest Complete", bg='#DDDDDD', state= DISABLED)
+            self.BtnStart.config(state= NORMAL, bg = '#72d466')
 
     def preTestCheck(self, startTime):
         global estop, testRunning
@@ -456,6 +460,9 @@ class controls:
             print("validating")
         try:
             testMin = float(EntTime[0].get())
+            if testMin < 0:
+                func.message("Warning","Test Duration must be Positive")
+                raise Exception("Voltage above Max 24v")
             powerValue = float(EntPower[0].get())
             if powerValue > 24 or powerValue < 0:
                 func.message("Warning","Voltage cannot not exceed 24V and must be a Postive Value")
@@ -467,13 +474,14 @@ class controls:
             if repeatRate < 1000:
                 func.message("Warning","Image Capture rate must be greater than 1 second and an interger value")
                 raise Exception("Value must be greater than 1")
-        except:
-            print("Error in Numerical Entry: ", Exception)
+        except Exception as e:
+            print(e)
+            print('general issue')
            #func.message("Warning","Numerical Entry Invalid")
         else:
             #1 means voltage
             if radioVar == 1: ### *** Remove hardcoded numbers, add calibration function
-                powerNormValue = (powerValue*0.0386) + 0.0797 #*** use calibration fucntion Calculated Calibration Curve (y=0.0386x + 0.0797)
+                powerNormValue = ((powerValue)*0.0383) + 0.0825 #*** use calibration fucntion Calculated Calibration Curve (y=0.0386x + 0.0797)
             #2 means current
             if radioVar == 2:
                 powerNormValue = powerValue*5/20/3.28  #Current 0-20A Proportial 5v, percentage value for DAC 0-3.28v
@@ -541,10 +549,10 @@ class controls:
             self.pressure_3 = round(pressureList[3],3)
             #self.graphing(self.pressure_0,self.pressure_1,self.pressure_2,self.pressure_3, testSec)
 
-            self.psen0.config(text = "Inlet 1: "+str(self.pressure_0)+"kPa") #Update the pressure sensor labels on UI
-            self.psen1.config(text = "Outlet 1: "+str(self.pressure_1)+"kPa")
-            self.psen2.config(text = "Inlet 2: "+str(self.pressure_2)+"kPa")
-            self.psen3.config(text = "Outlet 2: "+str(self.pressure_3)+"kPa")
+            self.psen0.config(text = "KHCO3 Inlet: "+str(self.pressure_0)+"kPa") #Update the pressure sensor labels on UI
+            self.psen1.config(text = "KHCO3 Outlet: "+str(self.pressure_1)+"kPa")
+            self.psen2.config(text = "CO2 Inlet: "+str(self.pressure_2)+"kPa")
+            self.psen3.config(text = "CO2 Outlet: "+str(self.pressure_3)+"kPa")
             pressure_sensor = root.after(1000, lambda: self.pressure_sensor(psen_pipe, mainp_pipe,testSec))
         else:
             root.after_cancel(self.pressure_sensor)
@@ -582,10 +590,11 @@ class controls:
             for i in pipeContents:
                 if type(i) == float:
                     self.saltArea = round(i,3)
+                    print(i)
                 # if type(i) == str:
                 #     maini_pipe.send(i)
             maini_pipe.send("run")
-            self.saltData.config(text = "Total Salt Area: %fmm2"%self.saltArea)
+            self.saltData.config(text = "Total Salt Area: %.3fmm2"%self.saltArea)
             self.img = Image.open(func.latestFile())
             self.imgW, self.imgH = self.img.size
             self.imgW = round(int(self.imgW)/2)
@@ -603,7 +612,6 @@ class controls:
         if not estop:
             while mainMulti_pipe.poll():
                 self.errorTuple = mainMulti_pipe.recv()
-
             if self.errorTuple[0]:
                 self.stopTest()
                 if self.errorTuple[1] == 1:
@@ -616,6 +624,7 @@ class controls:
                     func.message("Error","Test was Ended Due to Pressure Flux measured over Limit")
             errorChecking = root.after(500, lambda: self.errorChecking(mainMulti_pipe))
         else:
+            self.errorTuple=(False,0)
             root.after_cancel(self.errorChecking)    
 
 root = Tk()

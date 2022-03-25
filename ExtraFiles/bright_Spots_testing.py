@@ -74,8 +74,8 @@ else:
     print(imageSmall.shape[:2])
 
 
-    pts = np.array([[0,400], [240, 240], [400, 0], 
-                    [1000, 0], [1000, 600], [730, 750],
+    pts = np.array([[0,400], [260, 260], [400, 0], 
+                    [1000, 0], [1000, 600], [730, 730],
                     [600, 1000], [0, 1000]],
                 np.int32)
     pts = pts.reshape((-1, 1, 2))
@@ -130,13 +130,13 @@ else:
         # number of pixels
         labelMask = np.zeros(thresh.shape, dtype="uint8")
         labelMask[labels == label] = 255
-        #numPixels = cv2.countNonZero(labelMask)
+        numPixels = cv2.countNonZero(labelMask)
 
         # if the number of pixels in the component is sufficiently
         # large, then add it to our mask of "large blobs"
-        # if numPixels > 300:
-        mask = cv2.add(mask, labelMask)
-        count += 1
+        if numPixels > 100:
+            mask = cv2.add(mask, labelMask)
+            count += 1
     #print(count)
 
     # find the contours in the mask, then sort them from left to
@@ -153,7 +153,7 @@ else:
             (x, y, w, h) = cv2.boundingRect(c)
             ((cX, cY), radius) = cv2.minEnclosingCircle(c)
             if i == 0:
-                scaleFactor = (math.sqrt(200)/2)/radius
+                scaleFactor = 0.024035
             else:
                 xPos.append(round(cX*scaleFactor, 4))
                 yPos.append(round(cY*scaleFactor, 4))
@@ -163,21 +163,21 @@ else:
             
             #gray_2 = cv2.cvtColor(image, cv2.COLO)
             # print("X:"+ str(cX) + " Y:" + str(cY) + " Radius:" + str(radius))
-            cv2.circle(image, (int(cX), int(cY)), int(radius),
+            cv2.circle(masked, (int(cX), int(cY)), int(radius),
                 (255, 0, 0), 5)
-            cv2.putText(image, "#{}".format(i + 1), (x, y - 15),
+            cv2.putText(masked, "#{}".format(i + 1), (x, y - 15),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 255), 2)
 
         # show the output image
         if debug:
-            threshSmall = cv2.resize(image, (hSmall, wSmall))
+            threshSmall = cv2.resize(masked, (hSmall, wSmall))
             cv2.imshow("Image", threshSmall)
             cv2.waitKey(0)
             print(area)
 
         fileID = datetime.now().strftime("%H%M%S")
         fileName = "/home/pi/Carbon-Capture-Test-Bed/Images_Edited/%s_Testing.jpg" % (fileID)
-        cv2.imwrite(fileName, image)
+        cv2.imwrite(fileName, masked)
         
     else:
         #fileID = datetime.now().strftime("%Y%m%d-%H%M%S")

@@ -74,7 +74,7 @@ def imageScaleCalibration():
         gray = cv2.cvtColor(masked, cv2.COLOR_BGR2GRAY)
         
 ####### change colour cut off to fine tune ###### threshold the image to reveal light regions in the
-        thresh = cv2.threshold(gray, 40, 255, cv2.THRESH_BINARY)[1]
+        thresh = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY)[1]
 ###### Fine Tune Here #####
 
         # perform a series of erosions and dilations to remove
@@ -100,7 +100,7 @@ def imageScaleCalibration():
             numPixels = cv2.countNonZero(labelMask)
 
             # Only looking for one very large blog, the calibration block in the center
-            if numPixels > 1000:
+            if numPixels > 100000:
                 mask = cv2.add(mask, labelMask)
                 count += 1
 
@@ -134,13 +134,15 @@ def imageScaleCalibration():
                 cv2.imshow("Thresholded", threshSmall)
                 cv2.imshow("Identified", finalSmall)
                 cv2.waitKey(0)
+                cv2.destroyAllWindows()
         
             fileName = "/home/pi/Carbon-Capture-Test-Bed/ExtraFiles/CalibrationImage_Identified.jpg"
             cv2.imwrite(fileName, image)
             
         else:
             print("No Contour Found")
-            func.message("Error","Calibration Block Not Found")
+            scaleFactor = 0
+            func.message("Error","Calibration Block Not Found, Please Try Again")
             
         print("Calibration Completed")
         GPIO.output(17, GPIO.LOW)

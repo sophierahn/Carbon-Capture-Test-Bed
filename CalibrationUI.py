@@ -13,16 +13,16 @@ testDefault = func.loadTestPresets()
 scaleFactor = testDefault[11]
 powerLine = testDefault[12]
 
-text = 6
+text = 4
 master = tk.Tk()
 master.title("CO2 Calibration UI")
-master.geometry('600x300') #Set Size of GUI window (WxH)
+master.geometry('600x300+150+150') #Set Size of GUI window (WxH)
 
-lblTitle = Label(master, text="Calibration Panel", font=("Calibri",text+14))
+lblTitle = Label(master, text="Calibration Panel", font=("Calibri",text+16))
 lblTitle.place(x=200,y=5)
 lblInstructImageTitle = Label(master, text="Image Scale Calibration", font=("Calibri",text+8))
 lblInstructImageTitle.place(x=10,y=40)
-lblInstructImage = Label(master, text="Please Place the calibration block on the\ncenter of the cell window", font=("Calibri",text+6),justify="left")
+lblInstructImage = Label(master, text="Please Place the calibration block on the\ncenter of the cell window", font=("Calibri",text+4),justify="left")
 lblInstructImage.place(x=10,y=60)
 lblScale = Label(master, text="Scale Factor: ", font=("Calibri",text+6),justify="left")
 lblScale.place(x=10,y=100)
@@ -31,7 +31,7 @@ imageButton.place(x=30,y=140)
 
 lblInstructPowerTitle = Label(master, text="Power Supply Calibration", font=("Calibri",text+8))
 lblInstructPowerTitle.place(x=300,y=40)
-lblInstructPower = Label(master, text="Ensure the Power supply is turned on\nand power leads are disconnected from the cell", font=("Calibri",text+6),justify="left")
+lblInstructPower = Label(master, text="Ensure the Power supply is turned on\nand power leads are disconnected from the cell", font=("Calibri",text+4),justify="left")
 lblInstructPower.place(x=300,y=60)
 lblPowerCurve = Label(master, text="Power Curve: ", font=("Calibri",text+6),justify="left")
 lblPowerCurve.place(x=300,y=100)
@@ -47,7 +47,7 @@ def runImageCalibration():
     #scaleFactor = 40
     scaleFactor = imageScaleCalibration()
     lblScale.config(text="Scale Factor: %.3f" %(scaleFactor))
-    imageButton.config(text="Complete")
+    imageButton.config(text="Completed")
 
 def runPowerCalibration():
     global powerLine
@@ -56,7 +56,7 @@ def runPowerCalibration():
     powerLine = 0.0912
     #powerLine = powerCalibrator()
     lblPowerCurve.config(text=powerLine)
-    powerButton.config(text="Complete")
+    powerButton.config(text="Completed")
 
 def saveTest():
     global powerLine, scaleFactor

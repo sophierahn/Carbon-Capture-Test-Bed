@@ -63,13 +63,13 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
         intermittent = False
     
     ### Initalize Data File, When pretest is started  ***this will create blank files if the pretest is cancled -> move to func and use firstTime?
-    
     now = datetime.now()
     current= now.strftime("%m_%d_%Y_%H_%M_%S")
     pfilename = "./data/" +"Pressure_sensor_data_" + current +".csv"
     pfile = open(pfilename, "w") #creating pressure sensor data csv with current date and time
     pwriter = csv.writer(pfile)
-    pwriter.writerow(['time', '0' , '1', '2', '3', 'current', 'voltage', 'power'])
+    pwriter.writerow(['Elapsed Time', 'KHCO3 In (kPa)' , 'KHCO3 Out (kPa)', 'CO2 In (kPa)', 'CO2 Out (kPa)', 'Current (mA)', 'Voltage (V)', 'Power (mW)', 'CO2 Flow Rate (SCCM)'])
+    start = time.time()
 
     while not shutoff:
         while not q.empty():
@@ -127,10 +127,10 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
         # msg = 4, pressure over
 
         if flowRB > limitList[0]:  
-            print("what!!!",flowRB, limitList)      #CO2 Flow Rate Check
+            #print("what!!!",flowRB, limitList)      #CO2 Flow Rate Check
             multi_pipe.send((True,1)) 
         if powerList[0] > limitList[1]: #Current Check
-            print("why?",powerList) 
+            #print("why?",powerList) 
             multi_pipe.send((True,2)) 
         if powerList[1] > limitList[2]: #Voltage Check
             multi_pipe.send((True,3))
@@ -140,10 +140,11 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
         queueDump = [] #reseting the local queue list
         
         #Logging, intermitant or direct
-        data = False #*** Remove
+        #data = False #*** Remove
         now = time.time()
         if data:
-            datalist = [time.time()]+pressureList + powerList
+            elapsed = round(time.time()-start,2)
+            datalist = [elapsed]+pressureList+powerList
             if intermittent and now > next:
                 pwriter.writerow(datalist) #writing data to csv
                 next = time.time() + testFreq

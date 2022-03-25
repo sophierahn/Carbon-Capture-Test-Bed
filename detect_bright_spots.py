@@ -54,7 +54,7 @@ def start_imageCapture(image_pipe,scaleFactor):
         pfilename2 = "./data/" +"X_Y_Data" + current +".csv"
         pfile2 = open(pfilename2, "w") #creating Image data csv with current date and time
         pwriter2 = csv.writer(pfile2)
-        now = time.time()
+        start = time.time()
         
 
     while not shutoff:
@@ -80,7 +80,7 @@ def start_imageCapture(image_pipe,scaleFactor):
                 # Look at image folder, load most recent file
                 # * means all if need specific format then *.csv
                 list_of_files = glob.glob('/home/pi/Carbon-Capture-Test-Bed/Images_Raw/*.jpg')
-                elapsed = round(time.time()-now,2)
+                elapsed = round(time.time()-start,2)
                 pwriter2.writerow([elapsed , 'X Postion', 'Y Postion', 'Radius'])
                 latest_file = max(list_of_files, key=os.path.getctime)
                 image = cv2.imread(latest_file)
@@ -99,8 +99,8 @@ def start_imageCapture(image_pipe,scaleFactor):
 
                 #Masking the connectors out of the image
                 pts = np.array([[0,400], [260, 260], [400, 0], # *** points of the polygon, may need to fine tune 
-                                [1000, 0], [1000, 600], [730, 730],
-                                [600, 1000], [0, 1000]],
+                                [1000, 0], [1000, 600], [700, 730],
+                                [550, 1000], [0, 1000]],
                             np.int32)
                 pts = pts.reshape((-1, 1, 2))
                 mask = np.zeros(image.shape[:2], dtype="uint8")
@@ -197,7 +197,8 @@ def start_imageCapture(image_pipe,scaleFactor):
                 pwriter2.writerow([''])
                 data = True
                 if data:
-                    datalist = [round(time.time(),2),area, count]
+                    elapsed = round(time.time()-start,2)
+                    datalist = [elapsed, area, count]
                     pwriter1.writerow(datalist) #writing data to csv
                     
                

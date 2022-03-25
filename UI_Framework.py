@@ -262,8 +262,8 @@ class controls:
         self.BtnClose = Button(master, text="Close", command=lambda: self.close())
         self.BtnClose.place(x=10,y=580)
 
-        self.BtnDefault = Button(master, text="Calibrate System", command=lambda: self.calibrate())
-        self.BtnDefault.place(x=22,y=60)
+        self.BtnCalibrate = Button(master, text="Calibrate System", command=lambda: self.calibrate())
+        self.BtnCalibrate.place(x=22,y=60)
         
         
 
@@ -357,7 +357,7 @@ class controls:
             testRunning = False
             self.BtnCancel.config(text="Reset Test", bg='#ff5959', activebackground='#FF0000')
             self.BtnPreStart.config(state= DISABLED, bg='#DDDDDD')
-            self.BtnStart.config(state= DISABLED, bg='#DDDDDD')
+            self.BtnStart.config(text="Start Test",state= DISABLED, bg='#DDDDDD')
             EntFlow[0].delete(0,'end')
             EntPower[0].delete(0,'end')
             EntTime[0].delete(0,'end')
@@ -369,6 +369,8 @@ class controls:
             self.BtnCancel.config(text="Cancel Test", bg='#DDDDDD', activebackground='#ff5959')
             self.LblCountdown.config(text = "")
             self.BtnPreStart.config(text="Start PreTest", bg='#f7d240', state = NORMAL)
+            self.BtnCalibrate.config(state=NORMAL)
+            
 
 ### Start Pre Test procedure ###  #calibrate pressure sensors, start pump and gas flowing in cell, call 30 sec wait function
     def preTest(self):
@@ -392,15 +394,16 @@ class controls:
         except ValueError:
             func.message("Error","Please Enter Numbers Only")
         except Exception as e:
-           #func.message("Warning","Numerical Entry Invalid")
            print("Error in Numerical Entry: ", e)
+        
         else: #only proceeds if test values pass muster
-            print(limitList)
             if calibrating:
                 #calibrationValue = 0
                 calibrationValue = func.calibration()
             else:
                 calibrationValue = 0
+
+            self.BtnCalibrate.config(state=DISABLED)
             #Initialization of Multiplexer Process
             print("about to start Multi")
             q = Queue()
@@ -474,11 +477,12 @@ class controls:
             if repeatRate < 1000:
                 func.message("Warning","Image Capture rate must be greater than 1 second and an interger value")
                 raise Exception("Value must be greater than 1")
+        except ValueError:
+            func.message("Error","Please Enter Numbers Only")
         except Exception as e:
-            print(e)
-            print('general issue')
-           #func.message("Warning","Numerical Entry Invalid")
+            print("Numerical Entery Error:", e)
         else:
+            self.BtnStart.config(text="Test Running")
             #1 means voltage
             if radioVar == 1: ### *** Remove hardcoded numbers, add calibration function
                 powerNormValue = ((powerValue)*0.0383) + 0.0825 #*** use calibration fucntion Calculated Calibration Curve (y=0.0386x + 0.0797)

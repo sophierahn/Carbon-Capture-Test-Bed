@@ -75,8 +75,8 @@ else:
 
 
     pts = np.array([[0,400], [260, 260], [400, 0], 
-                    [1000, 0], [1000, 600], [730, 730],
-                    [600, 1000], [0, 1000]],
+                    [1000, 0], [1000, 600], [670, 720],
+                    [550, 1000], [0, 1000]],
                 np.int32)
     pts = pts.reshape((-1, 1, 2))
     mask = np.zeros(image.shape[:2], dtype="uint8")
@@ -95,6 +95,8 @@ else:
         cv2.imshow("image", imageSmall)
         cv2.waitKey(0)
         cv2.imshow("gray", threshSmall)
+        cv2.imwrite("grayscale.jpg", gray)
+        cv2.imwrite("blankImage.jpg", image)
         cv2.waitKey(0)
         
 
@@ -111,6 +113,7 @@ else:
     if debug:
         threshSmall = cv2.resize(thresh, (hSmall, wSmall))
         cv2.imshow("2", threshSmall)
+        cv2.imwrite("threshhold.jpg", thresh)
         cv2.waitKey(0)
 
     # perform a connected component analysis on the thresholded
@@ -177,7 +180,7 @@ else:
 
         fileID = datetime.now().strftime("%H%M%S")
         fileName = "/home/pi/Carbon-Capture-Test-Bed/Images_Edited/%s_Testing.jpg" % (fileID)
-        cv2.imwrite(fileName, masked)
+        cv2.imwrite("final.jpg", masked)
         
     else:
         #fileID = datetime.now().strftime("%Y%m%d-%H%M%S")

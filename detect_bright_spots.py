@@ -172,7 +172,7 @@ def start_imageCapture(image_pipe,scaleFactor):
                         #yPos.append(round(cY*scaleFactor, 4))
                         #radiusList.append(round(radius*scaleFactor, 4))
                         area += math.pi*(scaleFactor*radius)**2
-                        pwriter2.writerow(['' , cX*scaleFactor, cY*scaleFactor, radius*scaleFactor])
+                        pwriter2.writerow(['' , round(cX*scaleFactor,4), round(cY*scaleFactor,4), round(radius*scaleFactor,4)])
                         
                         cv2.circle(masked, (int(cX), int(cY)), int(radius),(0, 255, 0), 4)
                         cv2.putText(masked, "#{}".format(i + 1), (x, y - 15),cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
@@ -198,7 +198,7 @@ def start_imageCapture(image_pipe,scaleFactor):
                 data = True
                 if data:
                     elapsed = round(time.time()-start,2)
-                    datalist = [elapsed, area, count]
+                    datalist = [elapsed, round(area,4), count]
                     pwriter1.writerow(datalist) #writing data to csv
                     
                

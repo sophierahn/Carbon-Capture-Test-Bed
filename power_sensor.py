@@ -20,7 +20,7 @@ def power_log (power_pipe, q):
                 power = i[1]
                 power_pipe.send(power) #power sensor Data
             if i[0] == 2:
-                q.put_nowait((2,i[1]))
+                q.put_nowait((2,i[1])) #Power Supply Value
             if i[0] == 3:
                 q.put_nowait((3,i[1])) #pressure sensor data
             if i[0] == 4:

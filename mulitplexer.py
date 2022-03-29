@@ -63,13 +63,13 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
         intermittent = False
     
     ### Initalize Data File, When pretest is started  ***this will create blank files if the pretest is cancled -> move to func and use firstTime?
-    now = datetime.now()
-    current= now.strftime("%m_%d_%Y_%H_%M_%S")
-    pfilename = "./data/" +"Pressure_sensor_data_" + current +".csv"
-    pfile = open(pfilename, "w") #creating pressure sensor data csv with current date and time
-    pwriter = csv.writer(pfile)
-    pwriter.writerow(['Elapsed Time', 'KHCO3 In (kPa)' , 'KHCO3 Out (kPa)', 'CO2 In (kPa)', 'CO2 Out (kPa)', 'Current (mA)', 'Voltage (V)', 'Power (mW)', 'CO2 Flow Rate (SCCM)'])
-    start = time.time()
+    # now = datetime.now()
+    # current= now.strftime("%m_%d_%Y_%H_%M_%S")
+    # pfilename = "./data/" +"Sensor_data_" + current +".csv"
+    # pfile = open(pfilename, "w") #creating pressure sensor data csv with current date and time
+    # pwriter = csv.writer(pfile)
+    # pwriter.writerow(['Elapsed Time', 'KHCO3 In (kPa)' , 'KHCO3 Out (kPa)', 'CO2 In (kPa)', 'CO2 Out (kPa)', 'Current (mA)', 'Voltage (V)', 'Power (mW)', 'CO2 Flow Rate (SCCM)'])
+    #start = time.time()
 
     while not shutoff:
         while not q.empty():
@@ -90,6 +90,7 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
                 print(powerLevel[1])
                 if firstTime: #start data logging when the actual test starts
                     data = True
+                    pwriter, pfile, start = func.startFile()
                     firstTime = False
             if i[0] == 3:
                 q.put_nowait((3,i[1])) #pressure sensor data
@@ -157,5 +158,8 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
     dac_2.normalized_value = 0
     pfile.close() #Closing CSV file
     q.close()
-    q.join_thread()
+    try:
+        q.join_thread()
+    except Exception as e:
+        func.errorLog(e, "Multiplexer")
 

@@ -480,7 +480,7 @@ class controls:
             print("Numerical Entry Error:", e)
             func.errorLog(e, 'ValidateTest')
         else:
-            self.BtnStart.config(text="Test Running")
+            self.BtnStart.config(text="Test Running", state=DISABLED)
             #1 means voltage
             if radioVar == 1: ### *** Remove hardcoded numbers, add calibration function
                 powerNormValue = ((powerValue)*0.0383) + 0.0825 #*** use calibration fucntion Calculated Calibration Curve (y=0.0386x + 0.0797)
@@ -490,7 +490,7 @@ class controls:
             powerTuple = (radioVar,powerNormValue) #combining volt or current selection and Desired Value
 
             #Turn on Power Supply
-            q.put_nowait((radioVar,powerTuple))
+            q.put_nowait((2,powerTuple))
 
             #Turn on LEDs
             GPIO.setmode(GPIO.BCM)

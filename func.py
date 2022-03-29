@@ -9,7 +9,7 @@ from datetime import datetime
 import time
 import csv
 
-mac = True
+mac = False
 
 if not mac:
     import board

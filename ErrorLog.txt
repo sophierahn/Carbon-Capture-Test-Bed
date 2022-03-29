@@ -2,3 +2,8 @@
 03/27/2022-18:04:53: Vaalskdfja;l hello world
 03/27/2022-21:26:40: testing-Vaalskdfja;l hello world
 03/27/2022-21:27:14: testing- value Error: hello world
+03/29/2022-14:05:19: Multiplexer - local variable 'pfile' referenced before assignment
+03/29/2022-14:05:44: Multiplexer - local variable 'pfile' referenced before assignment
+03/29/2022-14:08:02: Multiplexer - local variable 'pfile' referenced before assignment
+03/29/2022-14:10:06: Multiplexer - local variable 'pfile' referenced before assignment
+03/29/2022-14:16:04: Multiplexer - local variable 'pfile' referenced before assignment

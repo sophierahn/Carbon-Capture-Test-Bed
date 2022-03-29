@@ -11,13 +11,7 @@ from tkinter import messagebox
 from tkinter import Canvas
 from PIL import ImageTk, Image, ImageFile
 from random import randint
-#import matplotlib
-#from matplotlib import pylab
 from numpy import False_
-#from sympy import true
-#matplotlib.use('TkAgg')
-#import matplotlib.pyplot as plt
-#from pylab import plot, show, figure, xlabel, ylabel, draw, pause, ion, close
 import os
 import glob
 import csv
@@ -26,8 +20,6 @@ from datetime import timedelta
 from multiprocessing import Process, Pipe, Queue
 from subprocess import Popen
 import func
-#import subprocess
-
 #Using *** to indicate Changes should be made in future
 
 #set true to view UI not on RPI
@@ -341,12 +333,16 @@ class controls:
     def close(self):
         if debug:
             print("closing")
-        self.killProcesses()
-        list_of_files = glob.glob('/home/pi/Carbon-Capture-Test-Bed/Images_Raw/*.jpg')
-        list_of_files.sort(key=os.path.getctime)
-        for file in list_of_files[:-1]:
-            os.remove(file)
-        sys.exit(0)
+        try:
+            self.killProcesses()
+            list_of_files = glob.glob('/home/pi/Carbon-Capture-Test-Bed/Images_Raw/*.jpg')
+            list_of_files.sort(key=os.path.getctime)
+            for file in list_of_files[:-1]:
+                os.remove(file)
+        except Exception as e:
+            func.errorLog(e, "Close")
+        finally:
+            sys.exit(0)
 
     ### Estop Function ###
     def stopTest(self):
@@ -395,6 +391,7 @@ class controls:
             func.message("Error","Please Enter Numbers Only")
         except Exception as e:
            print("Error in Numerical Entry: ", e)
+           func.errorLog(e, "preTest")
         
         else: #only proceeds if test values pass muster
             if calibrating:
@@ -480,7 +477,8 @@ class controls:
         except ValueError:
             func.message("Error","Please Enter Numbers Only")
         except Exception as e:
-            print("Numerical Entery Error:", e)
+            print("Numerical Entry Error:", e)
+            func.errorLog(e, 'ValidateTest')
         else:
             self.BtnStart.config(text="Test Running")
             #1 means voltage
@@ -492,7 +490,7 @@ class controls:
             powerTuple = (radioVar,powerNormValue) #combining volt or current selection and Desired Value
 
             #Turn on Power Supply
-            q.put_nowait((2,powerTuple))
+            q.put_nowait((radioVar,powerTuple))
 
             #Turn on LEDs
             GPIO.setmode(GPIO.BCM)
@@ -589,23 +587,24 @@ class controls:
 
         pipeContents = []
         if not estop:
-            while maini_pipe.poll(): #Empty pipe 
+            while maini_pipe.poll():    #Empty pipe 
                 pipeContents.append(maini_pipe.recv())
-            for i in pipeContents:
+            for i in pipeContents:      # Check pipe contents for salt area from background process
                 if type(i) == float:
                     self.saltArea = round(i,3)
-                    print(i)
-                # if type(i) == str:
-                #     maini_pipe.send(i)
-            maini_pipe.send("run")
+                    
+            maini_pipe.send("run") #Send Run signal to image capture processes 
             self.saltData.config(text = "Total Salt Area: %.3fmm2"%self.saltArea)
-            self.img = Image.open(func.latestFile())
-            self.imgW, self.imgH = self.img.size
-            self.imgW = round(int(self.imgW)/2)
-            self.imgH = round(int(self.imgH)/2)
-            self.imgSmall = self.img.resize((self.imgW,self.imgH))
-            self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
-            self.saltImage.config(image=self.imgSmall)
+            try:
+                self.img = Image.open(func.latestFile())
+                self.imgW, self.imgH = self.img.size
+                self.imgW = round(int(self.imgW)/2)
+                self.imgH = round(int(self.imgH)/2)
+                self.imgSmall = self.img.resize((self.imgW,self.imgH))
+                self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
+                self.saltImage.config(image=self.imgSmall)
+            except Exception as e:
+                func.errorLog(e, "Image Capture")
             image_capture = root.after(repeatRate, lambda: self.image_capture(image_pipe, maini_pipe, repeatRate))
         else:
             maini_pipe.send("stop")
@@ -620,12 +619,16 @@ class controls:
                 self.stopTest()
                 if self.errorTuple[1] == 1:
                     func.message("Error","Test was Ended Due to CO2 Flow Rate measured over Limit")
+                    func.errorLog("Test was Ended Due to CO2 Flow Rate measured over Limit", "Error Checking")
                 if self.errorTuple[1] == 2:
                     func.message("Error","Test was Ended Due to Current measured over Limit")
+                    func.errorLog("Test was Ended Due to Current measured over Limit", "Error Checking")
                 if self.errorTuple[1] == 3:
                     func.message("Error","Test was Ended Due to Voltage measured over Limit")
+                    func.errorLog("Test was Ended Due to Voltage measured over Limit", "Error Checking")
                 if self.errorTuple[1] == 4:
                     func.message("Error","Test was Ended Due to Pressure Flux measured over Limit")
+                    func.errorLog("Test was Ended Due to Pressure Flux measured over Limit", "Error Checking")    
             errorChecking = root.after(500, lambda: self.errorChecking(mainMulti_pipe))
         else:
             self.errorTuple=(False,0)

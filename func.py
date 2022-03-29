@@ -5,8 +5,11 @@ from time import sleep
 import sys
 import glob
 import os
+from datetime import datetime
+import time
+import csv
 
-mac = False
+mac = True
 
 if not mac:
     import board
@@ -111,7 +114,6 @@ def calibration():
     #saveTestPreset([calibrationValue],True) #Write Calibration value to Test Preset File
     return(calibrationValue)
 
-
 def setZero():
     i2c = board.I2C()
     tca = adafruit_tca9548a.TCA9548A(i2c)
@@ -119,3 +121,20 @@ def setZero():
     dac_2 = adafruit_mcp4725.MCP4725(tca[3], address=0x60)
     dac_1.normalized_value = 0
     dac_2.normalized_value = 0
+
+def startFile():
+    now = datetime.now()
+    current= now.strftime("%m_%d_%Y_%H_%M_%S")
+    pfilename = "./data/" +"Sensor_data_" + current +".csv"
+    pfile = open(pfilename, "w") #creating pressure sensor data csv with current date and time
+    pwriter = csv.writer(pfile)
+    pwriter.writerow(['Elapsed Time', 'KHCO3 In (kPa)' , 'KHCO3 Out (kPa)', 'CO2 In (kPa)', 'CO2 Out (kPa)', 'Current (mA)', 'Voltage (V)', 'Power (mW)', 'CO2 Flow Rate (SCCM)'])
+    start = time.time()
+    return (pwriter, pfile, start)
+
+def errorLog(error, location):
+    with open('ErrorLog.txt', 'a') as file:
+        now = datetime.now()
+        current= now.strftime("%m/%d/%Y-%H:%M:%S")
+        newString = "\n"+current + ": "+ str(location)+ " - " +str(error)
+        file.write(newString)

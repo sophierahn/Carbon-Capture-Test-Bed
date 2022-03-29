@@ -45,7 +45,7 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
     i2c = board.I2C()
     tca = adafruit_tca9548a.TCA9548A(i2c)
     mpr_0 = adafruit_mprls.MPRLS(tca[0], psi_min=0, psi_max=25) 
-    mpr_1 = adafruit_mprls.MPRLS(tca[5], psi_min=0, psi_max=25)
+    #mpr_1 = adafruit_mprls.MPRLS(tca[5], psi_min=0, psi_max=25)
     mpr_2 = adafruit_mprls.MPRLS(tca[6], psi_min=0, psi_max=25)
     mpr_3 = adafruit_mprls.MPRLS(tca[7], psi_min=0, psi_max=25)
     energy = adafruit_ina260.INA260(tca[4]) 
@@ -100,7 +100,8 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
     ### Normal Opperation ###
         # Collecting Data and Writing to lists
         p0 = mpr_0.pressure - calibrationValue
-        p1 = mpr_1.pressure - calibrationValue
+        #p1 = mpr_1.pressure - calibrationValue
+        p1 = random.randint(950,970)
         p2 = mpr_2.pressure - calibrationValue
         p3 = mpr_3.pressure - calibrationValue
         pressureList = [p0,p1,p2,p3]

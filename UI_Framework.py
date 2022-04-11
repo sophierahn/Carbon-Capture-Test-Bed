@@ -230,7 +230,7 @@ class controls:
         self.saltData.place(x=datax,y=salty+35)
         if not mac:
             self.img = Image.open(func.latestFile())
-        self.img = Image.open("/home/pi/Carbon-Capture-Test-Bed/Images_Edited/20220329-141506_identified.jpg")
+        #self.img = Image.open("/Users/bronwynerb/Carbon-Capture-Test-Bed/Images_Edited/20220329-141506_identified.jpg")
         self.imgW, self.imgH = self.img.size
         self.imgW = round(int(self.imgW)/2)
         self.imgH = round(int(self.imgH)/2)

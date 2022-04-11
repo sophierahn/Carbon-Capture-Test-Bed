@@ -23,7 +23,7 @@ import func
 #Using *** to indicate Changes should be made in future
 
 #set true to view UI not on RPI
-mac = False
+mac = True
 if not mac:
     from pressure_sensor import start_psensor
     from detect_bright_spots import start_imageCapture
@@ -230,13 +230,14 @@ class controls:
         self.saltData.place(x=datax,y=salty+35)
         if not mac:
             self.img = Image.open(func.latestFile())
-            self.imgW, self.imgH = self.img.size
-            self.imgW = round(int(self.imgW)/2)
-            self.imgH = round(int(self.imgH)/2)
-            self.imgSmall = self.img.resize((self.imgW,self.imgH))
-            self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
-            self.saltImage = Label(master,image=self.imgSmall)
-            self.saltImage.place(x=datax,y=salty+70)
+        self.img = Image.open("/home/pi/Carbon-Capture-Test-Bed/Images_Edited/20220329-141506_identified.jpg")
+        self.imgW, self.imgH = self.img.size
+        self.imgW = round(int(self.imgW)/2)
+        self.imgH = round(int(self.imgH)/2)
+        self.imgSmall = self.img.resize((self.imgW,self.imgH))
+        self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
+        self.saltImage = Label(master,image=self.imgSmall)
+        self.saltImage.place(x=datax,y=salty+70)
 
     #### Buttons ####
         btnX = setX+50
@@ -447,6 +448,7 @@ class controls:
                 self.stopTest()
                 func.message("Error","Test not initated after %f s of PreTest. Test cancelled" %(preTestDelay))
                 testCancelled = True
+                func.errorLog("Test not started after PreTest (%0.1f s)" %(preTestDelay), "PreTest Check")
             self.testCheck = root.after(1000, lambda: self.preTestCheck(startTime))
         else:
             root.after_cancel(self.testCheck)

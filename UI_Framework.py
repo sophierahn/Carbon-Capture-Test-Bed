@@ -55,6 +55,7 @@ countdown = None
 debug = False
 testRunning = False
 testDefault = []
+imageOn = True
 
 #User Editable Settings
 preTestWait = 5
@@ -124,9 +125,10 @@ class controls:
         EntPower[0].insert(tk.INSERT,testDefault[2])#Set Default
         EntPower[0].config(validate="key", validatecommand=(validation, '%S'))
         
-        global var1, var2, logScale #global UI varibles
+        global var1, var2, var3, logScale #global UI varibles
         var1 = IntVar()
         var2 = IntVar()
+        var3 = IntVar()
         self.radPowerV = Radiobutton(master, text="Voltage Control", variable=var1, value=1, command=lambda: self.lblChange())
         self.radPowerC = Radiobutton(master, text="Current Control", variable=var1, value=2, command=lambda: self.lblChange())
         self.radPowerV.place(x=setX,y=setY+100)#Voltage select 
@@ -197,6 +199,9 @@ class controls:
         checkPressure = tk.Checkbutton(master, text='Gauge Pressure',variable=var2, onvalue=1, offvalue=0)
         checkPressure.place(x=dataX,y=dataY+150)
         var2.set(int(testDefault[5]))
+        checkImage = tk.Checkbutton(master, text='Capure Images?',variable=var3, onvalue=1, offvalue=0)
+        checkImage.place(x=dataX,y=dataY+170)
+        var2.set(int(testDefault[5]))
         
     #### Live Data ####
         datax = 550
@@ -230,13 +235,14 @@ class controls:
         self.saltData.place(x=datax,y=salty+35)
         if not mac:
             self.img = Image.open(func.latestFile())
-            self.imgW, self.imgH = self.img.size
-            self.imgW = round(int(self.imgW)/2)
-            self.imgH = round(int(self.imgH)/2)
-            self.imgSmall = self.img.resize((self.imgW,self.imgH))
-            self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
-            self.saltImage = Label(master,image=self.imgSmall)
-            self.saltImage.place(x=datax,y=salty+70)
+        #self.img = Image.open("/Users/bronwynerb/Carbon-Capture-Test-Bed/Images_Edited/20220329-141506_identified.jpg")
+        self.imgW, self.imgH = self.img.size
+        self.imgW = round(int(self.imgW)/2)
+        self.imgH = round(int(self.imgH)/2)
+        self.imgSmall = self.img.resize((self.imgW,self.imgH))
+        self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
+        self.saltImage = Label(master,image=self.imgSmall)
+        self.saltImage.place(x=datax,y=salty+70)
 
     #### Buttons ####
         btnX = setX+50
@@ -447,6 +453,7 @@ class controls:
                 self.stopTest()
                 func.message("Error","Test not initated after %f s of PreTest. Test cancelled" %(preTestDelay))
                 testCancelled = True
+                func.errorLog("Test not started after PreTest (%0.1f s)" %(preTestDelay), "PreTest Check")
             self.testCheck = root.after(1000, lambda: self.preTestCheck(startTime))
         else:
             root.after_cancel(self.testCheck)
@@ -460,6 +467,7 @@ class controls:
             print("validating")
         try:
             testMin = float(EntTime[0].get())
+            imageOn = bool(var2.get())
             if testMin < 0:
                 func.message("Warning","Test Duration must be Positive")
                 raise Exception("Voltage above Max 24v")
@@ -507,16 +515,23 @@ class controls:
             power_script = Process(target= power_log, args= (power_pipe,q,))
             power_script.start()
 
-            #Initiallize Image Capture Process
-            image_pipe, maini_pipe = Pipe()
-            image_script = Process(target= start_imageCapture, args= (image_pipe,testDefault[11]))
-            image_script.start()
+            if imageOn:
+                #Initiallize Image Capture Process
+                image_pipe, maini_pipe = Pipe()
+                image_script = Process(target= start_imageCapture, args= (image_pipe,testDefault[11]))
+                image_script.start()
+                self.image_capture(image_pipe, maini_pipe, repeatRate)
+
+                #Turn on LEDs
+                GPIO.setmode(GPIO.BCM)
+                GPIO.setup(17,GPIO.OUT)
+                GPIO.output(17, GPIO.HIGH) 
 
             #Call repeating functions
             self.button_countdown(int(testMin*60))
             self.pressure_sensor(psen_pipe, mainp_pipe,int(testMin*60))
             self.power_sensor(power_pipe,mainpower_pipe)
-            self.image_capture(image_pipe, maini_pipe, repeatRate)
+            
 
 ### Repeating Functions ###
     def button_countdown(self,i):

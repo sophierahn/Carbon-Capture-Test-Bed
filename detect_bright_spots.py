@@ -46,12 +46,12 @@ def start_imageCapture(image_pipe,scaleFactor):
     if data:
         now = datetime.now()
         current= now.strftime("%m_%d_%Y_%H_%M_%S")
-        pfilename1 = "./data/" +"Image_Data" + current +".csv"
+        pfilename1 = "/media/pi/Lexar/CO2_System_Sensor_Data/" +"Image_Data" + current +".csv"
         pfile1 = open(pfilename1, "w") #creating Image data csv with current date and time
         pwriter1 = csv.writer(pfile1)
         pwriter1.writerow(['Time' , 'Cumulative Area', '# of Detected Areas'])
 
-        pfilename2 = "./data/" +"X_Y_Data" + current +".csv"
+        pfilename2 = "/media/pi/Lexar/CO2_System_Sensor_Data/" +"X_Y_Data" + current +".csv"
         pfile2 = open(pfilename2, "w") #creating Image data csv with current date and time
         pwriter2 = csv.writer(pfile2)
         start = time.time()
@@ -185,7 +185,7 @@ def start_imageCapture(image_pipe,scaleFactor):
                         print(area)
 
                     fileID = datetime.now().strftime("%Y%m%d-%H%M%S")
-                    fileName = "/home/pi/Carbon-Capture-Test-Bed/Images_Edited/%s_identified.jpg" % (fileID)
+                    fileName = "/media/pi/Lexar/CO2_System_Sensor_Data/Images_Edited/%s_identified.jpg" % (fileID)
                     imageSmall = cv2.resize(masked, (hSmall, wSmall),interpolation=cv2.INTER_AREA)
                     cv2.imwrite(fileName, imageSmall)
                     image_pipe.send(area)

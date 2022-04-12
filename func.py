@@ -125,7 +125,7 @@ def setZero():
 def startFile():
     now = datetime.now()
     current= now.strftime("%m_%d_%Y_%H_%M_%S")
-    pfilename = "/media/pi/Lexar/CO2_System_Sensor_Data" +"Sensor_data_" + current +".csv"
+    pfilename = "/media/pi/Lexar/CO2_System_Sensor_Data/" +"Sensor_data_" + current +".csv"
     pfile = open(pfilename, "w") #creating pressure sensor data csv with current date and time
     pwriter = csv.writer(pfile)
     pwriter.writerow(['Elapsed Time', 'KHCO3 In (kPa)' , 'KHCO3 Out (kPa)', 'CO2 In (kPa)', 'CO2 Out (kPa)', 'Current (mA)', 'Voltage (V)', 'Power (mW)', 'CO2 Flow Rate (SCCM)'])

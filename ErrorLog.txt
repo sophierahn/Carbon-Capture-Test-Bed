@@ -7,3 +7,12 @@
 03/29/2022-14:08:02: Multiplexer - local variable 'pfile' referenced before assignment
 03/29/2022-14:10:06: Multiplexer - local variable 'pfile' referenced before assignment
 03/29/2022-14:16:04: Multiplexer - local variable 'pfile' referenced before assignment
+03/29/2022-15:00:18: Multiplexer - local variable 'pfile' referenced before assignment
+03/29/2022-15:22:24: Multiplexer - local variable 'pfile' referenced before assignment
+03/29/2022-15:23:15: Multiplexer - local variable 'pfile' referenced before assignment
+03/29/2022-15:23:52: Multiplexer - local variable 'pfile' referenced before assignment
+03/29/2022-15:29:00: Multiplexer - local variable 'pfile' referenced before assignment
+03/29/2022-15:29:18: Multiplexer - local variable 'pfile' referenced before assignment
+03/29/2022-15:31:25: Multiplexer - local variable 'pfile' referenced before assignment
+03/29/2022-15:35:04: Multiplexer - local variable 'pfile' referenced before assignment
+03/29/2022-15:35:22: Multiplexer - local variable 'pfile' referenced before assignment

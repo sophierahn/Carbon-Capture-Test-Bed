@@ -54,7 +54,7 @@ try:
 except:
     print("error")
 
-image = cv2.imread("/home/pi/Carbon-Capture-Test-Bed/testnew1.jpg")
+image = cv2.imread("/media/pi/Lexar/CO2_System_Sensor_Data/testnew1.jpg")
 h = image.shape[0]
 w = image.shape[1]
 image = image[round(h/2-400):round(h/2+400),round(w/2-400):round(w/2+400)]

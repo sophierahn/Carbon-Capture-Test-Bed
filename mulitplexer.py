@@ -142,7 +142,7 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
         queueDump = [] #reseting the local queue list
         
         #Logging, intermitant or direct
-        #data = False #*** Remove
+        #data = Fa #*** Remove
         now = time.time()
         if data:
             elapsed = round(time.time()-start,2)

@@ -30,7 +30,7 @@ import func
 #Add option for lower frequency
 
 
-def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
+def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe, fileName):
     queueDump = []
     powerList = [0]*4
     pressureList = [0]*4
@@ -90,7 +90,7 @@ def muliplexer(calibrationValue,testFreq,limitList,q, multi_pipe):
                 print(powerLevel[1])
                 if firstTime: #start data logging when the actual test starts
                     data = True
-                    pwriter, pfile, start = func.startFile()
+                    pwriter, pfile, start = func.startFile(fileName)
                     firstTime = False
             if i[0] == 3:
                 q.put_nowait((3,i[1])) #pressure sensor data

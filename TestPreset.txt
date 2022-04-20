@@ -11,3 +11,4 @@ Flow Rate (ml/min): 30.000000
             Image Capture Rate: 7.000000
             Image Calibration (mm/pixel): 0.000000
             Power Line: 0.000000
+            Capture Images: 0.000000

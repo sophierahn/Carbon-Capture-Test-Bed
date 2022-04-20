@@ -13,6 +13,7 @@ from PIL import ImageTk, Image, ImageFile
 from random import randint
 from numpy import False_
 import os
+import os.path
 import glob
 import csv
 from datetime import datetime
@@ -23,7 +24,7 @@ import func
 #Using *** to indicate Changes should be made in future
 
 #set true to view UI not on RPI
-mac = False
+mac = True
 if not mac:
     from pressure_sensor import start_psensor
     from detect_bright_spots import start_imageCapture
@@ -48,6 +49,7 @@ EntCurrentLim = [None]*1
 EntVoltLim = [None]*1
 EntPressureLim = [None]*1
 EntImageRate = [None]*1
+EntFileName = [None]*1
 
 estop = False
 graph = False
@@ -58,8 +60,8 @@ testDefault = []
 imageOn = True
 
 #User Editable Settings
-preTestWait = 5
-preTestDelay = 120
+preTestWait = 10
+preTestDelay = 240
 
 class controls:
     global radioVar, estop, countdown, testDefault, graph, testRunning
@@ -86,7 +88,7 @@ class controls:
         # self.canvas.create_line(1,1,1,255, width = 3, fill="#666666")
 
         #Master Title
-        self.lblTitle = Label(master, text="MEA Cell Controls", font=("Calibri",text+14))
+        self.lblTitle = Label(master, text="CO2 Cell Controls", font=("Calibri",text+14))
         self.lblTitle.place(x=400,y=10)
 
     #### Settings Titles ####
@@ -157,7 +159,7 @@ class controls:
         EntFlowLim[0].insert(tk.INSERT,testDefault[6])
         EntFlowLim[0].config(validate="key", validatecommand=(validation, '%S')) 
 
-        self.lblCurrentLim = Label(master, text="Current Cut Off (A):", font=("Calibri",text+4))
+        self.lblCurrentLim = Label(master, text="Current Cut Off (mA):", font=("Calibri",text+4))
         self.lblCurrentLim.place(x=limX,y=limY+60)
         EntCurrentLim[0] = Entry(master, width=7, justify=RIGHT)
         EntCurrentLim[0].place(x=limX+200,y=limY+60)
@@ -183,25 +185,28 @@ class controls:
         dataY = limY+170
         self.TitlData = Label(master, text="Logging Settings", font=("Calibri",text+8))
         self.TitlData.place(x=dataX,y=dataY)
+        #Images Checkbox
+        checkImage = tk.Checkbutton(master, text='Capure Images?',variable=var3, onvalue=1, offvalue=0, font=("Calibri",text+4))
+        checkImage.place(x=dataX,y=dataY+30)
+        var3.set(int(testDefault[13]))
         #Image Frequancy 
         self.lblImage = Label(master, text="Image Capture Rate (s):", font=("Calibri",text+4))
-        self.lblImage.place(x=dataX,y=dataY+30)
+        self.lblImage.place(x=dataX,y=dataY+60)
         EntImageRate[0] = Entry(master, width=7, justify=RIGHT)
-        EntImageRate[0].place(x=limX+200,y=dataY+30)
+        EntImageRate[0].place(x=limX+200,y=dataY+60)
         EntImageRate[0].insert(tk.INSERT,testDefault[10])
+        
         #Data Frequancy
         self.LblLog = Label(master, text="Data Log Rate (s)", font=("Calibri",text+4))
-        self.LblLog.place(x=dataX,y=dataY+60)
+        self.LblLog.place(x=dataX,y=dataY+90)
         logScale = Scale(master, from_=0, to=20, label = "Set to 0 for <1s Logging", font=("Calibri",text+2), length=150, tickinterval=5, orient=HORIZONTAL,)
-        logScale.place(x=dataX,y=dataY+80)
+        logScale.place(x=dataX,y=dataY+110)
         logScale.set(testDefault[4])
         #Calibration Checkbox
         checkPressure = tk.Checkbutton(master, text='Gauge Pressure',variable=var2, onvalue=1, offvalue=0)
-        checkPressure.place(x=dataX,y=dataY+150)
+        checkPressure.place(x=dataX,y=dataY+180)
         var2.set(int(testDefault[5]))
-        checkImage = tk.Checkbutton(master, text='Capure Images?',variable=var3, onvalue=1, offvalue=0)
-        checkImage.place(x=dataX,y=dataY+170)
-        var2.set(int(testDefault[5]))
+       
         
     #### Live Data ####
         datax = 550
@@ -234,8 +239,9 @@ class controls:
         self.saltData = Label(master, text="Total Salt Area: 0 mm2", font=("Calibri",text+6))
         self.saltData.place(x=datax,y=salty+35)
         if not mac:
-            self.img = Image.open(func.latestFile())
-        #self.img = Image.open("/Users/bronwynerb/Carbon-Capture-Test-Bed/Images_Edited/20220329-141506_identified.jpg")
+            self.img = Image.open("/home/pi/Carbon-Capture-Test-Bed/OpeningImage.png")
+        if mac:
+            self.img = Image.open("/Users/bronwynerb/Carbon-Capture-Test-Bed/OpeningImage.png")
         self.imgW, self.imgH = self.img.size
         self.imgW = round(int(self.imgW)/2)
         self.imgH = round(int(self.imgH)/2)
@@ -254,14 +260,29 @@ class controls:
         self.BtnCancel = Button(master, text="Cancel Test", command=lambda: self.stopTest(), width=10, height=2, bg='#DDDDDD', activebackground='#ff5959', wraplength=100)
         self.BtnCancel.place(x=btnX,y=btnY+50)
         
-        self.BtnDefault = Button(master, text="Save Test Default", command=lambda: self.saveTest())
-        self.BtnDefault.place(x=20,y=20)
-
         self.BtnClose = Button(master, text="Close", command=lambda: self.close())
         self.BtnClose.place(x=10,y=580)
 
+        #Upper Right Buttons
+        self.BtnDefault = Button(master, text="Save Test Default", command=lambda: self.saveTest())
+        self.BtnDefault.place(x=20,y=20)
         self.BtnCalibrate = Button(master, text="Calibrate System", command=lambda: self.calibrate())
         self.BtnCalibrate.place(x=22,y=60)
+
+        #File Locations
+        self.BtnFolder = Button(master, text="Open Data Folder", command=lambda: self.openFolder())
+        self.BtnFolder.place(x=950,y=650)
+
+
+        #File Name Entry Box
+        now = datetime.now()
+        current= now.strftime("%m_%d_%Y:%H_%M_%S")
+        pfilename = "Sensor_data_" + current
+        self.FileName = Label(master, text="File Name:", font=("Calibri",text+6))
+        self.FileName.place(x=btnX-65,y=btnY-40)
+        EntFileName[0] = Entry(master,  width=40, justify=LEFT)
+        EntFileName[0].place(x=btnX,y=btnY-40)
+        EntFileName[0].insert(tk.INSERT,pfilename)
         
         
 
@@ -277,16 +298,24 @@ class controls:
         else:
             if debug:
                 print("changing current")
-            self.LblPower.config(text = "Set Current (A):")
+            self.LblPower.config(text = "Set Current (mA):")
 
     def calibrate(self):
         p1 = Popen(['python3','CalibrationUI.py'])
         p1.wait()
+    
+    def openFolder(self):
+        folderName = "/media/pi/Lexar/CO2_System_Sensor_Data/"
+        try:
+            os.system('xdg-open "%s"' % folderName)
+        except:
+            func.message("Error", "Ensure USB is Plugged in")
+        
         
     #Save Test Default Values
     def saveTest(self):
         global testDefault, radioVar, logScale, var2
-        testDefault = [0]*13
+        testDefault = [0]*14
         try:
             testDefault[0] = float(EntFlow[0].get())
             testDefault[1] = float(radioVar)
@@ -301,6 +330,7 @@ class controls:
             testDefault[10] = float(EntImageRate[0].get())
             testDefault[11] = testDefault[11]
             testDefault[12] = testDefault[12]
+            testDefault[13] = float(var3.get()) #Flag to enable image capturing 
             print(testDefault)
             func.saveTestPreset(testDefault,False)
         except Exception as e:
@@ -360,12 +390,22 @@ class controls:
             self.BtnCancel.config(text="Reset Test", bg='#ff5959', activebackground='#FF0000')
             self.BtnPreStart.config(state= DISABLED, bg='#DDDDDD')
             self.BtnStart.config(text="Start Test",state= DISABLED, bg='#DDDDDD')
+
+            #Reset control and display to intial state
             EntFlow[0].delete(0,'end')
             EntPower[0].delete(0,'end')
             EntTime[0].delete(0,'end')
             EntFlow[0].insert(0,str(testDefault[0]))
             EntPower[0].insert(0,str(testDefault[2]))
             EntTime[0].insert(0,str(testDefault[3]))
+            self.psen0.config(text="KHCO3 Inlet: 0kPa")
+            self.psen1.config(text="KHCO3 Outlet: 0kPa")
+            self.psen2.config(text="CO2 Inlet: 0kPa")
+            self.psen3.config(text="CO2 Outlet: 0kPa")
+            self.flowRB.config(text="CO2 Flow Rate: 0 SCCM")
+            self.power0.config(text="Current: 0 mA")
+            self.power1.config(text="Voltage: 0 V")
+            self.power2.config(text="Power: 0 mW")
         else:
             estop = False
             self.BtnCancel.config(text="Cancel Test", bg='#DDDDDD', activebackground='#ff5959')
@@ -389,10 +429,14 @@ class controls:
             limitList[1] = float(EntCurrentLim[0].get())
             limitList[2] = float(EntVoltLim[0].get())
             limitList[3] = float(EntPressureLim[0].get())
+            fileName = str(EntFileName[0].get())
             for i in limitList:
                 if i < 0:
                     func.message("Error","Limit Values must be Postive")
                     raise Exception("Negative Values")
+            if not os.path.isdir("/media/pi/Lexar/CO2_System_Sensor_Data/"):
+                func.message("Error", "Ensure USB is Plugged in")
+                raise Exception("USB Not Found")
         except ValueError:
             func.message("Error","Please Enter Numbers Only")
         except Exception as e:
@@ -411,7 +455,7 @@ class controls:
             print("about to start Multi")
             q = Queue()
             multi_pipe, mainMulti_pipe = Pipe()
-            multi = Process(target= muliplexer, args= (calibrationValue,logRate,limitList,q,multi_pipe,))
+            multi = Process(target= muliplexer, args= (calibrationValue,logRate,limitList,q,multi_pipe,fileName,))
             multi.start()
             
             #Setting up GPIO Pins for Relays
@@ -467,7 +511,7 @@ class controls:
             print("validating")
         try:
             testMin = float(EntTime[0].get())
-            imageOn = bool(var2.get())
+            imageOn = bool(var3.get())
             if testMin < 0:
                 func.message("Warning","Test Duration must be Positive")
                 raise Exception("Voltage above Max 24v")
@@ -526,6 +570,14 @@ class controls:
                 GPIO.setmode(GPIO.BCM)
                 GPIO.setup(17,GPIO.OUT)
                 GPIO.output(17, GPIO.HIGH) 
+            else:
+                self.img = Image.open("/home/pi/Carbon-Capture-Test-Bed/DisableImage.png")
+                self.imgW, self.imgH = self.img.size
+                self.imgW = round(int(self.imgW)/2)
+                self.imgH = round(int(self.imgH)/2)
+                self.imgSmall = self.img.resize((self.imgW,self.imgH))
+                self.imgSmall = ImageTk.PhotoImage(self.imgSmall)
+                self.saltImage.config(image=self.imgSmall)
 
             #Call repeating functions
             self.button_countdown(int(testMin*60))

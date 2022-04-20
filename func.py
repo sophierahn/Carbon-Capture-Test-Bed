@@ -9,7 +9,7 @@ from datetime import datetime
 import time
 import csv
 
-mac = False
+mac = True
 
 if not mac:
     import board
@@ -88,7 +88,8 @@ def saveTestPreset(testDefault,calibrate):
             Pressure Limit: %f\n\
             Image Capture Rate: %f\n\
             Image Calibration (mm/pixel): %f\n\
-            Power Line: %f" % (testDefault[0], testDefault[1], testDefault[2], testDefault[3], testDefault[4], testDefault[5], testDefault[6],testDefault[7],testDefault[8],testDefault[9],testDefault[10],testDefault[11],testDefault[12])
+            Power Line: %f\n\
+            Capture Images: %f" % (testDefault[0], testDefault[1], testDefault[2], testDefault[3], testDefault[4], testDefault[5], testDefault[6],testDefault[7],testDefault[8],testDefault[9],testDefault[10],testDefault[11],testDefault[12],testDefault[13])
             file.write(str(newString))
 
 def calibration(): 
@@ -122,10 +123,8 @@ def setZero():
     dac_1.normalized_value = 0
     dac_2.normalized_value = 0
 
-def startFile():
-    now = datetime.now()
-    current= now.strftime("%m_%d_%Y_%H_%M_%S")
-    pfilename = "/media/pi/Lexar/CO2_System_Sensor_Data/" +"Sensor_data_" + current +".csv"
+def startFile(fileName):
+    pfilename = "/media/pi/Lexar/CO2_System_Sensor_Data/" + fileName + ".csv"
     pfile = open(pfilename, "w") #creating pressure sensor data csv with current date and time
     pwriter = csv.writer(pfile)
     pwriter.writerow(['Elapsed Time', 'KHCO3 In (kPa)' , 'KHCO3 Out (kPa)', 'CO2 In (kPa)', 'CO2 Out (kPa)', 'Current (mA)', 'Voltage (V)', 'Power (mW)', 'CO2 Flow Rate (SCCM)'])

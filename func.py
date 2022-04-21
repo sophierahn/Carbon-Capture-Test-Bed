@@ -9,7 +9,7 @@ from datetime import datetime
 import time
 import csv
 
-mac = True
+mac = False
 
 if not mac:
     import board
@@ -50,7 +50,7 @@ def isint(x):
         return True
 
 def latestFile():
-        list_of_files = glob.glob('/home/pi/Carbon-Capture-Test-Bed/Images_Edited/*.jpg')
+        list_of_files = glob.glob("/media/pi/Lexar/Salt_Images/*.jpg") 
         return max(list_of_files, key=os.path.getctime)
 
 def loadTestPresets():

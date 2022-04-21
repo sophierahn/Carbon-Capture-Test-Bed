@@ -76,9 +76,11 @@ def start_imageCapture(image_pipe,scaleFactor):
                 camera.capture(fileName)
             except:
                 print("Error: Camera Capture Failed")
+                image_pipe.send(False)
             else:
                 # Look at image folder, load most recent file
                 # * means all if need specific format then *.csv
+                print ("Got the picture")
                 list_of_files = glob.glob('/home/pi/Carbon-Capture-Test-Bed/Images_Raw/*.jpg')
                 elapsed = round(time.time()-start,2)
                 pwriter2.writerow([elapsed , 'X Postion', 'Y Postion', 'Radius'])
@@ -185,7 +187,7 @@ def start_imageCapture(image_pipe,scaleFactor):
                         print(area)
 
                     fileID = datetime.now().strftime("%Y%m%d-%H%M%S")
-                    fileName = "/media/pi/Lexar/CO2_System_Sensor_Data/Images_Edited/%s_identified.jpg" % (fileID)
+                    fileName = "/media/pi/Lexar/Salt_Images/%s_identified.jpg" % (fileID)
                     imageSmall = cv2.resize(masked, (hSmall, wSmall),interpolation=cv2.INTER_AREA)
                     cv2.imwrite(fileName, imageSmall)
                     image_pipe.send(area)

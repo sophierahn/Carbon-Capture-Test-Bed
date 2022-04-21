@@ -24,7 +24,7 @@ import func
 #Using *** to indicate Changes should be made in future
 
 #set true to view UI not on RPI
-mac = True
+mac = False
 if not mac:
     from pressure_sensor import start_psensor
     from detect_bright_spots import start_imageCapture
@@ -252,7 +252,7 @@ class controls:
 
     #### Buttons ####
         btnX = setX+50
-        btnY = setY+390
+        btnY = setY+420
         self.BtnPreStart = Button(master, text="Start PreTest", command=lambda: self.preTest(), width=10, height=2, bg='#f7d240', activebackground='#f7a840', wraplength=100)
         self.BtnPreStart.place(x=btnX-55,y=btnY)
         self.BtnStart = Button(master, text="Start Test", command=lambda: self.validateTest(), width=10, height=2, bg='#DDDDDD', activebackground='#a6e89e', wraplength=100, state= DISABLED)
@@ -261,7 +261,7 @@ class controls:
         self.BtnCancel.place(x=btnX,y=btnY+50)
         
         self.BtnClose = Button(master, text="Close", command=lambda: self.close())
-        self.BtnClose.place(x=10,y=580)
+        self.BtnClose.place(x=btnX-70,y=btnY+110)
 
         #Upper Right Buttons
         self.BtnDefault = Button(master, text="Save Test Default", command=lambda: self.saveTest())
@@ -271,17 +271,17 @@ class controls:
 
         #File Locations
         self.BtnFolder = Button(master, text="Open Data Folder", command=lambda: self.openFolder())
-        self.BtnFolder.place(x=950,y=650)
+        self.BtnFolder.place(x=850,y=650)
 
 
         #File Name Entry Box
         now = datetime.now()
-        current= now.strftime("%m_%d_%Y:%H_%M_%S")
-        pfilename = "Sensor_data_" + current
+        current= now.strftime("%m%d%Y_%H%M%S")
+        pfilename = "SensorData_" + current
         self.FileName = Label(master, text="File Name:", font=("Calibri",text+6))
         self.FileName.place(x=btnX-65,y=btnY-40)
         EntFileName[0] = Entry(master,  width=40, justify=LEFT)
-        EntFileName[0].place(x=btnX,y=btnY-40)
+        EntFileName[0].place(x=btnX+30,y=btnY-40)
         EntFileName[0].insert(tk.INSERT,pfilename)
         
         
@@ -430,6 +430,12 @@ class controls:
             limitList[2] = float(EntVoltLim[0].get())
             limitList[3] = float(EntPressureLim[0].get())
             fileName = str(EntFileName[0].get())
+            for c in fileName:
+                if c.isalnum() or c == "_" or c == " ":
+                    pass
+                else:
+                    func.message("Error", "Please ensure the file name contains only letters, numbers and underscores")
+                    raise Exception("invalid File Name")
             for i in limitList:
                 if i < 0:
                     func.message("Error","Limit Values must be Postive")
@@ -512,6 +518,7 @@ class controls:
         try:
             testMin = float(EntTime[0].get())
             imageOn = bool(var3.get())
+            print(imageOn)
             if testMin < 0:
                 func.message("Warning","Test Duration must be Positive")
                 raise Exception("Voltage above Max 24v")
@@ -544,11 +551,6 @@ class controls:
             #Turn on Power Supply
             q.put_nowait((2,powerTuple))
 
-            #Turn on LEDs
-            GPIO.setmode(GPIO.BCM)
-            GPIO.setup(17,GPIO.OUT)
-            GPIO.output(17, GPIO.HIGH) 
-
             #Initiallize pressure sensor process
             psen_pipe, mainp_pipe = Pipe()
             psen_script = Process(target= start_psensor, args= (psen_pipe,q,))
@@ -561,6 +563,7 @@ class controls:
 
             if imageOn:
                 #Initiallize Image Capture Process
+                
                 image_pipe, maini_pipe = Pipe()
                 image_script = Process(target= start_imageCapture, args= (image_pipe,testDefault[11]))
                 image_script.start()
@@ -651,19 +654,24 @@ class controls:
         global estop
         if debug:
             print("Image Capture Starting")
-
         pipeContents = []
+
         if not estop:
             while maini_pipe.poll():    #Empty pipe 
                 pipeContents.append(maini_pipe.recv())
             for i in pipeContents:      # Check pipe contents for salt area from background process
                 if type(i) == float:
                     self.saltArea = round(i,3)
+                if type(i) == bool:
+                    func.message("Error", "Camera Capture Failed")
+                    self.stopTest()
                     
             maini_pipe.send("run") #Send Run signal to image capture processes 
             self.saltData.config(text = "Total Salt Area: %.3fmm2"%self.saltArea)
             try:
-                self.img = Image.open(func.latestFile())
+                filename = func.latestFile()
+                print(filename)
+                self.img = Image.open(filename)
                 self.imgW, self.imgH = self.img.size
                 self.imgW = round(int(self.imgW)/2)
                 self.imgH = round(int(self.imgH)/2)

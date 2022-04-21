@@ -16,3 +16,31 @@
 03/29/2022-15:31:25: Multiplexer - local variable 'pfile' referenced before assignment
 03/29/2022-15:35:04: Multiplexer - local variable 'pfile' referenced before assignment
 03/29/2022-15:35:22: Multiplexer - local variable 'pfile' referenced before assignment
+04/21/2022-13:40:49: preTest - invalid File Name
+04/21/2022-13:41:06: preTest - invalid File Name
+04/21/2022-13:41:14: preTest - invalid File Name
+04/21/2022-13:43:31: Multiplexer - local variable 'pfile' referenced before assignment
+04/21/2022-13:43:51: Multiplexer - local variable 'pfile' referenced before assignment
+04/21/2022-13:45:25: Multiplexer - local variable 'pfile' referenced before assignment
+04/21/2022-13:45:46: Multiplexer - local variable 'pfile' referenced before assignment
+04/21/2022-13:47:27: preTest - invalid File Name
+04/21/2022-13:47:37: Multiplexer - local variable 'pfile' referenced before assignment
+04/21/2022-13:48:59: preTest - USB Not Found
+04/21/2022-14:13:51: Multiplexer - local variable 'pfile' referenced before assignment
+04/21/2022-14:14:38: Multiplexer - local variable 'pfile' referenced before assignment
+04/21/2022-14:19:58: Image Capture - max() arg is an empty sequence
+04/21/2022-14:20:05: Image Capture - max() arg is an empty sequence
+04/21/2022-14:20:12: Image Capture - max() arg is an empty sequence
+04/21/2022-14:25:47: Image Capture - max() arg is an empty sequence
+04/21/2022-14:25:54: Image Capture - max() arg is an empty sequence
+04/21/2022-14:26:01: Image Capture - max() arg is an empty sequence
+04/21/2022-14:26:08: Image Capture - max() arg is an empty sequence
+04/21/2022-14:29:03: Image Capture - max() arg is an empty sequence
+04/21/2022-14:29:10: Image Capture - max() arg is an empty sequence
+04/21/2022-14:29:17: Image Capture - max() arg is an empty sequence
+04/21/2022-14:29:24: Image Capture - max() arg is an empty sequence
+04/21/2022-14:34:28: Image Capture - max() arg is an empty sequence
+04/21/2022-14:34:35: Image Capture - max() arg is an empty sequence
+04/21/2022-14:38:07: preTest - invalid File Name
+04/21/2022-14:40:49: ValidateTest - Voltage above Max 24v
+04/21/2022-14:40:52: Multiplexer - local variable 'pfile' referenced before assignment
